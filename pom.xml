@@ -24,13 +24,13 @@
 
     <repositories>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
+            <id>github-parser</id>
+            <name>GitHub Parser Package</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-specification-dpdescriptor-parser</url>
         </repository>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
+            <id>github-cli-extensions</id>
+            <name>GitHub Cli Extension Packages</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-cli-extensions</url>
         </repository>
     </repositories>
