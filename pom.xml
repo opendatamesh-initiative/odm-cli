@@ -20,17 +20,18 @@
 
     <properties>
         <java.version>11</java.version>
+        <spring-boot.version>2.7.12</spring-boot.version>
     </properties>
 
     <repositories>
         <repository>
-            <id>github-parser</id>
-            <name>GitHub Parser Package</name>
+            <id>odm-spec-parser-repo</id>
+            <name>GitHub Packages for ODM Specification Parser</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-specification-dpdescriptor-parser</url>
         </repository>
         <repository>
-            <id>github-cli-extensions</id>
-            <name>GitHub Cli Extension Packages</name>
+            <id>odm-cli-extensions-repo</id>
+            <name>GitHub Packages for ODM CLI Extensions</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-cli-extensions</url>
         </repository>
     </repositories>
@@ -75,6 +76,15 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>org.opendatamesh.cli.OdmCliApplication</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>
