@@ -1,7 +1,7 @@
 package org.opendatamesh.cli.usecases.importschema;
 
-import org.opendatamesh.cli.plugin.ImportPlugin;
-import org.opendatamesh.cli.plugin.PluginLoader;
+import org.opendatamesh.cli.extensions.ExtensionsLoader;
+import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import java.util.Map;
 public class ImportSchemaFactory {
 
     @Autowired
-    private PluginLoader pluginLoader;
+    private ExtensionsLoader extensionsLoader;
 
     public UseCase getImportSchemaUseCase(
             String descriptorFilePath,
@@ -28,8 +28,8 @@ public class ImportSchemaFactory {
                 inParams,
                 outParams
         );
-        ImportPlugin importPlugin = pluginLoader.getImportPlugin(from, to);
+        ImportSchemaExtension importSchemaExtension = extensionsLoader.getImportSchemaExtension(from, to);
         ImportSchemaParserOutboundPort parserOutboundPort = new ImportSchemaParserOutboundPortImpl();
-        return new ImportSchema(parameterOutboundPort, parserOutboundPort, importPlugin);
+        return new ImportSchema(parameterOutboundPort, parserOutboundPort, importSchemaExtension);
     }
 }

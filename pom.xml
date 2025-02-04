@@ -28,6 +28,11 @@
             <name>GitHub Packages</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-specification-dpdescriptor-parser</url>
         </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-cli-extensions</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -54,6 +59,11 @@
             <groupId>org.opendatamesh</groupId>
             <artifactId>odm-specification-dpdescriptor-parser</artifactId>
             <version>1.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendatamesh</groupId>
+            <artifactId>odm-cli-extensions</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
