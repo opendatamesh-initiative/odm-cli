@@ -24,7 +24,8 @@ class ImportSchema implements UseCase {
 
         ImportSchemaOptions options = new ImportSchemaOptions();
         options.setRootDescriptorPath(parameterOutboundPort.getDescriptorPath());
-        options.setCommandCliParameters(parameterOutboundPort.getOutParams());
+        options.setCommandCliInputParameters(parameterOutboundPort.getInParams());
+        options.setCommandCliOutputParameters(parameterOutboundPort.getOutParams());
 
         PortDPDS port = importSchemaExtension.importElement(options);
         descriptor.getInterfaceComponents().getOutputPorts().add(port);

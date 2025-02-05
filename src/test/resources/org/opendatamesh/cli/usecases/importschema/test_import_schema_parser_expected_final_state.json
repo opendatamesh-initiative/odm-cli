@@ -1,0 +1,53 @@
+{
+  "dataProductVersion": {
+    "dataProductDescriptor": "1.0.0",
+    "info": {
+      "fullyQualifiedName": "urn:dpds:{namespace}:dataproducts:{product-name}:1",
+      "entityType": "dataproduct",
+      "name": "{product-name}",
+      "version": "1.2.3",
+      "displayName": "{info.displayName}",
+      "description": "{info.description}",
+      "domain": "{info.domain}",
+      "owner": {
+        "id": "{info.owner.id}",
+        "name": "{info.owner.name}"
+      },
+      "contactPoints": []
+    },
+    "interfaceComponents": {
+      "outputPorts": [
+        {
+          "rawContent": " {\"$ref\": \"\"}",
+          "$ref": "",
+          "externalReference": true,
+          "name": "output_port_name",
+          "version": "1.0.0",
+          "tags": [],
+          "promises": {
+            "api": {
+              "externalReference": false,
+              "tags": [],
+              "specification": "1.0.0",
+              "definition": {
+                "inline": false,
+                "resolvedRef": false,
+                "mediaType": "text/json",
+                "$ref": "api.json"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "internalComponents": {
+      "applicationComponents": [],
+      "infrastructuralComponents": [],
+      "lifecycleInfo": {
+        "tasksInfo": [],
+        "stageNames": []
+      }
+    },
+    "tags": []
+  }
+}

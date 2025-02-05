@@ -14,11 +14,11 @@ public class ImportSchemaParserOutboundPortMock implements ImportSchemaParserOut
 
     @Override
     public DataProductVersionDPDS getDataProductVersion(Path descriptorPath) {
-        return null;
+        return state.getDataProductVersion();
     }
 
     @Override
     public void saveDescriptor(DataProductVersionDPDS descriptor, Path descriptorPath) {
-
+        state.setDataProductVersion(descriptor);
     }
 }

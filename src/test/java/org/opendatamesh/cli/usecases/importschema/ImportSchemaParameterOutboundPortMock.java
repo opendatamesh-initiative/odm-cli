@@ -5,15 +5,9 @@ import java.util.Map;
 
 class ImportSchemaParameterOutboundPortMock implements ImportSchemaParameterOutboundPort {
 
-    private final ImportSchemaParameterMockState state;
-
-    ImportSchemaParameterOutboundPortMock(ImportSchemaParameterMockState state) {
-        this.state = state;
-    }
-
     @Override
     public Path getDescriptorPath() {
-        return null;
+        return Path.of("");
     }
 
     @Override

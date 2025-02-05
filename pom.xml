@@ -75,6 +75,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <layout>ZIP</layout>
                     <mainClass>org.opendatamesh.cli.OdmCliApplication</mainClass>
                 </configuration>
             </plugin>

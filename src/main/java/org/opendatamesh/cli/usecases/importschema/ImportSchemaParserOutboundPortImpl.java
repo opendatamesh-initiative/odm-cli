@@ -36,7 +36,7 @@ class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPo
     @Override
     public void saveDescriptor(DataProductVersionDPDS descriptor, Path descriptorPath) {
         try (FileWriter writer = new FileWriter(descriptorPath.toFile())) {
-            String serializedContent = DPDSSerializer.DEFAULT_JSON_SERIALIZER.serialize(descriptor, "canonical");
+            String serializedContent = DPDSSerializer.DEFAULT_JSON_SERIALIZER.serialize(descriptor, "normalized");
             writer.write(serializedContent);
         } catch (IOException e) {
             throw new RuntimeException(e);
