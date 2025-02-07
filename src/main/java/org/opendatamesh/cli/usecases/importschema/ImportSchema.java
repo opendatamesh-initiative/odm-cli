@@ -1,7 +1,7 @@
 package org.opendatamesh.cli.usecases.importschema;
 
+import org.opendatamesh.cli.extensions.importschema.ImportSchemaArguments;
 import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaOptions;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.opendatamesh.dpds.model.interfaces.PortDPDS;
@@ -22,12 +22,12 @@ class ImportSchema implements UseCase {
     public void execute() {
         DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion(parameterOutboundPort.getDescriptorPath());
 
-        ImportSchemaOptions options = new ImportSchemaOptions();
-        options.setRootDescriptorPath(parameterOutboundPort.getDescriptorPath());
-        options.setCommandCliInputParameters(parameterOutboundPort.getInParams());
-        options.setCommandCliOutputParameters(parameterOutboundPort.getOutParams());
+        ImportSchemaArguments arguments = new ImportSchemaArguments();
+        arguments.setRootDescriptorPath(parameterOutboundPort.getDescriptorPath());
+        arguments.setOdmCliConfig(parameterOutboundPort.getOdmClientConfig());
+        arguments.setParentCommandOptions(parameterOutboundPort.getImportSchemaCommandParams());
 
-        PortDPDS port = importSchemaExtension.importElement(options);
+        PortDPDS port = importSchemaExtension.importElement(arguments);
         descriptor.getInterfaceComponents().getOutputPorts().add(port);
 
         parserOutboundPort.saveDescriptor(descriptor, parameterOutboundPort.getDescriptorPath());

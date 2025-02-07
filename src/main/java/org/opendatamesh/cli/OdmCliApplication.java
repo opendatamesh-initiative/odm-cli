@@ -18,11 +18,9 @@ public class OdmCliApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        // Initialize CommandLine with the rootCommand
-        CommandLine odmCliCommand = rootCommand.buildCommand();
+    public void run(String... args) {
+        CommandLine odmCliCommand = rootCommand.buildCommand(args);
         odmCliCommand.setExecutionStrategy(new CommandLine.RunAll());
-        // Execute the required command
         odmCliCommand.execute(args);
     }
 }

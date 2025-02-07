@@ -1,6 +1,6 @@
 package org.opendatamesh.cli.usecases.importschema;
 
-import org.opendatamesh.cli.extensions.ExtensionsLoader;
+import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,23 +12,18 @@ import java.util.Map;
 public class ImportSchemaFactory {
 
     @Autowired
-    private ExtensionsLoader extensionsLoader;
+    private OdmCliBaseConfiguration odmCliBaseConfiguration;
 
     public UseCase getImportSchemaUseCase(
             String descriptorFilePath,
-            String from,
-            String to,
-            Map<String, String> inParams,
-            Map<String, String> outParams
+            Map<String, String> importSchemaCommandParams,
+            ImportSchemaExtension importSchemaExtension
     ) {
         ImportSchemaParameterOutboundPort parameterOutboundPort = new ImportSchemaParameterOutboundPortImpl(
+                odmCliBaseConfiguration,
                 descriptorFilePath,
-                from,
-                to,
-                inParams,
-                outParams
+                importSchemaCommandParams
         );
-        ImportSchemaExtension importSchemaExtension = extensionsLoader.getImportSchemaExtension(from, to);
         ImportSchemaParserOutboundPort parserOutboundPort = new ImportSchemaParserOutboundPortImpl();
         return new ImportSchema(parameterOutboundPort, parserOutboundPort, importSchemaExtension);
     }

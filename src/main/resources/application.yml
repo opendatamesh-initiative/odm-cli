@@ -1,4 +1,17 @@
 logging:
   level:
-    root: ERROR
     org.springframework: ERROR
+
+cli:
+  cliConfiguration:
+    templatesFolder: "/path/to/templates"
+  remoteSystemsConfigurations:
+    - name: testDb
+      endpoint: "jdbc:mysql://localhost:3306/"
+      user: "root"
+      password: "root"
+    - name: anotherDb
+      endpoint: "jdbc:mysql://localhost:3306/"
+      user: "root"
+      password: "root"
+  env: '{"user": {"name": "Andrea Gioa", "email": "andrea.gioia@quantyca.it", "namespace": "org.odm"}}'

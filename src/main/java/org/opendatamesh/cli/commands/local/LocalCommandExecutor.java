@@ -4,10 +4,6 @@ import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LocalCommandExecutor implements PicoCliCommandExecutor {
+public class LocalCommandExecutor extends PicoCliCommandExecutor {
 
-    @Override
-    public Integer call() {
-        return 0;
-    }
 }

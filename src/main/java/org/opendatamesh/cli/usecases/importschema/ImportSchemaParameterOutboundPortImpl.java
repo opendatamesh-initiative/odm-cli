@@ -1,5 +1,7 @@
 package org.opendatamesh.cli.usecases.importschema;
 
+import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -9,20 +11,19 @@ import java.util.Map;
 
 class ImportSchemaParameterOutboundPortImpl implements ImportSchemaParameterOutboundPort {
 
+    private final OdmCliBaseConfiguration odmCliBaseConfiguration;
     private final Path descriptorFilePath;
-    private final String from;
-    private final String to;
-    private final Map<String, String> inParams;
-    private final Map<String, String> outParams;
+    private final Map<String, String> importSchemaCommandParams;
 
-    ImportSchemaParameterOutboundPortImpl(String descriptorRootFilePath, String from, String to, Map<String, String> inParams, Map<String, String> outParams) {
+    ImportSchemaParameterOutboundPortImpl(
+            OdmCliBaseConfiguration odmCliBaseConfiguration,
+            String descriptorRootFilePath,
+            Map<String, String> importSchemaCommandParams
+    ) {
+        this.odmCliBaseConfiguration = odmCliBaseConfiguration;
         this.descriptorFilePath = Path.of(descriptorRootFilePath);
         validateDescriptorFilePath(descriptorRootFilePath);
-        this.from = from;
-        this.to = to;
-        this.inParams = inParams;
-        this.outParams = outParams;
-        //TODO validate and setDefaultParmsForOutputPortTarget(outParamMap);
+        this.importSchemaCommandParams = importSchemaCommandParams;
     }
 
     private void validateDescriptorFilePath(String descriptorRootFilePath) {
@@ -58,22 +59,13 @@ class ImportSchemaParameterOutboundPortImpl implements ImportSchemaParameterOutb
     }
 
     @Override
-    public String getFrom() {
-        return from;
+    public OdmCliBaseConfiguration getOdmClientConfig() {
+        return this.odmCliBaseConfiguration;
     }
 
     @Override
-    public String getTo() {
-        return to;
+    public Map<String, String> getImportSchemaCommandParams() {
+        return importSchemaCommandParams;
     }
 
-    @Override
-    public Map<String, String> getInParams() {
-        return inParams;
-    }
-
-    @Override
-    public Map<String, String> getOutParams() {
-        return outParams;
-    }
 }

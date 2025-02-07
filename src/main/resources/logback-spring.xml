@@ -1,0 +1,37 @@
+<configuration>
+    <springProfile name="default">
+
+        <!-- Appender for general logs (INFO, WARN, etc.) -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>ERROR</level>
+                <onMatch>DENY</onMatch>
+                <onMismatch>ACCEPT</onMismatch>
+            </filter>
+            <encoder>
+                <pattern>%-5level : %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Appender for ERROR logs with red highlighting -->
+        <appender name="ERROR_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>ERROR</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+            <encoder>
+                <pattern>%highlight(%-5level) : %highlight(%msg%n)</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Logger settings -->
+        <logger name="org.springframework" level="ERROR" />
+
+        <!-- Root loggers for INFO and ERROR levels -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ERROR_CONSOLE" />
+        </root>
+    </springProfile>
+</configuration>

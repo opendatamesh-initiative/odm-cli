@@ -18,7 +18,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
     private List<PicoCliCommandBuilder> commands;
 
     @Override
-    public CommandLine buildCommand() {
+    public CommandLine buildCommand(String... args) {
         LocalCommandExecutor executor = new LocalCommandExecutor();
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(LOCAL_COMMAND);
@@ -27,7 +27,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
         spec.mixinStandardHelpOptions(true);
 
         commands.stream().filter(command -> LOCAL_COMMAND.equals(command.getParentCommandName()))
-                .forEach(command -> spec.addSubcommand(command.getCommandName(), command.buildCommand()));
+                .forEach(command -> spec.addSubcommand(command.getCommandName(), command.buildCommand(args)));
         return new CommandLine(spec);
     }
 
