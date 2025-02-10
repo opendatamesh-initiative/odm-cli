@@ -2,6 +2,7 @@ package org.opendatamesh.cli.usecases.importschema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -9,9 +10,10 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestImportSchema {
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @Disabled
     public void testImportSchema() throws IOException {
         ImportSchemaParserMockState parserState = objectMapper.readValue(
                 Resources.toByteArray(

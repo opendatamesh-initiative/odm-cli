@@ -3,30 +3,12 @@ package org.opendatamesh.cli.utils;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public abstract class CommandOptionsUtils {
 
     private CommandOptionsUtils() {
-    }
-
-    public static Map<String, String> parseListOfOptions(List<String> options) {
-        Map<String, String> paramsMap = new HashMap<>();
-        if (options == null) {
-            return paramsMap;
-        }
-        for (String p : options) {
-            String[] parts = p.split("=", 2);
-            if (parts.length == 2) {
-                paramsMap.put(parts[0], parts[1]);
-            } else {
-                throw new IllegalArgumentException("Invalid build argument format [" + p + "]");
-            }
-        }
-        return paramsMap;
     }
 
     public static Optional<String> getOptionFromArguments(String[] args, String option) {

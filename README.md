@@ -66,12 +66,6 @@ Manage local env and all interactions with the remote ODM Platform's services
 
 ## Options
 
-TODO
-
-### Common options
-
-| Command           | Default    | Description                                                       |
-|-------------------|------------|-------------------------------------------------------------------|
-| `--version, -v`   |            | Version o the command                                             |
- TODO change this  | `--config` | `$HOME/.odmcli`                                                   | Location of odmcli config files                                   |
-| `-l, --log-level` | `info`     | Set the logging level (`debug`, `info`, `warn`, `error`, `fatal`) |
+| Command         | Default | Description           |
+|-----------------|---------|-----------------------|
+| `--version, -v` |         | Version o the command |

@@ -1,5 +1,6 @@
 package org.opendatamesh.cli.usecases.importschema;
 
+import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.dpds.location.DescriptorLocation;
 import org.opendatamesh.dpds.location.UriLocation;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
@@ -14,8 +15,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPort {
+
+    private final Path descriptorPath;
+    private final OdmCliConfiguration odmCliConfiguration;
+
+    ImportSchemaParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
+        this.descriptorPath = descriptorPath;
+        this.odmCliConfiguration = odmCliConfiguration;
+    }
+
     @Override
-    public DataProductVersionDPDS getDataProductVersion(Path descriptorPath) {
+    public DataProductVersionDPDS getDataProductVersion() {
         try {
             DPDSParser descriptorParser = new DPDSParser(
                     "https://raw.githubusercontent.com/opendatamesh-initiative/odm-specification-dpdescriptor/main/schemas/",
@@ -34,9 +44,10 @@ class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPo
     }
 
     @Override
-    public void saveDescriptor(DataProductVersionDPDS descriptor, Path descriptorPath) {
+    public void saveDescriptor(DataProductVersionDPDS descriptor) {
         try (FileWriter writer = new FileWriter(descriptorPath.toFile())) {
-            String serializedContent = DPDSSerializer.DEFAULT_JSON_SERIALIZER.serialize(descriptor, "normalized");
+            //TODO
+            String serializedContent = DPDSSerializer.DEFAULT_JSON_SERIALIZER.serialize(descriptor, odmCliConfiguration.getCliConfiguration().getSaveFormat());
             writer.write(serializedContent);
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -2,8 +2,6 @@ package org.opendatamesh.cli.usecases.importschema;
 
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 
-import java.nio.file.Path;
-
 public class ImportSchemaParserOutboundPortMock implements ImportSchemaParserOutboundPort {
 
     private final ImportSchemaParserMockState state;
@@ -13,12 +11,12 @@ public class ImportSchemaParserOutboundPortMock implements ImportSchemaParserOut
     }
 
     @Override
-    public DataProductVersionDPDS getDataProductVersion(Path descriptorPath) {
+    public DataProductVersionDPDS getDataProductVersion() {
         return state.getDataProductVersion();
     }
 
     @Override
-    public void saveDescriptor(DataProductVersionDPDS descriptor, Path descriptorPath) {
+    public void saveDescriptor(DataProductVersionDPDS descriptor) {
         state.setDataProductVersion(descriptor);
     }
 }

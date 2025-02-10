@@ -20,16 +20,10 @@ class ImportSchema implements UseCase {
 
     @Override
     public void execute() {
-        DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion(parameterOutboundPort.getDescriptorPath());
-
-        ImportSchemaArguments arguments = new ImportSchemaArguments();
-        arguments.setRootDescriptorPath(parameterOutboundPort.getDescriptorPath());
-        arguments.setOdmCliConfig(parameterOutboundPort.getOdmClientConfig());
-        arguments.setParentCommandOptions(parameterOutboundPort.getImportSchemaCommandParams());
-
+        DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion();
+        ImportSchemaArguments arguments = parameterOutboundPort.getImportSchemaArguments();
         PortDPDS port = importSchemaExtension.importElement(arguments);
         descriptor.getInterfaceComponents().getOutputPorts().add(port);
-
-        parserOutboundPort.saveDescriptor(descriptor, parameterOutboundPort.getDescriptorPath());
+        parserOutboundPort.saveDescriptor(descriptor);
     }
 }

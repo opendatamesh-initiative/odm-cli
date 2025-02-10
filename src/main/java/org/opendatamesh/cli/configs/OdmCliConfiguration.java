@@ -4,22 +4,34 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.*;
 
+@Component
 @ConfigurationProperties(prefix = "cli")
+@Scope("thread")
 public class OdmCliConfiguration {
 
-    private OdmCliBaseConfiguration.Config cliConfiguration;
+    private Config cliConfiguration;
     private List<OdmCliBaseConfiguration.System> remoteSystemsConfigurations;
     private String env;
 
-    public OdmCliBaseConfiguration.Config getCliConfiguration() {
+    public OdmCliBaseConfiguration getBaseConfiguration() {
+        OdmCliBaseConfiguration baseConfiguration = new OdmCliBaseConfiguration();
+        baseConfiguration.setCliConfiguration(getCliConfiguration());
+        baseConfiguration.setRemoteSystemsConfigurations(getRemoteSystemsConfigurations());
+        baseConfiguration.setEnv(getEnvAsMap());
+        return baseConfiguration;
+    }
+
+    public Config getCliConfiguration() {
         return cliConfiguration;
     }
 
-    public void setCliConfiguration(OdmCliBaseConfiguration.Config cliConfiguration) {
+    public void setCliConfiguration(Config cliConfiguration) {
         this.cliConfiguration = cliConfiguration;
     }
 
@@ -50,6 +62,17 @@ public class OdmCliConfiguration {
         }
     }
 
+    public static class Config extends OdmCliBaseConfiguration.Config {
+        private String saveFormat;
+
+        public String getSaveFormat() {
+            return saveFormat;
+        }
+
+        public void setSaveFormat(String saveFormat) {
+            this.saveFormat = saveFormat;
+        }
+    }
 
     private Map<String, String> flattenJson(String jsonString) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
