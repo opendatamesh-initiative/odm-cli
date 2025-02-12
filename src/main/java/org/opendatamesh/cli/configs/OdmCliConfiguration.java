@@ -66,7 +66,9 @@ public class OdmCliConfiguration {
         private String saveFormat;
 
         public String getSaveFormat() {
-            return saveFormat;
+            return Optional.ofNullable(saveFormat)
+                    .map(String::toUpperCase)
+                    .orElse(null);
         }
 
         public void setSaveFormat(String saveFormat) {

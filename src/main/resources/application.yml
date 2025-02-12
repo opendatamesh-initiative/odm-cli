@@ -5,6 +5,7 @@ logging:
 cli:
   cliConfiguration:
     templatesFolder: "/path/to/templates"
+    saveFormat: CANONICAL
   remoteSystemsConfigurations:
     - name: testDb
       endpoint: "jdbc:mysql://localhost:3306/"

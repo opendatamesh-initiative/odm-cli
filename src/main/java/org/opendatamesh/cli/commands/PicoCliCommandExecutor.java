@@ -15,7 +15,7 @@ public abstract class PicoCliCommandExecutor implements Callable<Integer> {
             handleRequiredOptions();
             executeUseCase();
         } catch (Exception e) {
-            log.error("Failed to execute command, cause: {}", e.getMessage());
+            log.error("Failed to execute command, cause: {}", e.getMessage(), e);
         }
         return 0;
     }

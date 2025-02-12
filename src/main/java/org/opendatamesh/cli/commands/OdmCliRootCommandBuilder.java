@@ -33,7 +33,7 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
                     .forEach(command -> spec.addSubcommand(command.getCommandName(), command.buildCommand(args)));
             return new CommandLine(spec);
         } catch (Exception e) {
-            log.error("Failed to build command, cause: {}", e.getMessage());
+            log.error("Failed to build command, cause: {}", e.getMessage(), e);
             return new CommandLine(CommandLine.Model.CommandSpec.create());
         }
     }

@@ -45,6 +45,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                 order -> handleDescriptorFilePathParam(executor, spec, order),
                 order -> handleFromParam(executor, spec, order),
                 order -> handleToParam(executor, spec, order),
+                order -> handleTargetParam(executor, spec, order),
                 order -> {
                     if (extension != null) handleExtensionParameters(extension, spec, order);
                 }
@@ -115,6 +116,24 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                 })
                 .build();
         spec.addOption(toOption);
+    }
+
+    private void handleTargetParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
+        CommandLine.Model.OptionSpec targetOption = CommandLine.Model.OptionSpec.builder("--target")
+                .order(order)
+                .description("Import target sub-type (ex. if --to=port, it can be input-port, output-port, discovery-port, observability-port, control-port)")
+                .required(false)
+                .defaultValue("output-port")
+                .type(String.class)
+                .setter(new CommandLine.Model.ISetter() {
+                    @Override
+                    public <T> T set(T value) {
+                        executor.setImportSchemaCommandParam("target", (String) value);
+                        return value;
+                    }
+                })
+                .build();
+        spec.addOption(targetOption);
     }
 
     private void handleExtensionParameters(ImportSchemaExtension extension, CommandLine.Model.CommandSpec commandSpec, int order) {
