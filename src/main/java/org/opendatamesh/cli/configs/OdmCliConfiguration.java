@@ -1,15 +1,29 @@
 package org.opendatamesh.cli.configs;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/**
+ * This beans has "thread" scope. This allows its state to be accessed and modified
+ * by other beans. This behaviour is used to overwrite default configuration values
+ * by cli commands options and to allow a shared configuration context among all
+ * Spring components.
+ */
 @Component
 @ConfigurationProperties(prefix = "cli")
 @Scope("thread")
@@ -17,13 +31,19 @@ public class OdmCliConfiguration {
 
     private Config cliConfiguration;
     private List<OdmCliBaseConfiguration.System> remoteSystemsConfigurations;
-    private String env;
+
+    @Autowired
+    private Environment environment;
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
     public OdmCliBaseConfiguration getBaseConfiguration() {
         OdmCliBaseConfiguration baseConfiguration = new OdmCliBaseConfiguration();
         baseConfiguration.setCliConfiguration(getCliConfiguration());
         baseConfiguration.setRemoteSystemsConfigurations(getRemoteSystemsConfigurations());
-        baseConfiguration.setEnv(getEnvAsMap());
         return baseConfiguration;
     }
 
@@ -43,25 +63,6 @@ public class OdmCliConfiguration {
         this.remoteSystemsConfigurations = remoteSystemsConfigurations;
     }
 
-    public String getEnv() {
-        return env;
-    }
-
-    public void setEnv(String env) {
-        this.env = env;
-    }
-
-    public Map<String, String> getEnvAsMap() {
-        try {
-            if (env == null || env.isEmpty()) {
-                return Collections.emptyMap();
-            }
-            return flattenJson(env);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static class Config extends OdmCliBaseConfiguration.Config {
         private String saveFormat;
 
@@ -76,12 +77,44 @@ public class OdmCliConfiguration {
         }
     }
 
-    private Map<String, String> flattenJson(String jsonString) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(jsonString);
-        Map<String, String> flatMap = new LinkedHashMap<>();
-        flatten("", root, flatMap);
-        return flatMap;
+    public Map<String, String> getAllConfigurations() {
+        String rawConfig = getConfigContent();
+        return flattenJsonOrYaml(rawConfig);
+    }
+
+    private String getConfigContent() {
+        String springAppJson = environment.getProperty("spring.application.json");
+        if (springAppJson != null && !springAppJson.trim().isEmpty()) {
+            return springAppJson;
+        }
+        Resource resource = resourceLoader.getResource("classpath:application.yaml");
+        if (!resource.exists()) {
+            resource = resourceLoader.getResource("classpath:application.yml");
+        }
+        if (!resource.exists()) {
+            return "";
+        }
+        try {
+            return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<String, String> flattenJsonOrYaml(String input) {
+        try {
+            JsonNode root = isJson(input) ? jsonMapper.readTree(input) : yamlMapper.readTree(input);
+            Map<String, String> flatMap = new LinkedHashMap<>();
+            flatten("", root, flatMap);
+            return flatMap;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean isJson(String input) {
+        String trimmed = input.trim();
+        return trimmed.startsWith("{") || trimmed.startsWith("[");
     }
 
     private void flatten(String prefix, JsonNode node, Map<String, String> flatMap) {

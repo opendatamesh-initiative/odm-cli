@@ -3,6 +3,7 @@ package org.opendatamesh.cli.commands.local.importschema;
 import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
 import org.opendatamesh.cli.commands.local.LocalCommandBuilder;
+import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.ExtensionsLoader;
 import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.IntConsumer;
 
@@ -24,6 +26,8 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
     private ImportSchemaFactory importSchemaFactory;
     @Autowired
     private ExtensionsLoader extensionsLoader;
+    @Autowired
+    private OdmCliConfiguration configuration;
 
     private static final String IMPORT_COMMAND = "import";
 
@@ -152,7 +156,6 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                             return value;
                         }
                     });
-
             //Optional parameters
             if (extensionOption.getParamLabel() != null) {
                 builder.paramLabel(extensionOption.getParamLabel());
@@ -162,6 +165,10 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
             }
             if (extensionOption.getDefaultValue() != null) {
                 builder.defaultValue(extensionOption.getDefaultValue());
+            }
+            if (extensionOption.getDefaultValueFromConfig() != null) {
+                Map<String, String> allConfig = configuration.getAllConfigurations();
+                builder.defaultValue(allConfig.get(extensionOption.getDefaultValueFromConfig()));
             }
 
             CommandLine.Model.OptionSpec option = builder.build();

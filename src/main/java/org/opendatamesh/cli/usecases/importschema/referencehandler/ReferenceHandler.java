@@ -1,6 +1,7 @@
 package org.opendatamesh.cli.usecases.importschema.referencehandler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.Annotated;
@@ -15,8 +16,16 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.opendatamesh.cli.usecases.importschema.referencehandler.utils.JacksonUtils.mergeJsonNodes;
+
+/**
+ * Utility class used inside the data product descriptor visitors implementations
+ * to resolve references based on the {@link DescriptorFormat}
+ */
 public class ReferenceHandler {
 
     private final String REF = "$ref";
@@ -46,8 +55,7 @@ public class ReferenceHandler {
                 break;
             case NORMALIZED:
                 if (!StringUtils.hasText(referencableEntity.getRef())) {
-                    //TODO CREATE ref (maybe it can be done by navigating from root to child)
-                    break; //Now it ignores it
+                    break; //Ignores it
                 }
                 String ref = referencableEntity.getRef();
                 storeEntityContent(ref, referencableEntity);
@@ -80,16 +88,10 @@ public class ReferenceHandler {
                     if (standardDefinition.getDefinitionJson().has(REF)) {
                         storeEntityContent(standardDefinition.getDefinitionJson().get(REF).asText(), standardDefinition.getDefinitionJson());
                         cleanAllApiDefinitionAttributeExceptRef(standardDefinition);
-                    } else {
-                        //TODO CREATE ref (maybe it can be done by navigating from root to child)
                     }
                     break;
                 }
                 if (standardDefinition.isDefinitionReference()) {
-                    if (standardDefinition.getDefinitionReference().getRef() != null && standardDefinition.getDefinitionReference().getRawContent() != null) {
-                        //TODO save the rawContent on a file based on the ref
-                        break;
-                    }
                     //Already normalized
                     break;
                 }
@@ -103,19 +105,37 @@ public class ReferenceHandler {
     }
 
     private void storeEntityContent(String ref, Object entity) {
-        //TODO abstract the retrieve of the file
         File targetFile = resolveFile(ref);
-
         try {
-            if (ref.endsWith(".json")) {
-                jsonMapper.writerWithDefaultPrettyPrinter().writeValue(targetFile, entity);
-            } else if (ref.endsWith(".yaml") || ref.endsWith(".yml")) {
-                yamlMapper.writerWithDefaultPrettyPrinter().writeValue(targetFile, entity);
+            if (targetFile.exists()) {
+                String rawContent = Files.readString(targetFile.toPath(), StandardCharsets.UTF_8);
+                JsonNode sourceFile = getMapper(ref).readTree(rawContent);
+                //Using plain ObjectMapper so also null values are represented
+                JsonNode pojoContent = new ObjectMapper().valueToTree(entity);
+                JsonNode mergedContent = mergeJsonNodes(getMapper(ref), sourceFile, pojoContent);
+                Object contentToSave = getMapper(ref).treeToValue(mergedContent, Object.class);
+                getMapper(ref).writerWithDefaultPrettyPrinter().writeValue(targetFile, contentToSave);
             } else {
-                throw new IllegalArgumentException("Unsupported file format: " + ref);
+                getMapper(ref).writerWithDefaultPrettyPrinter().writeValue(targetFile, entity);
             }
+
         } catch (IOException e) {
             throw new RuntimeException("Failed to store entity content in file: " + ref, e);
+        }
+    }
+
+    private <T> void loadAttributesFromRef(String ref, T targetObject) {
+        if (ref == null || ref.isEmpty()) {
+            return;
+        }
+        File file = resolveFile(ref);
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Reference file not found: " + ref);
+        }
+        try {
+            getMapper(ref).readerForUpdating(targetObject).readValue(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load reference file: " + ref, e);
         }
     }
 
@@ -134,35 +154,11 @@ public class ReferenceHandler {
         }
     }
 
-    private <T> void loadAttributesFromRef(String ref, T targetObject) {
-        if (ref == null || ref.isEmpty()) {
-            return;
-        }
-        //TODO abstract the retrieve of the file
-        File file = resolveFile(ref);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Reference file not found: " + ref);
-        }
-
-        try {
-            if (ref.endsWith(".json")) {
-                targetObject = jsonMapper.readerForUpdating(targetObject).readValue(file);
-            } else if (ref.endsWith(".yaml") || ref.endsWith(".yml")) {
-                yamlMapper.readerForUpdating(targetObject).readValue(file);
-            } else {
-                throw new IllegalArgumentException("Unsupported file format: " + ref);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load reference file: " + ref, e);
-        }
-    }
-
     private File resolveFile(String ref) {
-        if (descriptorRootPath != null) {
-            Path resolvedPath = descriptorRootPath.getParent().resolve(ref).normalize();
-            return resolvedPath.toFile();
+        if (descriptorRootPath == null) {
+            throw new IllegalStateException("ReferenceHandler: missing descriptor root path");
         }
-        return new File(ref);
+        return descriptorRootPath.getParent().resolve(ref).normalize().toFile();
     }
 
     private boolean isMediaTypeDeserializable(String mediaType) {
@@ -184,5 +180,15 @@ public class ReferenceHandler {
                 return null;
             }
         });
+    }
+
+    private ObjectMapper getMapper(String ref) {
+        if (ref.endsWith(".json")) {
+            return jsonMapper;
+        } else if (ref.endsWith(".yaml") || ref.endsWith(".yml")) {
+            return yamlMapper;
+        } else {
+            throw new IllegalArgumentException("Unsupported file format: " + ref);
+        }
     }
 }

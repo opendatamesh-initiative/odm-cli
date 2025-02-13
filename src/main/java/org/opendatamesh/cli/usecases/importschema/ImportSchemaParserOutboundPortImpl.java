@@ -1,38 +1,46 @@
 package org.opendatamesh.cli.usecases.importschema;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.ReferenceHandler;
 import org.opendatamesh.cli.usecases.importschema.referencehandler.DescriptorFormat;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.DataProductVersionRefVisitor;
+import org.opendatamesh.cli.usecases.importschema.referencehandler.ReferenceResolver;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.springframework.util.StringUtils;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static org.opendatamesh.cli.usecases.importschema.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
 class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPort {
 
     private final Path descriptorPath;
     private final OdmCliConfiguration odmCliConfiguration;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper jsonMapper;
+    private final ObjectMapper yamlMapper;
 
     ImportSchemaParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
         this.descriptorPath = descriptorPath;
         this.odmCliConfiguration = odmCliConfiguration;
-        this.objectMapper = configObjectMapper();
+        this.jsonMapper = new ObjectMapper();
+        configObjectMapper(jsonMapper);
+        this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        configObjectMapper(yamlMapper);
     }
 
     @Override
     public DataProductVersionDPDS getDataProductVersion() {
         try {
-            DataProductVersionDPDS dataProductVersion = objectMapper.readValue(descriptorPath.toFile(), DataProductVersionDPDS.class);
-            resolveReferences(DescriptorFormat.CANONICAL, dataProductVersion);
+            DataProductVersionDPDS dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPath.toFile(), DataProductVersionDPDS.class);
+            ReferenceResolver.resolveReferences(DescriptorFormat.CANONICAL, dataProductVersion, descriptorPath);
             return dataProductVersion;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -41,31 +49,28 @@ class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPo
 
     @Override
     public void saveDescriptor(DataProductVersionDPDS descriptor) {
-        try (FileWriter writer = new FileWriter(descriptorPath.toFile())) {
+        try {
             DescriptorFormat saveFormat = DescriptorFormat.valueOf(StringUtils.capitalize(odmCliConfiguration.getCliConfiguration().getSaveFormat()));
-            resolveReferences(saveFormat, descriptor);
-            writer.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(descriptor));
+            ReferenceResolver.resolveReferences(saveFormat, descriptor, descriptorPath);
+
+            if (descriptorPath.toFile().exists()) {
+                String rawContent = Files.readString(descriptorPath, StandardCharsets.UTF_8);
+                JsonNode sourceDescriptorFile = getMapper(descriptorPath.toString()).readTree(rawContent);
+                //Using plain ObjectMapper so also null values are represented
+                JsonNode descriptorContent = new ObjectMapper().valueToTree(descriptor);
+                JsonNode mergedContent = mergeJsonNodes(getMapper(descriptorPath.toString()), sourceDescriptorFile, descriptorContent);
+                Object contentToSave = getMapper(descriptorPath.toString()).treeToValue(mergedContent, Object.class);
+                getMapper(descriptorPath.toString()).writerWithDefaultPrettyPrinter().writeValue(descriptorPath.toFile(), contentToSave);
+            } else {
+                getMapper(descriptorPath.toString()).writerWithDefaultPrettyPrinter().writeValue(descriptorPath.toFile(), descriptor);
+            }
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to descriptor in file: " + descriptorPath.toAbsolutePath(), e);
         }
     }
 
-    private void resolveReferences(DescriptorFormat format, DataProductVersionDPDS dataProductVersion) {
-        ReferenceHandler referenceHandler = new ReferenceHandler(format, descriptorPath);
-        DataProductVersionRefVisitor visitor = new DataProductVersionRefVisitor(referenceHandler);
-        if (dataProductVersion.getInterfaceComponents() != null) {
-            visitor.visit(dataProductVersion.getInterfaceComponents());
-        }
-        if (dataProductVersion.getInternalComponents() != null) {
-            visitor.visit(dataProductVersion.getInternalComponents());
-        }
-        if (dataProductVersion.getComponents() != null) {
-            visitor.visit(dataProductVersion.getComponents());
-        }
-    }
-
-    private ObjectMapper configObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
+    private void configObjectMapper(ObjectMapper mapper) {
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
@@ -79,6 +84,16 @@ class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPo
                 return null;
             }
         });
-        return mapper;
+    }
+
+
+    private ObjectMapper getMapper(String ref) {
+        if (ref.endsWith(".json")) {
+            return jsonMapper;
+        } else if (ref.endsWith(".yaml") || ref.endsWith(".yml")) {
+            return yamlMapper;
+        } else {
+            throw new IllegalArgumentException("Unsupported file format: " + ref);
+        }
     }
 }
