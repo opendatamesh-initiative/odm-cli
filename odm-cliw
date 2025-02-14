@@ -1,0 +1,26 @@
+#!/bin/bash
+
+JAR_NAME="odm-cli.jar"
+REPO_URL="https://github.com/opendatamesh-initiative/odm-cli"
+API_URL="https://api.github.com/repos/opendatamesh-initiative/odm-cli/releases/latest"
+
+mkdir -p ~/.odmcli
+cd ~/.odmcli
+
+# Fetch the latest release information and extract the JAR download URL
+DOWNLOAD_URL=$(wget -qO- "$API_URL" | grep "browser_download_url" | grep "$JAR_NAME" | cut -d '"' -f 4)
+
+if [[ -z "$DOWNLOAD_URL" ]]; then
+  echo "Failed to find JAR download URL. Exiting."
+  exit 1
+fi
+
+# Download the JAR file
+wget -O "$JAR_NAME" "$DOWNLOAD_URL"
+
+if [[ ! -f "$JAR_NAME" ]]; then
+  echo "Failed to download JAR. Exiting."
+  exit 1
+fi
+
+echo "JAR downloaded successfully to ~/.odmcli/$JAR_NAME"
