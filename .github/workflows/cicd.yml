@@ -19,6 +19,23 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: maven
+      - name: Set up Maven settings
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings>
+            <servers>
+              <server>
+                <id>odm-spec-parser-repo</id>
+                <username>your-github-username</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                <id>odm-cli-extensions-repo</id>
+                <username>your-github-username</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>" > ~/.m2/settings.xml
       - name: Get Git Tag
         run: |
           TAG_VERSION=$(echo "${{ github.ref_name }}" | sed 's/[^0-9.]//g')
@@ -40,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify-version
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Check out repository code
@@ -51,6 +68,23 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: maven
+      - name: Set up Maven settings
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings>
+            <servers>
+              <server>
+                <id>odm-spec-parser-repo</id>
+                <username>your-github-username</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                <id>odm-cli-extensions-repo</id>
+                <username>your-github-username</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>" > ~/.m2/settings.xml
       - name: Build JAR
         run: mvn clean package -DskipTests
       - name: Create package structure
@@ -94,14 +128,6 @@ jobs:
             odm-cli-linux.zip
             odm-cli-windows.zip
           retention-days: 7
-
-  deploy-maven-packages:
-    runs-on: ubuntu-latest
-    needs: build-and-package
-    permissions:
-      contents: read
-      packages: write
-    steps:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Set up JDK 11
@@ -112,13 +138,6 @@ jobs:
           cache: maven
       - name: Publish Maven package
         run: mvn -DskipTests -DGitHubPackages=true --batch-mode deploy
-
-  release:
-    runs-on: ubuntu-latest
-    needs: deploy-maven-packages
-    permissions:
-      contents: write
-    steps:
       - name: Download Packaged Artifacts
         uses: actions/download-artifact@v4
         with:
