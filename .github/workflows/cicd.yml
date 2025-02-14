@@ -90,7 +90,12 @@ jobs:
         run: |
           JAR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "JAR_VERSION=${JAR_VERSION}" >> $GITHUB_ENV
+      - name: Inject Version into odm-cli script
+        run: |
+          sed -i "s/VERSION=\"latest\"/VERSION=\"${{ env.JAR_VERSION }}\"/"  odm-cli
       - name: Upload JAR to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/odm-cli-${{ env.JAR_VERSION }}.jar
+          files: |
+            target/odm-cli-${{ env.JAR_VERSION }}.jar
+            odm-cli

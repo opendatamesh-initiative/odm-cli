@@ -1,0 +1,86 @@
+#!/bin/bash
+REPO_URL="https://github.com/opendatamesh-initiative/odm-cli"
+API_URL="https://api.github.com/repos/opendatamesh-initiative/odm-cli/releases/latest"
+INSTALL_DIR="$HOME/.odmcli"
+EXTENSIONS_DIR="$INSTALL_DIR/extensions"
+VERSION_FILE="$INSTALL_DIR/version.txt"
+CONFIG_FILE="$INSTALL_DIR/application.yml"
+
+# Version injected during release, fallback if not replaced
+VERSION="latest"
+
+# Get the latest version if not explicitly set
+if [[ "$VERSION" == "latest" ]]; then
+  echo "Fetching the latest release version..."
+  VERSION=$(wget -qO- "$API_URL" | grep '"tag_name":' | cut -d '"' -f 4 | sed 's/[^0-9.]//g')
+fi
+
+mkdir -p "$INSTALL_DIR" "$EXTENSIONS_DIR"
+cd "$INSTALL_DIR"
+
+# Set JAR file name
+JAR_NAME="odm-cli-${VERSION}.jar"
+
+# Check if the specified version is already installed
+if [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$VERSION" && -f "$JAR_NAME" ]]; then
+  echo "Version $VERSION is already installed."
+else
+  echo "Downloading version: $VERSION"
+  DOWNLOAD_URL="https://github.com/opendatamesh-initiative/odm-cli/releases/download/v${VERSION}/${JAR_NAME}"
+
+  if wget --spider "$DOWNLOAD_URL" 2>/dev/null; then
+    wget -O "$JAR_NAME" "$DOWNLOAD_URL"
+    echo "$VERSION" > "$VERSION_FILE"
+    echo "JAR downloaded successfully: $JAR_NAME"
+  else
+    echo "Error: Unable to download version $VERSION. Please check the release version."
+    exit 1
+  fi
+fi
+
+# Check if JAR file exists before executing
+if [[ ! -f "$JAR_NAME" ]]; then
+  echo "Error: JAR file $JAR_NAME not found. Exiting."
+  exit 1
+fi
+
+# Check for newer versions
+LATEST_VERSION=$(wget -qO- "$API_URL" | grep '"tag_name":' | cut -d '"' -f 4 | sed 's/[^0-9.]//g')
+if [[ "$VERSION" != "$LATEST_VERSION" ]]; then
+  echo "A newer version ($LATEST_VERSION) is available. Consider upgrading!"
+fi
+
+# Read extensions from application.yml (if exists)
+if [[ -f "$CONFIG_FILE" ]]; then
+  echo "Reading extensions from $CONFIG_FILE"
+  grep "url:" "$CONFIG_FILE" | awk '{print $2}' | while read -r EXT_URL; do
+    EXT_NAME=$(basename "$EXT_URL")
+    EXT_PATH="$EXTENSIONS_DIR/$EXT_NAME"
+
+    if [[ -f "$EXT_PATH" ]]; then
+      echo "Extension $EXT_NAME already exists. Skipping download."
+    else
+      echo "Downloading extension: $EXT_NAME"
+      wget -O "$EXT_PATH" "$EXT_URL"
+    fi
+  done
+fi
+
+# Construct Java command
+JAVA_CMD="java"
+
+# Add external configuration as a system property if application.yml exists
+if [[ -f "$CONFIG_FILE" ]]; then
+  JAVA_CMD+=" -Dspring.config.additional-location=file:$CONFIG_FILE"
+fi
+
+# Add loader path if extensions exist
+if [[ -d "$EXTENSIONS_DIR" && "$(ls -A "$EXTENSIONS_DIR")" ]]; then
+  JAVA_CMD+=" -Dloader.path=$EXTENSIONS_DIR"
+fi
+
+# Ensure JAR is correctly referenced
+JAVA_CMD+=" -jar $JAR_NAME"
+
+# Run odm-cli with optional arguments
+eval "$JAVA_CMD" "$@"

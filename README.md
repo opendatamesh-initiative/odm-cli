@@ -15,26 +15,34 @@
 
 ## About
 
-This repository is the home of the Open Data Mesh CLI.
+The Open Data Mesh Command Line tool provides a range of functionalities to support users within the Open Data Mesh
+ecosystem. Key features include an efficient way to create, validate, and manage data product descriptors, ensuring
+compliance with Open Data Mesh standards.
 
-## Installation
+## Setup
 
-Download the cli
+---
+To run the application properly, you must have a Java JDK installed.
+
+- **Linux**
+  ```sh
+  sudo apt update && sudo apt install -y openjdk-17-jdk
+  ```
+- **Windows**
+  ```powershell
+  winget install --id Oracle.JDK.17 -e
+  ```
+
+---
+
+Download the cli.
 
 ```bash
-echo TODO
+wget -qO odm-cli $(wget -qO- https://api.github.com/repos/opendatamesh-initiative/odm-cli/releases/latest | grep "browser_download_url.odm-cli" | cut -d '"' -f 4)
 ```
 
-or compile it from the code
-
-```bash
-git clone git@github.com:opendatamesh-initiative/odm-platform.git
-cd odm-cli
-mvn clean package spring-boot:repackage
-cd odm-cli
-```
-
-test the cli
+---
+Test the cli.
 
 ```bash
 ./odmcli --version
@@ -42,15 +50,8 @@ test the cli
 
 ## Configuration
 
-By default, the `odmcli` stores its configuration files in a directory called `.odmcli` within your `$HOME` directory.
-
-`odmcli` manages most of the files in the configuration directory and you shouldn't modify them. However, you can modify
-the `config.json` file to control certain aspects of how the `odmcli` command behaves.
-
-You can modify the `odmcli` command behavior using environment variables or command-line options. You can also use
-options within `config.json` to modify some of the same behavior. If an environment variable and the `--config` flag are
-set, the flag precedes the environment variable. Command line options override environment variables and environment
-variables override properties you specify in a `config.json` file.
+By default, the `odmcli` stores its configuration file in a directory called `.odmcli` within your `$HOME` directory.
+The
 
 ## Usage
 
