@@ -94,8 +94,15 @@ jobs:
           cp target/odm-cli.jar odm-cli-windows/
       - name: Download Portable JDKs
         run: |
-          curl -L -o jdk-linux.tar.gz https://github.com/adoptium/temurin11-binaries/releases/latest/download/OpenJDK11U-jre_x64_linux.tar.gz
-          curl -L -o jdk-windows.zip https://github.com/adoptium/temurin11-binaries/releases/latest/download/OpenJDK11U-jre_x64_windows.zip
+          # Get latest release URLs
+          LINUX_JDK_URL=$(curl -s https://api.github.com/repos/adoptium/temurin11-binaries/releases/latest | jq -r '.assets[] | select(.name | test("OpenJDK11U-jre_x64_linux.*.tar.gz$")) | .browser_download_url')
+          WINDOWS_JDK_URL=$(curl -s https://api.github.com/repos/adoptium/temurin11-binaries/releases/latest | jq -r '.assets[] | select(.name | test("OpenJDK11U-jre_x64_windows.*.zip$")) | .browser_download_url')
+
+          # Download JDKs
+          curl -L -o jdk-linux.tar.gz "$LINUX_JDK_URL"
+          curl -L -o jdk-windows.zip "$WINDOWS_JDK_URL"
+
+          # Extract JDKs
           tar -xzf jdk-linux.tar.gz -C odm-cli-linux --strip-components=1
           unzip -q jdk-windows.zip -d odm-cli-windows
       - name: Create Linux Startup Script
