@@ -87,7 +87,7 @@ class ImportSchema implements UseCase {
 
     private List<PortDPDS> replacePort(List<PortDPDS> ports, PortDPDS port) {
         List<PortDPDS> result = new ArrayList<>(ports != null ? ports : Collections.emptyList());
-        result.removeIf(p -> p.getFullyQualifiedName().equals(port.getFullyQualifiedName()));
+        result.removeIf(p -> port.getFullyQualifiedName().equals(p.getFullyQualifiedName()));
         result.add(port);
         return result;
     }
