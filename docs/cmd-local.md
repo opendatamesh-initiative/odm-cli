@@ -10,10 +10,10 @@ Manage local env
 
 ## Options
 
-| Command             | Default   | Description                                                                                                                                                                                                                                                                    |
-|---------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--save-format, -s` | canonical | Specifies the format in which the descriptor could be saved. If set to `normalized`, each descriptor component is stored as a separate file, and the `ref` field is populated. If set to `canonical`, all the `ref` are loaded and the descriptor is saved as one single file. |
-| `--version, -v`     |           | Version o the command                                                                                                                                                                                                                                                          |
+| Command             | Default    | Description                                                                                                                                                                                                                                                                    |
+|---------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--save-format, -s` | normalized | Specifies the format in which the descriptor could be saved. If set to `normalized`, each descriptor component is stored as a separate file, and the `ref` field is populated. If set to `canonical`, all the `ref` are loaded and the descriptor is saved as one single file. |
+| `--version, -v`     |            | Version o the command                                                                                                                                                                                                                                                          |
 
 ## Subcommands
 

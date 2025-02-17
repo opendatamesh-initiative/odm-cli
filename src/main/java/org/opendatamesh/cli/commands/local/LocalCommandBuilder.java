@@ -49,7 +49,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
                 .description("Specifies the format in which the descriptor could be saved. If set to canonical, each descriptor component is stored as a separate file, and the ref field is populated. If set to normalized, the descriptor is saved as the final POJO is.")
                 .paramLabel("canonical/normalized")
                 .required(false)
-                .defaultValue(odmCliConfiguration.getCliConfiguration().getSaveFormat() == null ? DescriptorFormat.CANONICAL.name() : odmCliConfiguration.getCliConfiguration().getSaveFormat())
+                .defaultValue(odmCliConfiguration.getCliConfiguration().getSaveFormat() == null ? DescriptorFormat.NORMALIZED.name() : odmCliConfiguration.getCliConfiguration().getSaveFormat())
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {
                     @Override
