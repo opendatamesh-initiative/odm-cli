@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.opendatamesh.dpds.model.core.ReferenceableEntityDPDS;
 import org.opendatamesh.dpds.model.core.StandardDefinitionDPDS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -33,6 +35,7 @@ public class ReferenceHandler {
     private final ObjectMapper yamlMapper;
     private final DescriptorFormat format;
     private final Path descriptorRootPath;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public ReferenceHandler(DescriptorFormat format, Path descriptorRootPath) {
         this.format = format;
@@ -107,6 +110,8 @@ public class ReferenceHandler {
     private void storeEntityContent(String ref, Object entity) {
         File targetFile = resolveFile(ref);
         try {
+            generateParentDirsIfNotExist(targetFile);
+
             if (targetFile.exists()) {
                 String rawContent = Files.readString(targetFile.toPath(), StandardCharsets.UTF_8);
                 JsonNode sourceFile = getMapper(ref).readTree(rawContent);
@@ -124,16 +129,24 @@ public class ReferenceHandler {
         }
     }
 
+    private void generateParentDirsIfNotExist(File targetFile) {
+        File parentDir = targetFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+    }
+
     private <T> void loadAttributesFromRef(String ref, T targetObject) {
         if (ref == null || ref.isEmpty()) {
             return;
         }
-        File file = resolveFile(ref);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Reference file not found: " + ref);
-        }
         try {
-            getMapper(ref).readerForUpdating(targetObject).readValue(file);
+            File file = resolveFile(ref);
+            if (!file.exists()) {
+                logger.warn("Reference file not found: {}", ref);
+            } else {
+                getMapper(ref).readerForUpdating(targetObject).readValue(file);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load reference file: " + ref, e);
         }

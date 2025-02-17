@@ -16,22 +16,22 @@ if [[ "$VERSION" == "latest" ]]; then
 fi
 
 mkdir -p "$INSTALL_DIR" "$EXTENSIONS_DIR"
-cd "$INSTALL_DIR"
 
 # Set JAR file name
 JAR_NAME="odm-cli-${VERSION}.jar"
+JAR_PATH="$INSTALL_DIR/$JAR_NAME"
 
 # Check if the specified version is already installed
-if [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$VERSION" && -f "$JAR_NAME" ]]; then
+if [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$VERSION" && -f "$JAR_PATH" ]]; then
   echo "Version $VERSION is already installed."
 else
   echo "Downloading version: $VERSION"
   DOWNLOAD_URL="https://github.com/opendatamesh-initiative/odm-cli/releases/download/v${VERSION}/${JAR_NAME}"
 
   if wget --spider "$DOWNLOAD_URL" 2>/dev/null; then
-    wget -O "$JAR_NAME" "$DOWNLOAD_URL"
+    wget -O "$JAR_PATH" "$DOWNLOAD_URL"
     echo "$VERSION" > "$VERSION_FILE"
-    echo "JAR downloaded successfully: $JAR_NAME"
+    echo "JAR downloaded successfully: $JAR_PATH"
   else
     echo "Error: Unable to download version $VERSION. Please check the release version."
     exit 1
@@ -39,8 +39,8 @@ else
 fi
 
 # Check if JAR file exists before executing
-if [[ ! -f "$JAR_NAME" ]]; then
-  echo "Error: JAR file $JAR_NAME not found. Exiting."
+if [[ ! -f "$JAR_PATH" ]]; then
+  echo "Error: JAR file $JAR_PATH not found. Exiting."
   exit 1
 fi
 
@@ -53,7 +53,7 @@ fi
 # Read extensions from application.yml (if exists)
 if [[ -f "$CONFIG_FILE" ]]; then
   echo "Reading extensions from $CONFIG_FILE"
-  grep "url:" "$CONFIG_FILE" | awk '{print $2}' | while read -r EXT_URL; do
+  grep "url:" "$CONFIG_FILE" | awk -F' ' '{print $2}' | while read -r EXT_URL; do
     EXT_NAME=$(basename "$EXT_URL")
     EXT_PATH="$EXTENSIONS_DIR/$EXT_NAME"
 
@@ -80,7 +80,7 @@ if [[ -d "$EXTENSIONS_DIR" && "$(ls -A "$EXTENSIONS_DIR")" ]]; then
 fi
 
 # Ensure JAR is correctly referenced
-JAVA_CMD+=" -jar $JAR_NAME"
+JAVA_CMD+=" -jar $JAR_PATH"
 
 # Run odm-cli with optional arguments
 eval "$JAVA_CMD" "$@"
