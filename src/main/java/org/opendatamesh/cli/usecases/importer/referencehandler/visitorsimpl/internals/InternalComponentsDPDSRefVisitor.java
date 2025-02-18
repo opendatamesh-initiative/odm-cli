@@ -1,6 +1,6 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.internals;
+package org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.internals;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.RefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.RefVisitor;
 import org.opendatamesh.dpds.model.internals.ApplicationComponentDPDS;
 import org.opendatamesh.dpds.model.internals.InfrastructuralComponentDPDS;
 import org.opendatamesh.dpds.model.internals.LifecycleInfoDPDS;

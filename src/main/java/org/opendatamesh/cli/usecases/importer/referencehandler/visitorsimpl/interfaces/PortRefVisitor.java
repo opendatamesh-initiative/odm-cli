@@ -1,6 +1,6 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.interfaces;
+package org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.interfaces;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.RefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.RefVisitor;
 import org.opendatamesh.dpds.model.core.ExternalResourceDPDS;
 import org.opendatamesh.dpds.model.interfaces.ExpectationsDPDS;
 import org.opendatamesh.dpds.model.interfaces.ObligationsDPDS;

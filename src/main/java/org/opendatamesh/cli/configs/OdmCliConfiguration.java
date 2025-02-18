@@ -30,7 +30,7 @@ import java.util.*;
 public class OdmCliConfiguration {
 
     private Config cliConfiguration;
-    private List<OdmCliBaseConfiguration.System> remoteSystemsConfigurations;
+    private List<OdmCliBaseConfiguration.SystemConfig> systems;
 
     @Autowired
     private Environment environment;
@@ -43,7 +43,7 @@ public class OdmCliConfiguration {
     public OdmCliBaseConfiguration getBaseConfiguration() {
         OdmCliBaseConfiguration baseConfiguration = new OdmCliBaseConfiguration();
         baseConfiguration.setCliConfiguration(getCliConfiguration());
-        baseConfiguration.setRemoteSystemsConfigurations(getRemoteSystemsConfigurations());
+        baseConfiguration.setSystems(getSystems());
         return baseConfiguration;
     }
 
@@ -55,12 +55,12 @@ public class OdmCliConfiguration {
         this.cliConfiguration = cliConfiguration;
     }
 
-    public List<OdmCliBaseConfiguration.System> getRemoteSystemsConfigurations() {
-        return remoteSystemsConfigurations;
+    public List<OdmCliBaseConfiguration.SystemConfig> getSystems() {
+        return systems;
     }
 
-    public void setRemoteSystemsConfigurations(List<OdmCliBaseConfiguration.System> remoteSystemsConfigurations) {
-        this.remoteSystemsConfigurations = remoteSystemsConfigurations;
+    public void setSystems(List<OdmCliBaseConfiguration.SystemConfig> systems) {
+        this.systems = systems;
     }
 
     public static class Config extends OdmCliBaseConfiguration.Config {

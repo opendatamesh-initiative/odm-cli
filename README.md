@@ -51,7 +51,7 @@ cli:
   cliConfiguration:
     templatesFolder: '/path/to/templates'
     saveFormat: CANONICAL
-  remoteSystemsConfigurations:
+  systems:
     - name: testDb
       endpoint: 'jdbc:mysql://localhost:3306/'
       user: 'root'
@@ -74,7 +74,7 @@ Where:
 - **cli.configuration**: Internal CLI settings that define default parameter values.
     - **templatesFolder**: the (default) directory where templates for Data Product Descriptor elements are stored.
     - **saveFormat**: the (default) format in which the data product descriptor is saved
-- **cli.remoteSystemsConfigurations**:
+- **cli.systems**:
     - **name**: the configuration name, used for retrieval.
     - **endpoint**: the connection url of the remote system.
     - **user** & **password** : credentials needed for authentication.

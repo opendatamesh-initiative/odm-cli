@@ -1,7 +1,7 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaArguments;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
+import org.opendatamesh.cli.extensions.importer.ImporterArguments;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.opendatamesh.dpds.model.interfaces.PortDPDS;
@@ -12,53 +12,54 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class ImportSchema implements UseCase {
+class PortImporter implements UseCase {
 
-    private final ImportSchemaParameterOutboundPort parameterOutboundPort;
-    private final ImportSchemaParserOutboundPort parserOutboundPort;
-    private final ImportSchemaExtension importSchemaExtension;
+    private final PortImporterParameterOutboundPort parameterOutboundPort;
+    private final PortImporterParserOutboundPort parserOutboundPort;
+    private final ImporterExtension<PortDPDS> importerExtension;
 
-    ImportSchema(ImportSchemaParameterOutboundPort parameterOutboundPort, ImportSchemaParserOutboundPort parserOutboundPort, ImportSchemaExtension importSchemaExtension) {
+    PortImporter(PortImporterParameterOutboundPort parameterOutboundPort, PortImporterParserOutboundPort parserOutboundPort, ImporterExtension<PortDPDS> importerExtension) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
-        this.importSchemaExtension = importSchemaExtension;
+        this.importerExtension = importerExtension;
     }
 
     @Override
     public void execute() {
         DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion();
-        ImportSchemaArguments arguments = parameterOutboundPort.getImportSchemaArguments();
-        PortDPDS port = importSchemaExtension.importElement(arguments);
+        ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
+        arguments.setDataProductVersion(descriptor);
+        PortDPDS port = importerExtension.importElement(null, arguments);
         addPortToDescriptor(descriptor, port);
         parserOutboundPort.saveDescriptor(descriptor);
     }
 
     private void addPortToDescriptor(DataProductVersionDPDS descriptor, PortDPDS port) {
-        String target = getTargetOption();
-        fixPortFqn(descriptor, port, target);
+        String toOption = getToOption();
+        fixPortFqn(descriptor, port, toOption);
         Map<String, Consumer<DataProductVersionDPDS>> handlers = getPortAdditionToTargetHandler(port);
 
         Consumer<DataProductVersionDPDS> handler = handlers.getOrDefault(
-                target.toLowerCase(),
+                toOption,
                 d -> {
-                    throw new IllegalArgumentException("Invalid target option for import command: " + target);
+                    throw new IllegalArgumentException("Invalid to option for port importer command: " + toOption);
                 }
         );
 
         handler.accept(descriptor);
     }
 
-    private String getTargetOption() {
-        String target = parameterOutboundPort.getImportSchemaArguments().getParentCommandOptions().get("target");
-        if (!StringUtils.hasText(target)) {
-            throw new IllegalArgumentException("Target option for import command is not specified.");
+    private String getToOption() {
+        String toOption = parameterOutboundPort.getImporterArguments().getParentCommandOptions().get("to");
+        if (!StringUtils.hasText(toOption)) {
+            throw new IllegalArgumentException("'to' option for import command is not specified.");
         }
-        return target;
+        return toOption;
     }
 
-    private void fixPortFqn(DataProductVersionDPDS descriptor, PortDPDS port, String target) {
+    private void fixPortFqn(DataProductVersionDPDS descriptor, PortDPDS port, String toOption) {
         if (!StringUtils.hasText(port.getFullyQualifiedName())) {
-            String collectionName = target.replace("-", "") + "s";
+            String collectionName = toOption.replace("-", "") + "s";
             String fqn = String.format(
                     "%s:%s:%s:%s",
                     descriptor.getInfo().getFullyQualifiedName(),

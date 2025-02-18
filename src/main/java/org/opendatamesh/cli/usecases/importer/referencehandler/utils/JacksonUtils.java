@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.utils;
+package org.opendatamesh.cli.usecases.importer.referencehandler.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

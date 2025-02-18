@@ -1,7 +1,7 @@
 
-package org.opendatamesh.cli.usecases.importschema.referencehandler;
+package org.opendatamesh.cli.usecases.importer.referencehandler;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.DataProductVersionRefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.DataProductVersionRefVisitor;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 
 import java.nio.file.Path;

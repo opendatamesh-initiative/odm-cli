@@ -6,8 +6,8 @@ import org.opendatamesh.cli.commands.local.LocalCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.ExtensionsLoader;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
-import org.opendatamesh.cli.usecases.importschema.ImportSchemaFactory;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
+import org.opendatamesh.cli.usecases.importer.PortImporterFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -23,7 +23,7 @@ import static org.opendatamesh.cli.utils.CommandOptionsUtils.getOptionFromArgume
 public class ImportCommandBuilder implements PicoCliCommandBuilder {
 
     @Autowired
-    private ImportSchemaFactory importSchemaFactory;
+    private PortImporterFactory portImporterFactory;
     @Autowired
     private ExtensionsLoader extensionsLoader;
     @Autowired
@@ -36,8 +36,8 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         Optional<String> from = getOptionFromArguments(args, "--from");
         Optional<String> to = getOptionFromArguments(args, "--to");
 
-        ImportSchemaExtension extension = from.isPresent() && to.isPresent() ? extensionsLoader.getImportSchemaExtension(from.get(), to.get()) : null;
-        ImportCommandExecutor executor = new ImportCommandExecutor(importSchemaFactory, extension);
+        ImporterExtension extension = from.isPresent() && to.isPresent() ? extensionsLoader.getImporterExtension(from.get(), to.get()) : null;
+        ImportCommandExecutor executor = new ImportCommandExecutor(portImporterFactory, extension);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(IMPORT_COMMAND);
         spec.mixinStandardHelpOptions(true);
@@ -108,7 +108,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
     private void handleToParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
         CommandLine.Model.OptionSpec toOption = CommandLine.Model.OptionSpec.builder("--to")
                 .order(order)
-                .description("Import target type (ex. output-port, input-port, api, schema, etc...)")
+                .description("Import target name (ex. name of an output-port, input-port, etc...)")
                 .required(true)
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {
@@ -140,7 +140,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         spec.addOption(targetOption);
     }
 
-    private void handleExtensionParameters(ImportSchemaExtension extension, CommandLine.Model.CommandSpec commandSpec, int order) {
+    private void handleExtensionParameters(ImporterExtension extension, CommandLine.Model.CommandSpec commandSpec, int order) {
         for (ExtensionOption extensionOption : extension.getExtensionOptions()) {
             CommandLine.Model.OptionSpec.Builder builder = CommandLine.Model.OptionSpec
                     .builder(extensionOption.getNames().toArray(new String[0]))

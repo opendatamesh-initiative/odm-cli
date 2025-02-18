@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler;
+package org.opendatamesh.cli.usecases.importer.referencehandler;
 
 /**
  * Enum defining different descriptor formats for reference resolution.

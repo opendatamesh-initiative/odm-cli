@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.DescriptorFormat;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.ReferenceResolver;
+import org.opendatamesh.cli.usecases.importer.referencehandler.DescriptorFormat;
+import org.opendatamesh.cli.usecases.importer.referencehandler.ReferenceResolver;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.springframework.util.StringUtils;
 
@@ -18,16 +18,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.opendatamesh.cli.usecases.importschema.referencehandler.utils.JacksonUtils.mergeJsonNodes;
+import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
-class ImportSchemaParserOutboundPortImpl implements ImportSchemaParserOutboundPort {
+class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutboundPort {
 
     private final Path descriptorPath;
     private final OdmCliConfiguration odmCliConfiguration;
     private final ObjectMapper jsonMapper;
     private final ObjectMapper yamlMapper;
 
-    ImportSchemaParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
+    PortPortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
         this.descriptorPath = descriptorPath;
         this.odmCliConfiguration = odmCliConfiguration;
         this.jsonMapper = new ObjectMapper();

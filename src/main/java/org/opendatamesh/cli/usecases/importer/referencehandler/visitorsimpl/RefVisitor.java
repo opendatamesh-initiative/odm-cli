@@ -1,6 +1,6 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl;
+package org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.ReferenceHandler;
+import org.opendatamesh.cli.usecases.importer.referencehandler.ReferenceHandler;
 
 public abstract class RefVisitor {
     protected RefVisitor parent;

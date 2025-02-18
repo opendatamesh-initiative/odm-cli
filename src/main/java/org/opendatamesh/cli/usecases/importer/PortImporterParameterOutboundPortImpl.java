@@ -1,18 +1,18 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaArguments;
+import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 
 import java.nio.file.Path;
 import java.util.Map;
 
-class ImportSchemaParameterOutboundPortImpl implements ImportSchemaParameterOutboundPort {
+class PortImporterParameterOutboundPortImpl implements PortImporterParameterOutboundPort {
 
     private final OdmCliConfiguration odmCliBaseConfiguration;
     private final Path descriptorFilePath;
     private final Map<String, String> importSchemaCommandParams;
 
-    ImportSchemaParameterOutboundPortImpl(
+    PortImporterParameterOutboundPortImpl(
             OdmCliConfiguration odmCliBaseConfiguration,
             String descriptorRootFilePath,
             Map<String, String> importSchemaCommandParams
@@ -23,8 +23,8 @@ class ImportSchemaParameterOutboundPortImpl implements ImportSchemaParameterOutb
     }
 
     @Override
-    public ImportSchemaArguments getImportSchemaArguments() {
-        ImportSchemaArguments arguments = new ImportSchemaArguments();
+    public ImporterArguments getImporterArguments() {
+        ImporterArguments arguments = new ImporterArguments();
         arguments.setRootDescriptorPath(this.descriptorFilePath);
         arguments.setOdmCliConfig(this.odmCliBaseConfiguration.getBaseConfiguration());
         arguments.setParentCommandOptions(this.importSchemaCommandParams);

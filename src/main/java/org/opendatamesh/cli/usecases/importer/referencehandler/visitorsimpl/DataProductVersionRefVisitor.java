@@ -1,9 +1,9 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl;
+package org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.ReferenceHandler;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.core.ComponentRefVisitor;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.interfaces.InterfaceComponentsRefVisitor;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.internals.InternalComponentsDPDSRefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.ReferenceHandler;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.core.ComponentRefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.interfaces.InterfaceComponentsRefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.internals.InternalComponentsDPDSRefVisitor;
 import org.opendatamesh.dpds.model.core.ComponentsDPDS;
 import org.opendatamesh.dpds.model.core.ExternalResourceDPDS;
 import org.opendatamesh.dpds.model.info.InfoDPDS;

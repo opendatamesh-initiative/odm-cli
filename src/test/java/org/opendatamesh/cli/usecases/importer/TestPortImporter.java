@@ -1,16 +1,16 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaArguments;
+import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestImportSchema {
+public class TestPortImporter {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
@@ -21,20 +21,20 @@ public class TestImportSchema {
                 ),
                 ImportSchemaParserMockState.class
         );
-        ImportSchemaParserOutboundPortMock parserOutboundPort = new ImportSchemaParserOutboundPortMock(parserState);
-        ImportSchemaArguments importSchemaArguments = new ImportSchemaArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of("target", "output-port"));
-        ImportSchemaParameterOutboundPortMock parameterOutboundPort = new ImportSchemaParameterOutboundPortMock(importSchemaArguments);
+        PortImporterParserOutboundPortMock parserOutboundPort = new PortImporterParserOutboundPortMock(parserState);
+        ImporterArguments importSchemaArguments = new ImporterArguments();
+        importSchemaArguments.setParentCommandOptions(Map.of("to", "output-port"));
+        PortImporterParameterOutboundPortMock parameterOutboundPort = new PortImporterParameterOutboundPortMock(importSchemaArguments);
 
-        ImportSchemaExtensionMockState extensionState = objectMapper.readValue(
+        ImporterExtensionMockState extensionState = objectMapper.readValue(
                 Resources.toByteArray(
                         getClass().getResource("test_import_schema_extension_initial_state.json")
                 ),
-                ImportSchemaExtensionMockState.class
+                ImporterExtensionMockState.class
         );
-        ImportSchemaExtensionMock importSchemaExtensionMock = new ImportSchemaExtensionMock(extensionState);
+        ImporterExtensionMock importSchemaExtensionMock = new ImporterExtensionMock(extensionState);
 
-        new ImportSchema(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
                 .execute();
 
 
@@ -58,20 +58,20 @@ public class TestImportSchema {
                 ),
                 ImportSchemaParserMockState.class
         );
-        ImportSchemaParserOutboundPortMock parserOutboundPort = new ImportSchemaParserOutboundPortMock(parserState);
-        ImportSchemaArguments importSchemaArguments = new ImportSchemaArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of("target", "output-port"));
-        ImportSchemaParameterOutboundPortMock parameterOutboundPort = new ImportSchemaParameterOutboundPortMock(importSchemaArguments);
+        PortImporterParserOutboundPortMock parserOutboundPort = new PortImporterParserOutboundPortMock(parserState);
+        ImporterArguments importSchemaArguments = new ImporterArguments();
+        importSchemaArguments.setParentCommandOptions(Map.of("to", "output-port"));
+        PortImporterParameterOutboundPortMock parameterOutboundPort = new PortImporterParameterOutboundPortMock(importSchemaArguments);
 
-        ImportSchemaExtensionMockState extensionState = objectMapper.readValue(
+        ImporterExtensionMockState extensionState = objectMapper.readValue(
                 Resources.toByteArray(
                         getClass().getResource("test_import_schema_preexistingports_extension_initial_state.json")
                 ),
-                ImportSchemaExtensionMockState.class
+                ImporterExtensionMockState.class
         );
-        ImportSchemaExtensionMock importSchemaExtensionMock = new ImportSchemaExtensionMock(extensionState);
+        ImporterExtensionMock importSchemaExtensionMock = new ImporterExtensionMock(extensionState);
 
-        new ImportSchema(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
                 .execute();
 
 

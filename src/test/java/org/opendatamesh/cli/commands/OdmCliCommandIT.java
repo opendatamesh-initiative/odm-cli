@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.cli.OdmCliApplication;
 import org.opendatamesh.cli.extensions.ExtensionsLoader;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -49,9 +49,9 @@ public class OdmCliCommandIT {
 
         URLClassLoader jarClassLoader = new URLClassLoader(jarUrls, this.getClass().getClassLoader());
 
-        ServiceLoader<ImportSchemaExtension> serviceLoader = ServiceLoader.load(ImportSchemaExtension.class, jarClassLoader);
+        ServiceLoader<ImporterExtension> serviceLoader = ServiceLoader.load(ImporterExtension.class, jarClassLoader);
 
-        Mockito.when(extensionsLoader.getImportSchemaExtension(anyString(), anyString()))
+        Mockito.when(extensionsLoader.getImporterExtension(anyString(), anyString()))
                 .thenAnswer(invocation -> {
                     String from = invocation.getArgument(0);
                     String to = invocation.getArgument(1);
@@ -60,14 +60,17 @@ public class OdmCliCommandIT {
                             .filter(extension -> extension.supports(from, to))
                             .findFirst()
                             .orElseThrow(() -> new IllegalArgumentException(
-                                    String.format("No ImportSchemaExtension found supporting from '%s' to '%s'", from, to)
+                                    String.format("No ImporterExtension found supporting from '%s' to '%s'", from, to)
                             ));
                 });
     }
 
+    /**
+     * if this test fails check src/test/resources/org/opendatamesh/cli/commands/odm-cli-extensions-starter.jar
+     */
     @Test
     public void testExtensionLoading() {
-        ImportSchemaExtension extension = extensionsLoader.getImportSchemaExtension("jdbc", "port");
+        ImporterExtension extension = extensionsLoader.getImporterExtension("jdbc", "output-port");
         assertNotNull(extension, "The extension should not be null");
         System.out.println("Loaded extension: " + extension.getClass().getName());
     }

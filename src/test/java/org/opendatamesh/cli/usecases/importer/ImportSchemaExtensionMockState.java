@@ -1,8 +1,8 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.dpds.model.interfaces.PortDPDS;
 
-class ImportSchemaExtensionMockState {
+class ImporterExtensionMockState {
 
     private PortDPDS outputPort;
 

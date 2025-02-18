@@ -1,7 +1,7 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @Component
-public class ImportSchemaFactory {
+public class PortImporterFactory {
 
     @Autowired
     private OdmCliConfiguration odmCliConfiguration;
@@ -22,16 +22,16 @@ public class ImportSchemaFactory {
     public UseCase getImportSchemaUseCase(
             String descriptorFilePath,
             Map<String, String> importSchemaCommandParams,
-            ImportSchemaExtension importSchemaExtension
+            ImporterExtension importSchemaExtension
     ) {
         validateDescriptorFilePath(descriptorFilePath);
-        ImportSchemaParameterOutboundPort parameterOutboundPort = new ImportSchemaParameterOutboundPortImpl(
+        PortImporterParameterOutboundPort parameterOutboundPort = new PortImporterParameterOutboundPortImpl(
                 odmCliConfiguration,
                 descriptorFilePath,
                 importSchemaCommandParams
         );
-        ImportSchemaParserOutboundPort parserOutboundPort = new ImportSchemaParserOutboundPortImpl(Paths.get(descriptorFilePath), odmCliConfiguration);
-        return new ImportSchema(parameterOutboundPort, parserOutboundPort, importSchemaExtension);
+        PortImporterParserOutboundPort parserOutboundPort = new PortPortImporterParserOutboundPortImpl(Paths.get(descriptorFilePath), odmCliConfiguration);
+        return new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtension);
     }
 
     private void validateDescriptorFilePath(String descriptorRootFilePath) {

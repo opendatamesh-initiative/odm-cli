@@ -7,7 +7,7 @@ import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ImportSchemaCommandTest extends OdmCliCommandIT {
+public class PortImporterCommandTest extends OdmCliCommandIT {
     @Test
     void testImportSchemaCommand() {
         String[] args = {"odm-cli", "local", "import"};
@@ -22,7 +22,7 @@ public class ImportSchemaCommandTest extends OdmCliCommandIT {
      * */
     @Test
     @Disabled
-    void testImportSchemaExtensions() throws Exception {
+    void testImporterExtensions() throws Exception {
         String[] args = {"local",
                 "-s=NORMALIZED",
                 "import",

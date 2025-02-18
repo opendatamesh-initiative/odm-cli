@@ -1,8 +1,8 @@
 package org.opendatamesh.cli.commands.local.importschema;
 
 import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
-import org.opendatamesh.cli.extensions.importschema.ImportSchemaExtension;
-import org.opendatamesh.cli.usecases.importschema.ImportSchemaFactory;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
+import org.opendatamesh.cli.usecases.importer.PortImporterFactory;
 import org.opendatamesh.cli.utils.CommandOptionsUtils;
 
 import java.util.HashMap;
@@ -10,14 +10,14 @@ import java.util.Map;
 
 public class ImportCommandExecutor extends PicoCliCommandExecutor {
 
-    private final ImportSchemaFactory importSchemaFactory;
-    private final ImportSchemaExtension importSchemaExtension;
+    private final PortImporterFactory portImporterFactory;
+    private final ImporterExtension<?> importSchemaExtension;
 
     private String descriptorFilePath;
     private Map<String, String> importSchemaCommandParams = new HashMap<>();
 
-    public ImportCommandExecutor(ImportSchemaFactory importSchemaFactory, ImportSchemaExtension importSchemaExtension) {
-        this.importSchemaFactory = importSchemaFactory;
+    public ImportCommandExecutor(PortImporterFactory portImporterFactory, ImporterExtension<?> importSchemaExtension) {
+        this.portImporterFactory = portImporterFactory;
         this.importSchemaExtension = importSchemaExtension;
     }
 
@@ -35,7 +35,7 @@ public class ImportCommandExecutor extends PicoCliCommandExecutor {
         if (importSchemaExtension == null) {
             return;
         }
-        importSchemaFactory.getImportSchemaUseCase(
+        portImporterFactory.getImportSchemaUseCase(
                 descriptorFilePath,
                 importSchemaCommandParams,
                 importSchemaExtension

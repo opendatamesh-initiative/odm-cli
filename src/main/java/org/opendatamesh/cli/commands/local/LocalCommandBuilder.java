@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.OdmCliRootCommandBuilder;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.DescriptorFormat;
+import org.opendatamesh.cli.usecases.importer.referencehandler.DescriptorFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;

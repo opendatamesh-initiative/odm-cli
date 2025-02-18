@@ -1,9 +1,1 @@
-
- ,-----.    ,--.            ,-----.,--.,--.
-'  .-.  ' ,-|  |,--,--,--. '  .--./|  |`--'
-|  | |  |' .-. ||        | |  |    |  |,--.
-'  '-'  '\ `-' ||  |  |  | '  '--'\|  ||  |
- `-----'  `---' `--`--`--'  `-----'`--'`--'
-
-${application.name} ${application.formatted-version}
-Powered by Spring Boot ${spring-boot.version}
+Starting ${application.name} ${application.formatted-version}

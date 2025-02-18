@@ -1,7 +1,7 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.core;
+package org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.core;
 
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.RefVisitor;
-import org.opendatamesh.cli.usecases.importschema.referencehandler.visitorsimpl.interfaces.PortRefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.RefVisitor;
+import org.opendatamesh.cli.usecases.importer.referencehandler.visitorsimpl.interfaces.PortRefVisitor;
 import org.opendatamesh.dpds.model.core.StandardDefinitionDPDS;
 import org.opendatamesh.dpds.model.interfaces.PortDPDS;
 import org.opendatamesh.dpds.model.internals.ApplicationComponentDPDS;

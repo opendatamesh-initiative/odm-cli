@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.importschema.referencehandler;
+package org.opendatamesh.cli.usecases.importer.referencehandler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.opendatamesh.cli.usecases.importschema.referencehandler.utils.JacksonUtils.mergeJsonNodes;
+import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
 /**
  * Utility class used inside the data product descriptor visitors implementations

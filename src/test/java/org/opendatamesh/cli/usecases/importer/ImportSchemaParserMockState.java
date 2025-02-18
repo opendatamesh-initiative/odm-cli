@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.importschema;
+package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 
