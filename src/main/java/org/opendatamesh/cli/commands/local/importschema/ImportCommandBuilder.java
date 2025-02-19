@@ -42,7 +42,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         spec.name(IMPORT_COMMAND);
         spec.mixinStandardHelpOptions(true);
         spec.version("odm-cli local import 1.0.0");
-        spec.usageMessage().description("Import schema into a descriptor file", extension == null ? "" : extension.getExtensionInfo().getDescription());
+        spec.usageMessage().description("Import an object into a descriptor file", extension == null ? "" : extension.getExtensionInfo().getDescription());
         spec.usageMessage().sortOptions(false);
 
         handleWithOrder(Lists.newArrayList(
@@ -50,6 +50,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                 order -> handleFromParam(executor, spec, order),
                 order -> handleToParam(executor, spec, order),
                 order -> handleTargetParam(executor, spec, order),
+                order -> handleSourceParam(executor, spec, order),
                 order -> {
                     if (extension != null) handleExtensionParameters(extension, spec, order);
                 }
@@ -91,7 +92,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
     private void handleFromParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
         CommandLine.Model.OptionSpec fromOption = CommandLine.Model.OptionSpec.builder("--from")
                 .order(order)
-                .description("Import source type (ex. ddl, jdbc, unity, etc...)")
+                .description("Import source type according to extension (ex. ddl, jdbc, unity, etc...)")
                 .required(true)
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {
@@ -108,7 +109,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
     private void handleToParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
         CommandLine.Model.OptionSpec toOption = CommandLine.Model.OptionSpec.builder("--to")
                 .order(order)
-                .description("Import target name (ex. name of an output-port, input-port, etc...)")
+                .description("Import target object (ex. output-port, input-port, etc...)")
                 .required(true)
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {
@@ -125,14 +126,30 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
     private void handleTargetParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
         CommandLine.Model.OptionSpec targetOption = CommandLine.Model.OptionSpec.builder("--target")
                 .order(order)
-                .description("Import target sub-type (ex. if --to=port, it can be input-port, output-port, discovery-port, observability-port, control-port)")
-                .required(false)
-                .defaultValue("output-port")
+                .description("Import target name (ex. if --to=output-port, it is the name of the output-port to import)")
+                .required(true)
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {
                     @Override
                     public <T> T set(T value) {
                         executor.setImportSchemaCommandParam("target", (String) value);
+                        return value;
+                    }
+                })
+                .build();
+        spec.addOption(targetOption);
+    }
+
+    private void handleSourceParam(ImportCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
+        CommandLine.Model.OptionSpec targetOption = CommandLine.Model.OptionSpec.builder("--source")
+                .order(order)
+                .description("Import source according to the import extension")
+                .required(true)
+                .type(String.class)
+                .setter(new CommandLine.Model.ISetter() {
+                    @Override
+                    public <T> T set(T value) {
+                        executor.setImportSchemaCommandParam("source", (String) value);
                         return value;
                     }
                 })
