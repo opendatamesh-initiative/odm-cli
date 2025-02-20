@@ -1,13 +1,15 @@
 # Open Data Mesh Command Line
 
 <!-- TOC -->
+
 * [Open Data Mesh Command Line](#open-data-mesh-command-line)
-  * [About](#about)
-  * [Setup](#setup)
-  * [Configuration](#configuration)
-  * [Usage](#usage)
-    * [Commands](#commands)
-    * [Options](#options)
+    * [About](#about)
+    * [Setup](#setup)
+    * [Configuration](#configuration)
+    * [Usage](#usage)
+        * [Commands](#commands)
+        * [Options](#options)
+
 <!-- TOC -->
 
 ## About
@@ -50,7 +52,8 @@ An example configuration file is shown below:
 cli:
   cliConfiguration:
     templatesFolder: '/path/to/templates'
-    saveFormat: CANONICAL
+    saveFormat: NORMALIZED
+    interactive: true
   systems:
     - name: testDb
       endpoint: 'jdbc:mysql://localhost:3306/'
@@ -74,6 +77,8 @@ Where:
 - **cli.configuration**: Internal CLI settings that define default parameter values.
     - **templatesFolder**: the (default) directory where templates for Data Product Descriptor elements are stored.
     - **saveFormat**: the (default) format in which the data product descriptor is saved
+    - **interactive**:  the (default) behavior of the CLI. When set to `false`, the CLI will not prompt the user for
+      required options and will fail if they are not provided.
 - **cli.systems**:
     - **name**: the configuration name, used for retrieval.
     - **endpoint**: the connection url of the remote system.
@@ -96,6 +101,7 @@ Where:
 
 ### Options
 
-| Command         | Default | Description           |
-|-----------------|---------|-----------------------|
-| `--version, -v` |         | Version o the command |
+| Command             | Default                                               | Description                                                                                                        |
+|---------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `--version, -v`     |                                                       | Version o the command                                                                                              |
+| `--interactive, -i` | true (can be overwritten in the application.yml file) | When set to `false`, the CLI will not prompt the user for required options and will fail if they are not provided. |

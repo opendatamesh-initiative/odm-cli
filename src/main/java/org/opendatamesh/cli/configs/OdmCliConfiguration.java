@@ -65,6 +65,7 @@ public class OdmCliConfiguration {
 
     public static class Config extends OdmCliBaseConfiguration.Config {
         private String saveFormat;
+        private Boolean interactive;
 
         public String getSaveFormat() {
             return Optional.ofNullable(saveFormat)
@@ -74,6 +75,14 @@ public class OdmCliConfiguration {
 
         public void setSaveFormat(String saveFormat) {
             this.saveFormat = saveFormat;
+        }
+
+        public Boolean isInteractive() {
+            return interactive;
+        }
+
+        public void setInteractive(Boolean interactive) {
+            this.interactive = interactive;
         }
     }
 
