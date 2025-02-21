@@ -26,7 +26,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
 
     @Override
     public CommandLine buildCommand(String... args) {
-        LocalCommandExecutor executor = new LocalCommandExecutor();
+        LocalCommandExecutor executor = new LocalCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(LOCAL_COMMAND);
         spec.version("odm-cli local 1.0.0");

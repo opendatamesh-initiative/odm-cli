@@ -1,5 +1,6 @@
 package org.opendatamesh.cli.commands;
 
+import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,11 @@ import static picocli.CommandLine.ExitCode.SOFTWARE;
 public abstract class PicoCliCommandExecutor implements Callable<Integer> {
 
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
+    protected final OdmCliConfiguration odmCliConfiguration;
+
+    protected PicoCliCommandExecutor(OdmCliConfiguration odmCliConfiguration) {
+        this.odmCliConfiguration = odmCliConfiguration;
+    }
 
     /**
      * Executes the CLI command when invoked by PicoCli.
@@ -31,7 +37,7 @@ public abstract class PicoCliCommandExecutor implements Callable<Integer> {
     @Override
     public final Integer call() {
         try {
-            handleRequiredOptions();
+            handleRequiredOptions(odmCliConfiguration.getCliConfiguration().isInteractive());
             executeUseCase();
             return OK;
         } catch (Exception e) {
@@ -46,7 +52,7 @@ public abstract class PicoCliCommandExecutor implements Callable<Integer> {
      * <br>to easily handle all the {@link org.opendatamesh.cli.extensions.ExtensionOption}
      * <br>of a {@link  org.opendatamesh.cli.extensions.Extension}
      */
-    protected void handleRequiredOptions() {
+    protected void handleRequiredOptions(Boolean interactive) {
 
     }
 

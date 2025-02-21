@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
+import static picocli.CommandLine.ExitCode.OK;
 
 @SpringBootTest(classes = {OdmCliApplication.class})
 public class OdmCliCommandIT {
@@ -70,7 +71,7 @@ public class OdmCliCommandIT {
      */
     @Test
     public void testExtensionLoading() {
-        ImporterExtension extension = extensionsLoader.getImporterExtension("jdbc", "output-port");
+        ImporterExtension extension = extensionsLoader.getImporterExtension("starter", "port");
         assertNotNull(extension, "The extension should not be null");
         System.out.println("Loaded extension: " + extension.getClass().getName());
     }
@@ -88,8 +89,11 @@ public class OdmCliCommandIT {
         for (Object command : commandObjects) {
             if (command instanceof Callable) {
                 System.out.println("Invoking call() on: " + command.getClass().getName());
-                Object result = ((Callable<?>) command).call();
+                Integer result = ((Callable<Integer>) command).call();
                 System.out.println("Result: " + result);
+                if (result != OK) {
+                    throw new RuntimeException("Failed command execution: " + command.getClass());
+                }
             } else if (command instanceof Runnable) {
                 System.out.println("Invoking run() on: " + command.getClass().getName());
                 ((Runnable) command).run();

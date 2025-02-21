@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.commands.local.importschema;
+package org.opendatamesh.cli.commands.local.importer;
 
 import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.IntConsumer;
 
-import static org.opendatamesh.cli.utils.CommandOptionsUtils.getOptionFromArguments;
-
 @Component
 public class ImportCommandBuilder implements PicoCliCommandBuilder {
 
@@ -36,8 +34,8 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         Optional<String> from = getOptionFromArguments(args, "--from");
         Optional<String> to = getOptionFromArguments(args, "--to");
 
-        ImporterExtension extension = from.isPresent() && to.isPresent() ? extensionsLoader.getImporterExtension(from.get(), to.get()) : null;
-        ImportCommandExecutor executor = new ImportCommandExecutor(portImporterFactory, extension);
+        ImporterExtension<?> extension = from.isPresent() && to.isPresent() ? extensionsLoader.getImporterExtension(from.get(), to.get()) : null;
+        ImportCommandExecutor executor = new ImportCommandExecutor(configuration, portImporterFactory, extension);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(IMPORT_COMMAND);
         spec.mixinStandardHelpOptions(true);
@@ -163,7 +161,6 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                     .builder(extensionOption.getNames().toArray(new String[0]))
                     .order(order)
                     .type(String.class)
-                    .interactive(extensionOption.isInteractive())
                     .setter(new CommandLine.Model.ISetter() {
                         @Override
                         public <T> T set(T value) {
@@ -200,5 +197,20 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
             handler.accept(order);
             order++;
         }
+    }
+
+    private Optional<String> getOptionFromArguments(String[] args, String option) {
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.startsWith(option)) {
+                if (arg.contains("=")) {
+                    return Optional.of(arg.substring(arg.indexOf('=') + 1));
+                }
+                if (i + 1 < args.length) {
+                    return Optional.ofNullable(args[i + 1]);
+                }
+            }
+        }
+        return Optional.empty();
     }
 }
