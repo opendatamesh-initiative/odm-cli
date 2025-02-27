@@ -1,7 +1,6 @@
 package org.opendatamesh.cli.commands.local;
 
 import com.google.common.collect.Lists;
-import org.opendatamesh.cli.commands.OdmCliRootCommandBuilder;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.usecases.importer.referencehandler.DescriptorFormat;
@@ -13,9 +12,11 @@ import picocli.CommandLine;
 import java.util.List;
 import java.util.function.IntConsumer;
 
+import static org.opendatamesh.cli.commands.OdmCliRootCommandBuilder.ODM_CLI_COMMAND;
+
 @Component
 public class LocalCommandBuilder implements PicoCliCommandBuilder {
-    private static final String LOCAL_COMMAND = "local";
+    public static final String LOCAL_COMMAND = "local";
 
     @Autowired
     @Lazy
@@ -30,7 +31,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(LOCAL_COMMAND);
         spec.version("odm-cli local 1.0.0");
-        spec.usageMessage().description("Manage local env");
+        spec.usageMessage().description("Manages features that are done within the local environment.");
         spec.mixinStandardHelpOptions(true);
 
         handleWithOrder(Lists.newArrayList(
@@ -64,7 +65,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
 
     @Override
     public String getParentCommandName() {
-        return new OdmCliRootCommandBuilder().getCommandName();
+        return ODM_CLI_COMMAND;
     }
 
     @Override

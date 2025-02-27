@@ -1,0 +1,32 @@
+{
+  "finalConfiguration": {
+    "cli": {
+      "cliConfiguration": {
+        "interactive": null
+      },
+      "systems": [
+        {
+          "name": "anotherDb",
+          "endpoint": "jdbc:mysql://localhost:3306/",
+          "user": "root",
+          "password": "root"
+        }
+      ],
+      "env": {
+        "simpleField": "value1",
+        "complexField": {
+          "complexFieldNested": "value2"
+        },
+        "newEmptyArray": [],
+        "newArray": [
+          {
+            "element1Simple": "value",
+            "element1Nested": {
+              "element1NestedAttribute": "value"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

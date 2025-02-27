@@ -15,7 +15,7 @@ import java.util.function.IntConsumer;
 @Component
 public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
 
-    private static final String ODM_CLI_COMMAND = "odm-cli";
+    public static final String ODM_CLI_COMMAND = "odm-cli";
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
     @Autowired
@@ -36,7 +36,7 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
             spec.mixinStandardHelpOptions(true);
 
             handleWithOrder(Lists.newArrayList(
-                    order -> handleInteractiveOption(executor, spec, order)
+                    order -> handleInteractiveOption(spec, order)
             ));
 
             commands.stream().filter(command -> ODM_CLI_COMMAND.equals(command.getParentCommandName()))
@@ -58,7 +58,7 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
         return ODM_CLI_COMMAND;
     }
 
-    private void handleInteractiveOption(OdmCliRootCommandExecutor executor, CommandLine.Model.CommandSpec spec, int order) {
+    private void handleInteractiveOption(CommandLine.Model.CommandSpec spec, int order) {
         CommandLine.Model.OptionSpec descriptorFilePathOption = CommandLine.Model.OptionSpec
                 .builder("-i", "--interactive")
                 .order(order)
@@ -77,6 +77,8 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
                 .build();
         spec.addOption(descriptorFilePathOption);
     }
+
+    //============= Utility code ===============================================================
 
     private void handleWithOrder(List<IntConsumer> handlers) {
         int order = 0;

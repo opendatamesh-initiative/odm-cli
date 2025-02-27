@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 
-public class PortImporterCommandTest extends OdmCliCommandIT {
+public class ImporterCommandTest extends OdmCliCommandIT {
     @Test
     void testImportSchemaCommand() {
         String[] args = {"odm-cli", "local", "import"};
@@ -20,13 +20,13 @@ public class PortImporterCommandTest extends OdmCliCommandIT {
     }
 
     @Test
-    void testFailInteractive() throws Exception {
+    void testFailInteractive() {
         String[] args = {
                 "--interactive=false", //The command must fail if required options are not initialized.
                 "local",
                 "-s=NORMALIZED",
                 "import",
-                "-f" + getClass().getResource("data-product-descriptor.json").getPath(),
+                "-f " + getClass().getResource("data-product-descriptor.json").getPath(),
                 "--from=starter",
                 "--source=starter",
                 "--to=output-port",

@@ -2,7 +2,6 @@ package org.opendatamesh.cli.commands.local.importer;
 
 import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
-import org.opendatamesh.cli.commands.local.LocalCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.ExtensionsLoader;
@@ -16,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.IntConsumer;
+
+import static org.opendatamesh.cli.commands.local.LocalCommandBuilder.LOCAL_COMMAND;
 
 @Component
 public class ImportCommandBuilder implements PicoCliCommandBuilder {
@@ -58,7 +59,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
 
     @Override
     public String getParentCommandName() {
-        return new LocalCommandBuilder().getCommandName();
+        return LOCAL_COMMAND;
     }
 
     @Override
@@ -181,7 +182,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
                 builder.defaultValue(extensionOption.getDefaultValue());
             }
             if (extensionOption.getDefaultValueFromConfig() != null) {
-                Map<String, String> allConfig = configuration.getAllConfigurations();
+                Map<String, String> allConfig = configuration.getAllConfiguration();
                 builder.defaultValue(allConfig.get(extensionOption.getDefaultValueFromConfig()));
             }
 
@@ -190,6 +191,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
             commandSpec.addOption(option);
         }
     }
+    //============= Utility code ===============================================================
 
     private void handleWithOrder(List<IntConsumer> handlers) {
         int order = 0;

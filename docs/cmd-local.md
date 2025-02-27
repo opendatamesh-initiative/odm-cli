@@ -2,7 +2,7 @@
 
 ## Usage
 
-`odmcli local`
+`odm-cli local`
 
 ## Description
 
