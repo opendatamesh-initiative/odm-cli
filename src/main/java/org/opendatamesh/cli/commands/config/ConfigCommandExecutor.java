@@ -29,7 +29,7 @@ public class ConfigCommandExecutor extends PicoCliCommandExecutor {
 
     @Override
     protected void executeUseCase() {
-        hanldePrintConfiguration();
+        handlePrintConfiguration();
         if (nothingToUpdate()) {
             return;
         }
@@ -43,7 +43,7 @@ public class ConfigCommandExecutor extends PicoCliCommandExecutor {
                 CollectionUtils.isEmpty(arrayAttributesEntriesToDelete);
     }
 
-    private void hanldePrintConfiguration() {
+    private void handlePrintConfiguration() {
         if (print) {
             String stringifiedMap = odmCliConfiguration.getAllConfiguration().toString();
             stringifiedMap = stringifiedMap.replace(",", ",\n");
