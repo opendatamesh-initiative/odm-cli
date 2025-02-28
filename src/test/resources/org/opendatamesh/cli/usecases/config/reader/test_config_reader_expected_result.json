@@ -1,0 +1,8 @@
+{
+  "cli.cliConfiguration.templatesFolder": "null",
+  "cli.cliConfiguration.saveFormat": "NORMALIZED",
+  "cli.cliConfiguration.interactive": "true",
+  "cli.systems[0].name": "system1",
+  "cli.systems[1].name": "system2",
+  "cli.systems[2].name": "system3"
+}

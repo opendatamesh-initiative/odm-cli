@@ -17,6 +17,18 @@ fi
 
 mkdir -p "$INSTALL_DIR" "$EXTENSIONS_DIR"
 
+
+# Ensure application.yml exists
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Creating default application.yml"
+  cat <<EOL > "$CONFIG_FILE"
+# Default configuration
+extensions:
+  urls: []
+EOL
+fi
+
+
 # Set JAR file name
 JAR_NAME="odm-cli-${VERSION}.jar"
 JAR_PATH="$INSTALL_DIR/$JAR_NAME"

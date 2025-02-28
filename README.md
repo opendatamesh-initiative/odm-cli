@@ -95,9 +95,10 @@ Where:
 
 ### Commands
 
-| Command                             | Description      |
-|-------------------------------------|------------------|
-| [`odmcli local`](docs/cmd-local.md) | Manage local env |
+| Command                               | Description                                                      |
+|---------------------------------------|------------------------------------------------------------------|
+| [`odmcli local`](docs/cmd-local.md)   | Manages features that are executed within the local environment. |
+| [`odmcli config`](docs/cmd-config.md) | Manages the configuration file.                                  |
 
 ### Options
 

@@ -1,0 +1,20 @@
+{
+  "cli": {
+    "cliConfiguration": {
+      "templatesFolder": null,
+      "saveFormat": "NORMALIZED",
+      "interactive": true
+    },
+    "systems": [
+      {
+        "name": "system1"
+      },
+      {
+        "name": "system2"
+      },
+      {
+        "name": "system3"
+      }
+    ]
+  }
+}
