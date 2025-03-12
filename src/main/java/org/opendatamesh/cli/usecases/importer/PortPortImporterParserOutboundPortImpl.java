@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.mergeJsonNodes;
+import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
 
 class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutboundPort {
 
@@ -30,9 +31,9 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
     PortPortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
         this.descriptorPath = descriptorPath;
         this.odmCliConfiguration = odmCliConfiguration;
-        this.jsonMapper = new ObjectMapper();
+        this.jsonMapper = new ObjectMapper().registerModule(parserFixModule());
         configObjectMapper(jsonMapper);
-        this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        this.yamlMapper = new ObjectMapper(new YAMLFactory()).registerModule(parserFixModule());
         configObjectMapper(yamlMapper);
     }
 
@@ -57,7 +58,7 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
                 String rawContent = Files.readString(descriptorPath, StandardCharsets.UTF_8);
                 JsonNode sourceDescriptorFile = getMapper(descriptorPath.toString()).readTree(rawContent);
                 //Using plain ObjectMapper so also null values are represented
-                JsonNode descriptorContent = new ObjectMapper().valueToTree(descriptor);
+                JsonNode descriptorContent = new ObjectMapper().registerModule(parserFixModule()).valueToTree(descriptor);
                 JsonNode mergedContent = mergeJsonNodes(getMapper(descriptorPath.toString()), sourceDescriptorFile, descriptorContent);
                 Object contentToSave = getMapper(descriptorPath.toString()).treeToValue(mergedContent, Object.class);
                 getMapper(descriptorPath.toString()).writerWithDefaultPrettyPrinter().writeValue(descriptorPath.toFile(), contentToSave);

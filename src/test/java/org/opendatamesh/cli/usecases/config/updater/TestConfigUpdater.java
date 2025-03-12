@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+
 public class TestConfigUpdater {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(parserFixModule());
 
 
     @Test

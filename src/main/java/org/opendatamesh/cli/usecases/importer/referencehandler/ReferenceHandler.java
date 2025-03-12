@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.mergeJsonNodes;
+import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
 
 /**
  * Utility class used inside the data product descriptor visitors implementations
@@ -40,9 +41,9 @@ public class ReferenceHandler {
     public ReferenceHandler(DescriptorFormat format, Path descriptorRootPath) {
         this.format = format;
         this.descriptorRootPath = descriptorRootPath;
-        this.jsonMapper = new ObjectMapper();
+        this.jsonMapper = new ObjectMapper().registerModule(parserFixModule());
         configObjectMapper(jsonMapper);
-        this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        this.yamlMapper = new ObjectMapper(new YAMLFactory()).registerModule(parserFixModule());
         configObjectMapper(yamlMapper);
     }
 
@@ -116,7 +117,7 @@ public class ReferenceHandler {
                 String rawContent = Files.readString(targetFile.toPath(), StandardCharsets.UTF_8);
                 JsonNode sourceFile = getMapper(ref).readTree(rawContent);
                 //Using plain ObjectMapper so also null values are represented
-                JsonNode pojoContent = new ObjectMapper().valueToTree(entity);
+                JsonNode pojoContent = new ObjectMapper().registerModule(parserFixModule()).valueToTree(entity);
                 JsonNode mergedContent = mergeJsonNodes(getMapper(ref), sourceFile, pojoContent);
                 Object contentToSave = getMapper(ref).treeToValue(mergedContent, Object.class);
                 getMapper(ref).writerWithDefaultPrettyPrinter().writeValue(targetFile, contentToSave);

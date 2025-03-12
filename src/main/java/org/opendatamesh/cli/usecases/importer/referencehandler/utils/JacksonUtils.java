@@ -2,7 +2,12 @@ package org.opendatamesh.cli.usecases.importer.referencehandler.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.opendatamesh.dpds.model.internals.LifecycleInfoDPDS;
+import org.opendatamesh.dpds.model.internals.LifecycleTaskInfoDPDS;
+import org.opendatamesh.dpds.serde.LifecycleInfoDeserializer;
+import org.opendatamesh.dpds.serde.LifecycleTaskInfoDeserializer;
 
 /**
  * Utility class for handling JSON operations using Jackson.
@@ -80,5 +85,12 @@ public abstract class JacksonUtils {
         return newNode;
     }
 
-
+    @Deprecated
+    //TODO remove this when fix parser
+    public static SimpleModule parserFixModule() {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(LifecycleTaskInfoDPDS.class, new LifecycleTaskInfoDeserializer());
+        module.addDeserializer(LifecycleInfoDPDS.class, new LifecycleInfoDeserializer());
+        return module;
+    }
 }
