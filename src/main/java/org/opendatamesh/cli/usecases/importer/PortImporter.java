@@ -5,15 +5,19 @@ import org.opendatamesh.cli.extensions.importer.ImporterExtension;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.opendatamesh.dpds.model.interfaces.PortDPDS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class PortImporter implements UseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(PortImporter.class);
     private final PortImporterParameterOutboundPort parameterOutboundPort;
     private final PortImporterParserOutboundPort parserOutboundPort;
     private final ImporterExtension<PortDPDS> importerExtension;
@@ -29,9 +33,28 @@ class PortImporter implements UseCase {
         DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion();
         ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
         arguments.setDataProductVersion(descriptor);
-        PortDPDS port = importerExtension.importElement(null, arguments);
+        Optional<PortDPDS> existingPort = findPortIfExists(descriptor, arguments);
+        logInformationAboutExistingPort(existingPort, arguments);
+        PortDPDS port = importerExtension.importElement(existingPort.orElse(null), arguments);
         addPortToDescriptor(descriptor, port);
         parserOutboundPort.saveDescriptor(descriptor);
+    }
+
+    private void logInformationAboutExistingPort(Optional<PortDPDS> existingPort, ImporterArguments arguments) {
+        existingPort.ifPresentOrElse(
+                port -> log.info("Existing port found with name: {} and fqn: {}",
+                        port.getName(),
+                        port.getFullyQualifiedName()),
+                () -> log.info("No existing port found with type: {} and name: {}. Creating a new port.",
+                        arguments.getParentCommandOptions().get("to"),
+                        arguments.getParentCommandOptions().get("target"))
+        );
+    }
+
+    private Optional<PortDPDS> findPortIfExists(DataProductVersionDPDS descriptor, ImporterArguments arguments) {
+        String portType = arguments.getParentCommandOptions().get("to");
+        String portName = arguments.getParentCommandOptions().get("target");
+        return getPortByTypeAndName(descriptor, portType, portName);
     }
 
     private void addPortToDescriptor(DataProductVersionDPDS descriptor, PortDPDS port) {
@@ -69,6 +92,24 @@ class PortImporter implements UseCase {
             );
             port.setFullyQualifiedName(fqn);
         }
+    }
+
+    private Map<String, Function<DataProductVersionDPDS, List<PortDPDS>>> getPortRetrievers() {
+        Map<String, Function<DataProductVersionDPDS, List<PortDPDS>>> portRetrievers = new HashMap<>();
+
+        portRetrievers.put("input-port", d -> d.getInterfaceComponents().getInputPorts());
+        portRetrievers.put("output-port", d -> d.getInterfaceComponents().getOutputPorts());
+        portRetrievers.put("discovery-port", d -> d.getInterfaceComponents().getDiscoveryPorts());
+        portRetrievers.put("observability-port", d -> d.getInterfaceComponents().getObservabilityPorts());
+        portRetrievers.put("control-port", d -> d.getInterfaceComponents().getControlPorts());
+
+        return portRetrievers;
+    }
+
+    private Optional<PortDPDS> getPortByTypeAndName(DataProductVersionDPDS dataProduct, String portType, String portName) {
+        return Optional.ofNullable(getPortRetrievers().get(portType))
+                .map(retriever -> retriever.apply(dataProduct))
+                .flatMap(ports -> ports.stream().filter(p -> p.getName().equals(portName)).findFirst());
     }
 
     private Map<String, Consumer<DataProductVersionDPDS>> getPortAdditionToTargetHandler(PortDPDS port) {

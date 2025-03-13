@@ -24,7 +24,10 @@ public class TestPortImporter {
         );
         PortImporterParserOutboundPortMock parserOutboundPort = new PortImporterParserOutboundPortMock(parserState);
         ImporterArguments importSchemaArguments = new ImporterArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of("to", "output-port"));
+        importSchemaArguments.setParentCommandOptions(Map.of(
+                "to", "output-port",
+                "target", "output_port_name")
+        );        
         PortImporterParameterOutboundPortMock parameterOutboundPort = new PortImporterParameterOutboundPortMock(importSchemaArguments);
 
         ImporterExtensionMockState extensionState = objectMapper.readValue(
@@ -61,7 +64,11 @@ public class TestPortImporter {
         );
         PortImporterParserOutboundPortMock parserOutboundPort = new PortImporterParserOutboundPortMock(parserState);
         ImporterArguments importSchemaArguments = new ImporterArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of("to", "output-port"));
+        importSchemaArguments.setParentCommandOptions(Map.of(
+                "to", "output-port",
+                "target", "another_output_port_name")
+        );
+
         PortImporterParameterOutboundPortMock parameterOutboundPort = new PortImporterParameterOutboundPortMock(importSchemaArguments);
 
         ImporterExtensionMockState extensionState = objectMapper.readValue(
@@ -87,4 +94,5 @@ public class TestPortImporter {
                 .usingRecursiveComparison()
                 .isEqualTo(parserExpectedState);
     }
+
 }
