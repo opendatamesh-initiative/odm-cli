@@ -18,7 +18,7 @@
       "inputPorts": [],
       "outputPorts": [],
       "observabilityPorts": [],
-      "discoverabilityPorts": [],
+      "discoveryPorts": [],
       "controlPorts": []
     },
     "internalComponents": {

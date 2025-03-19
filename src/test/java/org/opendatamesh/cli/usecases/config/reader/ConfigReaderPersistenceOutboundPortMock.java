@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+
 
 class ConfigReaderPersistenceOutboundPortMock implements ConfigReaderPersistenceOutboundPort {
 
@@ -17,7 +17,7 @@ class ConfigReaderPersistenceOutboundPortMock implements ConfigReaderPersistence
     @Override
     public JsonNode getConfigContent() {
         try {
-            return new ObjectMapper().registerModule(parserFixModule()).readValue(rawConfig, JsonNode.class);
+            return new ObjectMapper().readValue(rawConfig, JsonNode.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

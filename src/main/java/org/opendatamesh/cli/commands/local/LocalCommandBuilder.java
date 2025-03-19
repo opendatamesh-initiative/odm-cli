@@ -3,7 +3,7 @@ package org.opendatamesh.cli.commands.local;
 import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.importer.referencehandler.DescriptorFormat;
+import org.opendatamesh.dpds.referencehandler.DescriptorFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
         LocalCommandExecutor executor = new LocalCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(LOCAL_COMMAND);
-        spec.version("odm-cli local 1.0.0");
+        spec.version("1.0.0");
         spec.usageMessage().description("Manages features that are done within the local environment.");
         spec.mixinStandardHelpOptions(true);
 

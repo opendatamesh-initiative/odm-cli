@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.importer.referencehandler.DescriptorFormat;
-import org.opendatamesh.cli.usecases.importer.referencehandler.ReferenceResolver;
-import org.opendatamesh.dpds.model.DataProductVersionDPDS;
+import org.opendatamesh.dpds.model.DataProductVersion;
+import org.opendatamesh.dpds.referencehandler.DescriptorFormat;
+import org.opendatamesh.dpds.referencehandler.ReferenceResolver;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -18,8 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.mergeJsonNodes;
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+import static org.opendatamesh.dpds.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
 class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutboundPort {
 
@@ -31,16 +28,16 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
     PortPortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
         this.descriptorPath = descriptorPath;
         this.odmCliConfiguration = odmCliConfiguration;
-        this.jsonMapper = new ObjectMapper().registerModule(parserFixModule());
+        this.jsonMapper = new ObjectMapper();
         configObjectMapper(jsonMapper);
-        this.yamlMapper = new ObjectMapper(new YAMLFactory()).registerModule(parserFixModule());
+        this.yamlMapper = new ObjectMapper(new YAMLFactory());
         configObjectMapper(yamlMapper);
     }
 
     @Override
-    public DataProductVersionDPDS getDataProductVersion() {
+    public DataProductVersion getDataProductVersion() {
         try {
-            DataProductVersionDPDS dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPath.toFile(), DataProductVersionDPDS.class);
+            DataProductVersion dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPath.toFile(), DataProductVersion.class);
             ReferenceResolver.resolveReferences(DescriptorFormat.CANONICAL, dataProductVersion, descriptorPath);
             return dataProductVersion;
         } catch (Exception e) {
@@ -49,7 +46,7 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
     }
 
     @Override
-    public void saveDescriptor(DataProductVersionDPDS descriptor) {
+    public void saveDescriptor(DataProductVersion descriptor) {
         try {
             DescriptorFormat saveFormat = DescriptorFormat.valueOf(StringUtils.capitalize(odmCliConfiguration.getCliConfiguration().getSaveFormat()));
             ReferenceResolver.resolveReferences(saveFormat, descriptor, descriptorPath);
@@ -58,7 +55,7 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
                 String rawContent = Files.readString(descriptorPath, StandardCharsets.UTF_8);
                 JsonNode sourceDescriptorFile = getMapper(descriptorPath.toString()).readTree(rawContent);
                 //Using plain ObjectMapper so also null values are represented
-                JsonNode descriptorContent = new ObjectMapper().registerModule(parserFixModule()).valueToTree(descriptor);
+                JsonNode descriptorContent = new ObjectMapper().valueToTree(descriptor);
                 JsonNode mergedContent = mergeJsonNodes(getMapper(descriptorPath.toString()), sourceDescriptorFile, descriptorContent);
                 Object contentToSave = getMapper(descriptorPath.toString()).treeToValue(mergedContent, Object.class);
                 getMapper(descriptorPath.toString()).writerWithDefaultPrettyPrinter().writeValue(descriptorPath.toFile(), contentToSave);
@@ -74,17 +71,6 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
     private void configObjectMapper(ObjectMapper mapper) {
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
-            @Override
-            public Object findSerializer(Annotated am) {
-                return null;
-            }
-
-            @Override
-            public Object findDeserializer(Annotated am) {
-                return null;
-            }
-        });
     }
 
 

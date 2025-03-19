@@ -1,16 +1,16 @@
 package org.opendatamesh.cli.usecases.importer;
 
-import org.opendatamesh.dpds.model.interfaces.PortDPDS;
+import org.opendatamesh.dpds.model.interfaces.Port;
 
 class ImporterExtensionMockState {
 
-    private PortDPDS outputPort;
+    private Port outputPort;
 
-    public PortDPDS getOutputPort() {
+    public Port getOutputPort() {
         return outputPort;
     }
 
-    public void setOutputPort(PortDPDS outputPort) {
+    public void setOutputPort(Port outputPort) {
         this.outputPort = outputPort;
     }
 }

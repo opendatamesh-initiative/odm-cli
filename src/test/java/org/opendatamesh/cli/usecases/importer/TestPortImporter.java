@@ -1,6 +1,8 @@
 package org.opendatamesh.cli.usecases.importer;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.io.Resources;
 import org.junit.jupiter.api.Test;
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
@@ -9,10 +11,12 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+
 
 public class TestPortImporter {
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(parserFixModule());
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
     @Test
     public void testImportSchema() throws IOException {
@@ -27,7 +31,7 @@ public class TestPortImporter {
         importSchemaArguments.setParentCommandOptions(Map.of(
                 "to", "output-port",
                 "target", "output_port_name")
-        );        
+        );
         PortImporterParameterOutboundPortMock parameterOutboundPort = new PortImporterParameterOutboundPortMock(importSchemaArguments);
 
         ImporterExtensionMockState extensionState = objectMapper.readValue(

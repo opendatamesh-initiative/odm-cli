@@ -68,8 +68,8 @@ cli:
   <customEnv>:
     <customEnvField>: <customEnvValue>
 extensions:
-  - name: odm-cli-extensions-starter-1.0.1
-    url: https://github.com/opendatamesh-initiative//odm-cli-extensions-starter/releases/download/v1.0.1/odm-cli-extensions-starter-1.0.1.jar
+  - name: odm-cli-extensions-starter-1.1.0
+    url: https://github.com/opendatamesh-initiative//odm-cli-extensions-starter/releases/download/v1.1.0/odm-cli-extensions-starter-1.1.0.jar
 ```
 
 Where:
@@ -95,10 +95,11 @@ Where:
 
 ### Commands
 
-| Command                               | Description                                                      |
-|---------------------------------------|------------------------------------------------------------------|
-| [`odmcli local`](docs/cmd-local.md)   | Manages features that are executed within the local environment. |
-| [`odmcli config`](docs/cmd-config.md) | Manages the configuration file.                                  |
+| Command                                   | Description                                                      |
+|-------------------------------------------|------------------------------------------------------------------|
+| [`odmcli config`](docs/cmd-config.md)     | Manages the configuration file.                                  |
+| [`odmcli local`](docs/cmd-local.md)       | Manages features that are executed within the local environment. |
+| [`odmcli platform`](docs/cmd-platform.md) | Command to manage ODM Platform functionalities.                  |
 
 ### Options
 

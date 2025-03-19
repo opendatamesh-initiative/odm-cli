@@ -3,8 +3,8 @@ package org.opendatamesh.cli.usecases.importer;
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
 import org.opendatamesh.cli.usecases.UseCase;
-import org.opendatamesh.dpds.model.DataProductVersionDPDS;
-import org.opendatamesh.dpds.model.interfaces.PortDPDS;
+import org.opendatamesh.dpds.model.DataProductVersion;
+import org.opendatamesh.dpds.model.interfaces.Port;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -20,9 +20,9 @@ class PortImporter implements UseCase {
     private static final Logger log = LoggerFactory.getLogger(PortImporter.class);
     private final PortImporterParameterOutboundPort parameterOutboundPort;
     private final PortImporterParserOutboundPort parserOutboundPort;
-    private final ImporterExtension<PortDPDS> importerExtension;
+    private final ImporterExtension<Port> importerExtension;
 
-    PortImporter(PortImporterParameterOutboundPort parameterOutboundPort, PortImporterParserOutboundPort parserOutboundPort, ImporterExtension<PortDPDS> importerExtension) {
+    PortImporter(PortImporterParameterOutboundPort parameterOutboundPort, PortImporterParserOutboundPort parserOutboundPort, ImporterExtension<Port> importerExtension) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
         this.importerExtension = importerExtension;
@@ -30,17 +30,17 @@ class PortImporter implements UseCase {
 
     @Override
     public void execute() {
-        DataProductVersionDPDS descriptor = parserOutboundPort.getDataProductVersion();
+        DataProductVersion descriptor = parserOutboundPort.getDataProductVersion();
         ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
         arguments.setDataProductVersion(descriptor);
-        Optional<PortDPDS> existingPort = findPortIfExists(descriptor, arguments);
+        Optional<Port> existingPort = findPortIfExists(descriptor, arguments);
         logInformationAboutExistingPort(existingPort, arguments);
-        PortDPDS port = importerExtension.importElement(existingPort.orElse(null), arguments);
+        Port port = importerExtension.importElement(existingPort.orElse(null), arguments);
         addPortToDescriptor(descriptor, port);
         parserOutboundPort.saveDescriptor(descriptor);
     }
 
-    private void logInformationAboutExistingPort(Optional<PortDPDS> existingPort, ImporterArguments arguments) {
+    private void logInformationAboutExistingPort(Optional<Port> existingPort, ImporterArguments arguments) {
         existingPort.ifPresentOrElse(
                 port -> log.info("Existing port found with name: {} and fqn: {}",
                         port.getName(),
@@ -51,18 +51,18 @@ class PortImporter implements UseCase {
         );
     }
 
-    private Optional<PortDPDS> findPortIfExists(DataProductVersionDPDS descriptor, ImporterArguments arguments) {
+    private Optional<Port> findPortIfExists(DataProductVersion descriptor, ImporterArguments arguments) {
         String portType = arguments.getParentCommandOptions().get("to");
         String portName = arguments.getParentCommandOptions().get("target");
         return getPortByTypeAndName(descriptor, portType, portName);
     }
 
-    private void addPortToDescriptor(DataProductVersionDPDS descriptor, PortDPDS port) {
+    private void addPortToDescriptor(DataProductVersion descriptor, Port port) {
         String toOption = getToOption();
         fixPortFqn(descriptor, port, toOption);
-        Map<String, Consumer<DataProductVersionDPDS>> handlers = getPortAdditionToTargetHandler(port);
+        Map<String, Consumer<DataProductVersion>> handlers = getPortAdditionToTargetHandler(port);
 
-        Consumer<DataProductVersionDPDS> handler = handlers.getOrDefault(
+        Consumer<DataProductVersion> handler = handlers.getOrDefault(
                 toOption,
                 d -> {
                     throw new IllegalArgumentException("Invalid to option for port importer command: " + toOption);
@@ -80,7 +80,7 @@ class PortImporter implements UseCase {
         return toOption;
     }
 
-    private void fixPortFqn(DataProductVersionDPDS descriptor, PortDPDS port, String toOption) {
+    private void fixPortFqn(DataProductVersion descriptor, Port port, String toOption) {
         if (!StringUtils.hasText(port.getFullyQualifiedName())) {
             String collectionName = toOption.replace("-", "") + "s";
             String fqn = String.format(
@@ -94,8 +94,8 @@ class PortImporter implements UseCase {
         }
     }
 
-    private Map<String, Function<DataProductVersionDPDS, List<PortDPDS>>> getPortRetrievers() {
-        Map<String, Function<DataProductVersionDPDS, List<PortDPDS>>> portRetrievers = new HashMap<>();
+    private Map<String, Function<DataProductVersion, List<Port>>> getPortRetrievers() {
+        Map<String, Function<DataProductVersion, List<Port>>> portRetrievers = new HashMap<>();
 
         portRetrievers.put("input-port", d -> d.getInterfaceComponents().getInputPorts());
         portRetrievers.put("output-port", d -> d.getInterfaceComponents().getOutputPorts());
@@ -106,14 +106,14 @@ class PortImporter implements UseCase {
         return portRetrievers;
     }
 
-    private Optional<PortDPDS> getPortByTypeAndName(DataProductVersionDPDS dataProduct, String portType, String portName) {
+    private Optional<Port> getPortByTypeAndName(DataProductVersion dataProduct, String portType, String portName) {
         return Optional.ofNullable(getPortRetrievers().get(portType))
                 .map(retriever -> retriever.apply(dataProduct))
                 .flatMap(ports -> ports.stream().filter(p -> p.getName().equals(portName)).findFirst());
     }
 
-    private Map<String, Consumer<DataProductVersionDPDS>> getPortAdditionToTargetHandler(PortDPDS port) {
-        Map<String, Consumer<DataProductVersionDPDS>> actions = new HashMap<>();
+    private Map<String, Consumer<DataProductVersion>> getPortAdditionToTargetHandler(Port port) {
+        Map<String, Consumer<DataProductVersion>> actions = new HashMap<>();
         actions.put("input-port", d -> d.getInterfaceComponents().setInputPorts(
                 replacePort(d.getInterfaceComponents().getInputPorts(), port)));
         actions.put("output-port", d -> d.getInterfaceComponents().setOutputPorts(
@@ -127,8 +127,8 @@ class PortImporter implements UseCase {
         return actions;
     }
 
-    private List<PortDPDS> replacePort(List<PortDPDS> ports, PortDPDS port) {
-        List<PortDPDS> result = new ArrayList<>(ports != null ? ports : Collections.emptyList());
+    private List<Port> replacePort(List<Port> ports, Port port) {
+        List<Port> result = new ArrayList<>(ports != null ? ports : Collections.emptyList());
         result.removeIf(p -> port.getFullyQualifiedName().equals(p.getFullyQualifiedName()));
         result.add(port);
         return result;

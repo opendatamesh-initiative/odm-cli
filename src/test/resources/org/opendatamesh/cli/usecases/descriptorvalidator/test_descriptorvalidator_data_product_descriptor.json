@@ -1,0 +1,23 @@
+{
+  "outputPort": {
+    "rawContent": " {\"$ref\": \"\"}",
+    "externalReference": true,
+    "name": "output_port_name",
+    "version": "1.0.0",
+    "$ref": "",
+    "tags": [],
+    "promises": {
+      "api": {
+        "externalReference": false,
+        "tags": [],
+        "specification": "1.0.0",
+        "definition": {
+          "resolvedRef": false,
+          "inline": false,
+          "mediaType": "text/json",
+          "$ref": "api.json"
+        }
+      }
+    }
+  }
+}

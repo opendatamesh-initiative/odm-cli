@@ -1,6 +1,6 @@
 package org.opendatamesh.cli.usecases.importer;
 
-import org.opendatamesh.dpds.model.DataProductVersionDPDS;
+import org.opendatamesh.dpds.model.DataProductVersion;
 
 public class PortImporterParserOutboundPortMock implements PortImporterParserOutboundPort {
 
@@ -11,12 +11,12 @@ public class PortImporterParserOutboundPortMock implements PortImporterParserOut
     }
 
     @Override
-    public DataProductVersionDPDS getDataProductVersion() {
+    public DataProductVersion getDataProductVersion() {
         return state.getDataProductVersion();
     }
 
     @Override
-    public void saveDescriptor(DataProductVersionDPDS descriptor) {
+    public void saveDescriptor(DataProductVersion descriptor) {
         state.setDataProductVersion(descriptor);
     }
 }

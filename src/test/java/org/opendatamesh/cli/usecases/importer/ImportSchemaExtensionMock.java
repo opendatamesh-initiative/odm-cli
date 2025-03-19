@@ -4,12 +4,12 @@ import org.opendatamesh.cli.extensions.ExtensionInfo;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
-import org.opendatamesh.dpds.model.interfaces.PortDPDS;
+import org.opendatamesh.dpds.model.interfaces.Port;
 
 import java.util.List;
 
 
-class ImporterExtensionMock implements ImporterExtension<PortDPDS> {
+class ImporterExtensionMock implements ImporterExtension<Port> {
 
     private final ImporterExtensionMockState state;
 
@@ -23,13 +23,13 @@ class ImporterExtensionMock implements ImporterExtension<PortDPDS> {
     }
 
     @Override
-    public PortDPDS importElement(PortDPDS t, ImporterArguments importerArguments) {
+    public Port importElement(Port t, ImporterArguments importerArguments) {
         return state.getOutputPort();
     }
 
     @Override
     public Class getTargetClass() {
-        return PortDPDS.class;
+        return Port.class;
     }
 
     @Override

@@ -11,7 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+
 
 class ConfigUpdater implements UseCase {
 
@@ -149,7 +149,7 @@ class ConfigUpdater implements UseCase {
     }
 
     private JsonNode computeDeepDifference(JsonNode updatedConfig, JsonNode defaultConfig) {
-        ObjectNode diff = new ObjectMapper().registerModule(parserFixModule()).createObjectNode();
+        ObjectNode diff = new ObjectMapper().createObjectNode();
 
         // Check for fields in the updatedConfig that are not in/are different from defaultConfig
         Iterator<Map.Entry<String, JsonNode>> fields = updatedConfig.fields();

@@ -27,6 +27,7 @@ public class OdmCliConfiguration {
 
     private Config cliConfiguration;
     private List<OdmCliBaseConfiguration.SystemConfig> systems;
+    private OdmPlatform odmPlatform;
 
     @Autowired
     @Lazy
@@ -67,6 +68,14 @@ public class OdmCliConfiguration {
         this.systems = systems;
     }
 
+    public OdmPlatform getOdmPlatform() {
+        return odmPlatform;
+    }
+
+    public void setOdmPlatform(OdmPlatform odmPlatform) {
+        this.odmPlatform = odmPlatform;
+    }
+
     public static class Config extends OdmCliBaseConfiguration.Config {
         private String saveFormat;
         private Boolean interactive;
@@ -87,6 +96,30 @@ public class OdmCliConfiguration {
 
         public void setInteractive(Boolean interactive) {
             this.interactive = interactive;
+        }
+    }
+
+    public static class OdmPlatform {
+        private OdmPlatformService registryService;
+
+        public OdmPlatformService getRegistryService() {
+            return registryService;
+        }
+
+        public void setRegistryService(OdmPlatformService registryService) {
+            this.registryService = registryService;
+        }
+    }
+
+    public static class OdmPlatformService {
+        private String endpoint;
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        public void setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
         }
     }
 }

@@ -1,9 +1,9 @@
 package org.opendatamesh.cli.usecases.importer;
 
-import org.opendatamesh.dpds.model.DataProductVersionDPDS;
+import org.opendatamesh.dpds.model.DataProductVersion;
 
 interface PortImporterParserOutboundPort {
-    DataProductVersionDPDS getDataProductVersion();
+    DataProductVersion getDataProductVersion();
 
-    void saveDescriptor(DataProductVersionDPDS descriptor);
+    void saveDescriptor(DataProductVersion descriptor);
 }

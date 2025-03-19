@@ -66,10 +66,7 @@
     "internalComponents": {
       "applicationComponents": [],
       "infrastructuralComponents": [],
-      "lifecycleInfo": {
-        "tasksInfo": [],
-        "stageNames": []
-      }
+      "lifecycleInfo": {}
     },
     "tags": []
   }

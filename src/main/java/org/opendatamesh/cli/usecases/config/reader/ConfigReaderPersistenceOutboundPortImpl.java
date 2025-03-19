@@ -12,11 +12,9 @@ import org.springframework.util.StreamUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
-
 class ConfigReaderPersistenceOutboundPortImpl implements ConfigReaderPersistenceOutboundPort {
-    private final ObjectMapper jsonMapper = new ObjectMapper().registerModule(parserFixModule());
-    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory()).registerModule(parserFixModule());
+    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
     private final Environment environment;
     private final ResourceLoader resourceLoader;
 
