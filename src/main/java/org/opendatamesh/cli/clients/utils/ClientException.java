@@ -1,8 +1,8 @@
 package org.opendatamesh.cli.clients.utils;
 
 public class ClientException extends RuntimeException {
-    private final int code;
-    private final String responseBody;
+    private int code;
+    private String responseBody;
 
     public ClientException(int statusCode, String responseBody) {
         this.code = statusCode;
