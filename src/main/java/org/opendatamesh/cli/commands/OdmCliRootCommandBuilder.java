@@ -32,7 +32,7 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
             CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
             spec.name(ODM_CLI_COMMAND);
             spec.usageMessage().description("ODM CLI init method");
-            spec.version("odm-cli 1.0.0");
+            spec.version("1.0.0");
             spec.mixinStandardHelpOptions(true);
 
             handleWithOrder(Lists.newArrayList(

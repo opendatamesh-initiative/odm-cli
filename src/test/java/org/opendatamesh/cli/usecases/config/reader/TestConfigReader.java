@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
+
 
 public class TestConfigReader {
     @Test
@@ -21,7 +21,7 @@ public class TestConfigReader {
         );
 
         Map<String, String> result = new ConfigReader(persistenceOutboundPort).execute();
-        Map<String, String> expectedResult = new ObjectMapper().registerModule(parserFixModule()).readValue(new File(getClass().getResource("test_config_reader_expected_result.json").getPath()), Map.class);
+        Map<String, String> expectedResult = new ObjectMapper().readValue(new File(getClass().getResource("test_config_reader_expected_result.json").getPath()), Map.class);
         Assertions.assertThat(result).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedResult);
     }
 }

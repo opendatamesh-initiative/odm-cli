@@ -13,15 +13,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.opendatamesh.cli.usecases.importer.referencehandler.utils.JacksonUtils.parserFixModule;
 
 class ConfigUpdaterPersistenceOutboundPortImpl implements ConfigUpdaterPersistenceOutboundPort {
 
     private final Environment environment;
     private final ResourceLoader resourceLoader;
 
-    private final ObjectMapper jsonMapper = new ObjectMapper().registerModule(parserFixModule());
-    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory()).registerModule(parserFixModule());
+    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
     ConfigUpdaterPersistenceOutboundPortImpl(Environment environment, ResourceLoader resourceLoader) {
         this.environment = environment;

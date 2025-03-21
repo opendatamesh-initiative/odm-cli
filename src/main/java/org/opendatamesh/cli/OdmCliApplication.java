@@ -4,6 +4,7 @@ import org.opendatamesh.cli.commands.OdmCliRootCommandBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import picocli.CommandLine;
 
@@ -14,7 +15,9 @@ public class OdmCliApplication implements CommandLineRunner {
     private OdmCliRootCommandBuilder rootCommand;
 
     public static void main(String[] args) {
-        SpringApplication.run(OdmCliApplication.class, args);
+        SpringApplication app = new SpringApplication(OdmCliApplication.class);
+        app.setWebApplicationType(WebApplicationType.NONE);
+        app.run(args);
     }
 
     @Override

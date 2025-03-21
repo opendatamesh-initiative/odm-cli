@@ -63,7 +63,7 @@
         }
       ],
       "observabilityPorts": [],
-      "discoverabilityPorts": [],
+      "discoveryPorts": [],
       "controlPorts": []
     },
     "internalComponents": {

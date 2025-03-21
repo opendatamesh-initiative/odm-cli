@@ -1,15 +1,15 @@
 package org.opendatamesh.cli.usecases.importer;
 
-import org.opendatamesh.dpds.model.DataProductVersionDPDS;
+import org.opendatamesh.dpds.model.DataProductVersion;
 
 public class ImportSchemaParserMockState {
-    private DataProductVersionDPDS dataProductVersion;
+    private DataProductVersion dataProductVersion;
 
-    public DataProductVersionDPDS getDataProductVersion() {
+    public DataProductVersion getDataProductVersion() {
         return dataProductVersion;
     }
 
-    public void setDataProductVersion(DataProductVersionDPDS dataProductVersion) {
+    public void setDataProductVersion(DataProductVersion dataProductVersion) {
         this.dataProductVersion = dataProductVersion;
     }
 }
