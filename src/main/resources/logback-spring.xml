@@ -26,12 +26,13 @@
         </appender>
 
         <!-- Logger settings -->
-        <logger name="org.springframework" level="ERROR" />
+        <logger name="org.springframework" level="ERROR"/>
+        <logger name="org.springframework.boot" level="ERROR"/>
 
         <!-- Root loggers for INFO and ERROR levels -->
         <root level="INFO">
-            <appender-ref ref="CONSOLE" />
-            <appender-ref ref="ERROR_CONSOLE" />
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ERROR_CONSOLE"/>
         </root>
     </springProfile>
 </configuration>

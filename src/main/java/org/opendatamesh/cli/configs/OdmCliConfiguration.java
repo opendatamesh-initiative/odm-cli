@@ -1,5 +1,6 @@
 package org.opendatamesh.cli.configs;
 
+import org.opendatamesh.cli.configs.platform.PlatformConfiguration;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.opendatamesh.cli.usecases.config.reader.ConfigReaderFactory;
 import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterFactory;
@@ -27,7 +28,7 @@ public class OdmCliConfiguration {
 
     private Config cliConfiguration;
     private List<OdmCliBaseConfiguration.SystemConfig> systems;
-    private OdmPlatform odmPlatform;
+    private PlatformConfiguration platform;
 
     @Autowired
     @Lazy
@@ -68,12 +69,12 @@ public class OdmCliConfiguration {
         this.systems = systems;
     }
 
-    public OdmPlatform getOdmPlatform() {
-        return odmPlatform;
+    public PlatformConfiguration getPlatform() {
+        return platform;
     }
 
-    public void setOdmPlatform(OdmPlatform odmPlatform) {
-        this.odmPlatform = odmPlatform;
+    public void setPlatform(PlatformConfiguration platform) {
+        this.platform = platform;
     }
 
     public static class Config extends OdmCliBaseConfiguration.Config {
@@ -99,27 +100,5 @@ public class OdmCliConfiguration {
         }
     }
 
-    public static class OdmPlatform {
-        private OdmPlatformService registryService;
 
-        public OdmPlatformService getRegistryService() {
-            return registryService;
-        }
-
-        public void setRegistryService(OdmPlatformService registryService) {
-            this.registryService = registryService;
-        }
-    }
-
-    public static class OdmPlatformService {
-        private String endpoint;
-
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        public void setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-        }
-    }
 }

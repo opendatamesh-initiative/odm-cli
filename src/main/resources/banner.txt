@@ -1,1 +1,0 @@
-Starting ${application.name} ${application.formatted-version}

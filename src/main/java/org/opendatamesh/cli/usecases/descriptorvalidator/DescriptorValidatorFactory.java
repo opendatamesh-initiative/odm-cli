@@ -1,6 +1,6 @@
 package org.opendatamesh.cli.usecases.descriptorvalidator;
 
-import org.opendatamesh.cli.clients.platform.registry.OdmPlatformRegistryClientFactory;
+import org.opendatamesh.cli.clients.platform.registry.PlatformRegistryClientFactory;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.usecases.UseCaseReturning;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class DescriptorValidatorFactory {
     private OdmCliConfiguration cliConfiguration;
 
     @Autowired
-    private OdmPlatformRegistryClientFactory registryClientFactory;
+    private PlatformRegistryClientFactory registryClientFactory;
 
     public UseCaseReturning<DataProductValidationResults> getDescriptorValidatorUseCase(
             String descriptorFilePath,

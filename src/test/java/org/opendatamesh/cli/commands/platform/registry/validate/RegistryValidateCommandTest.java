@@ -27,6 +27,7 @@ public class RegistryValidateCommandTest extends OdmCliCommandIT {
                 "registry",
                 "validate",
                 "-f" + getClass().getResource("data-product-descriptor.json").getPath(),
+                "--verbose=true"
         };
         invokeCommand(args);
     }

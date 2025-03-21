@@ -1,16 +1,16 @@
 package org.opendatamesh.cli.usecases.descriptorvalidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.opendatamesh.cli.clients.platform.registry.OdmPlatformRegistryClient;
+import org.opendatamesh.cli.clients.platform.registry.PlatformRegistryClient;
 import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationRequestResource;
 import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationResponseResource;
 
 import java.util.List;
 
 class DescriptorValidatorOdmOutboundPortImpl implements DescriptorValidatorOdmOutboundPort {
-    private final OdmPlatformRegistryClient registryClient;
+    private final PlatformRegistryClient registryClient;
 
-    DescriptorValidatorOdmOutboundPortImpl(OdmPlatformRegistryClient registryClient) {
+    DescriptorValidatorOdmOutboundPortImpl(PlatformRegistryClient registryClient) {
         this.registryClient = registryClient;
     }
 
@@ -25,7 +25,7 @@ class DescriptorValidatorOdmOutboundPortImpl implements DescriptorValidatorOdmOu
 
         DataProductValidationResults results = new DataProductValidationResults();
         results.getResults().add(new DataProductValidationResults.Result(
-                "Syntax Validation",
+                "Data Product Descriptor Syntax",
                 response.getSyntaxValidationResult().isValidated(),
                 response.getSyntaxValidationResult().getValidationOutput()
         ));

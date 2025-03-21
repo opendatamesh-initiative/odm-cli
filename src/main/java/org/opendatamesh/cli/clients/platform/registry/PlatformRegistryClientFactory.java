@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
-public class OdmPlatformRegistryClientFactory {
+public class PlatformRegistryClientFactory {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -14,10 +14,10 @@ public class OdmPlatformRegistryClientFactory {
     @Autowired
     private OdmCliConfiguration configuration;
 
-    public OdmPlatformRegistryClient getClient() {
-        if (configuration.getOdmPlatform() == null || configuration.getOdmPlatform().getRegistryService() == null) {
+    public PlatformRegistryClient getClient() {
+        if (configuration.getPlatform() == null || configuration.getPlatform().getServices() == null || configuration.getPlatform().getServices().getRegistry() == null) {
             throw new IllegalStateException("Missing configuration for odm-platform registry service.");
         }
-        return new OdmPlatformRegistryClientImpl(restTemplate, configuration.getOdmPlatform().getRegistryService());
+        return new PlatformRegistryClientImpl(restTemplate, configuration.getPlatform().getServices().getRegistry());
     }
 }

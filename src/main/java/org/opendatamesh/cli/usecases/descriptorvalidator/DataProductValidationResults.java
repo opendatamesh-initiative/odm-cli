@@ -1,7 +1,5 @@
 package org.opendatamesh.cli.usecases.descriptorvalidator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,9 +18,9 @@ public class DataProductValidationResults {
     public static class Result {
         private String name;
         private boolean validated;
-        private JsonNode validationOutput;
+        private Object validationOutput;
 
-        public Result(String name, boolean validated, JsonNode validationOutput) {
+        public Result(String name, boolean validated, Object validationOutput) {
             this.name = name;
             this.validated = validated;
             this.validationOutput = validationOutput;
@@ -44,11 +42,11 @@ public class DataProductValidationResults {
             this.validated = validated;
         }
 
-        public JsonNode getValidationOutput() {
+        public Object getValidationOutput() {
             return validationOutput;
         }
 
-        public void setValidationOutput(JsonNode validationOutput) {
+        public void setValidationOutput(Object validationOutput) {
             this.validationOutput = validationOutput;
         }
     }

@@ -31,8 +31,9 @@ public class OdmDataProductValidationResponseResource {
     }
 
     public static class OdmDataProductValidationResult {
+        private String name;
         private boolean validated;
-        private JsonNode validationOutput;
+        private Object validationOutput;
 
         public OdmDataProductValidationResult() {
         }
@@ -50,11 +51,19 @@ public class OdmDataProductValidationResponseResource {
             this.validated = validated;
         }
 
-        public JsonNode getValidationOutput() {
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Object getValidationOutput() {
             return validationOutput;
         }
 
-        public void setValidationOutput(JsonNode validationOutput) {
+        public void setValidationOutput(Object validationOutput) {
             this.validationOutput = validationOutput;
         }
     }

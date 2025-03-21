@@ -37,8 +37,8 @@ import java.util.function.Function;
  */
 public class RestUtils {
 
-    private final RestTemplate rest;
-    private final ObjectMapper objectMapper;
+    protected final RestTemplate rest;
+    protected final ObjectMapper objectMapper;
 
     public RestUtils(RestTemplate restTemplate) {
         this.rest = restTemplate;

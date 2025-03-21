@@ -14,9 +14,21 @@ endpoints. Those can be configured on the cli configuration file.
 ```yaml
 cli:
   #[ ... ]
-  odmPlatform:
-    registryService:
-      endpoint: http://localhost:8001
+  platform:
+    services:
+      registry:
+        url: http://localhost:8001 #(mandatory)
+        headers: #(optional) Can be used to authenticate via ApiKey
+          - name: 
+            value: 
+        oauth2: #(optional) Can be used to authenticate via Oauth2
+          url: 
+          grantType: 
+          scope: 
+          clientId: 
+          clientSecret: 
+          clientCertificate: 
+          clientCertificatePrivateKey:         
     #[ ... ]
 ```
 
