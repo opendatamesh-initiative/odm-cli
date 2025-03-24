@@ -27,10 +27,10 @@ class PlatformRegistryClientImpl implements PlatformRegistryClient {
     }
 
     @Override
-    public OdmDataProductValidationResponseResource validateDataProduct(OdmDataProductValidationRequestResource validationRequest) {
+    public OdmDataProductValidationResponseResource testValidateDataProduct(OdmDataProductValidationRequestResource validationRequest) {
         try {
             return restUtils.genericPost(
-                    registryServiceCredential.getUrl() + "/api/v1/pp/registry/products/*/validate",
+                    registryServiceCredential.getUrl() + "/api/v1/pp/registry/validate/report",
                     null,
                     validationRequest,
                     OdmDataProductValidationResponseResource.class

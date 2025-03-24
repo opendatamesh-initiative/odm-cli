@@ -4,5 +4,5 @@ import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductVa
 import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationResponseResource;
 
 public interface PlatformRegistryClient {
-    OdmDataProductValidationResponseResource validateDataProduct(OdmDataProductValidationRequestResource validationRequest);
+    OdmDataProductValidationResponseResource testValidateDataProduct(OdmDataProductValidationRequestResource validationRequest);
 }

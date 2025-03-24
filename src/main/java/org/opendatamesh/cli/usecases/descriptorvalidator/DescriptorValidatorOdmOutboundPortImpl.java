@@ -21,7 +21,7 @@ class DescriptorValidatorOdmOutboundPortImpl implements DescriptorValidatorOdmOu
         validationRequest.setValidateSyntax(true);
         validationRequest.setDataProductVersion(rawDescriptor);
 
-        OdmDataProductValidationResponseResource response = registryClient.validateDataProduct(validationRequest);
+        OdmDataProductValidationResponseResource response = registryClient.testValidateDataProduct(validationRequest);
 
         DataProductValidationResults results = new DataProductValidationResults();
         results.getResults().add(new DataProductValidationResults.Result(
