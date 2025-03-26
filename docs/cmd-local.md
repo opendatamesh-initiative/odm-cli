@@ -20,3 +20,4 @@ Manage local env
 | Command                                      | Description                                          |
 |----------------------------------------------|------------------------------------------------------|
 | [`odmcli local import`](cmd-local-import.md) | Imports a descriptor element from an external source |
+| [`odmcli local init`](cmd-local-init.md)     | Initializes a new data product descriptor template with the given domain and name |

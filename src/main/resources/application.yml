@@ -20,6 +20,9 @@ cli:
     services:
       registry:
         url: http://localhost:8001
-
+  template:
+    owner:
+      id: "testId"
+      name: "456123"
   env:
     custom: customVariable
