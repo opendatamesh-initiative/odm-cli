@@ -9,11 +9,11 @@ import org.opendatamesh.dpds.model.interfaces.Port;
 import java.util.List;
 
 
-class ImporterExtensionMock implements ImporterExtension<Port> {
+class PortImporterExtensionMock implements ImporterExtension<Port> {
 
-    private final ImporterExtensionMockState state;
+    private final PortImporterExtensionMockState state;
 
-    public ImporterExtensionMock(ImporterExtensionMockState state) {
+    public PortImporterExtensionMock(PortImporterExtensionMockState state) {
         this.state = state;
     }
 

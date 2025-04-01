@@ -6,13 +6,13 @@ import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import java.nio.file.Path;
 import java.util.Map;
 
-class PortImporterParameterOutboundPortImpl implements PortImporterParameterOutboundPort {
+class ImporterParameterOutboundPortImpl implements ImporterParameterOutboundPort {
 
     private final OdmCliConfiguration odmCliBaseConfiguration;
     private final Path descriptorFilePath;
     private final Map<String, String> importSchemaCommandParams;
 
-    PortImporterParameterOutboundPortImpl(
+    ImporterParameterOutboundPortImpl(
             OdmCliConfiguration odmCliBaseConfiguration,
             String descriptorRootFilePath,
             Map<String, String> importSchemaCommandParams

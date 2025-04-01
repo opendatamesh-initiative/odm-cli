@@ -6,7 +6,7 @@ import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.ExtensionsLoader;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
-import org.opendatamesh.cli.usecases.importer.PortImporterFactory;
+import org.opendatamesh.cli.usecases.importer.ImporterFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -22,7 +22,7 @@ import static org.opendatamesh.cli.commands.local.LocalCommandBuilder.LOCAL_COMM
 public class ImportCommandBuilder implements PicoCliCommandBuilder {
 
     @Autowired
-    private PortImporterFactory portImporterFactory;
+    private ImporterFactory importerFactory;
     @Autowired
     private ExtensionsLoader extensionsLoader;
     @Autowired
@@ -36,7 +36,7 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         Optional<String> to = getOptionFromArguments(args, "--to");
 
         ImporterExtension<?> extension = from.isPresent() && to.isPresent() ? extensionsLoader.getImporterExtension(from.get(), to.get()) : null;
-        ImportCommandExecutor executor = new ImportCommandExecutor(configuration, portImporterFactory, extension);
+        ImportCommandExecutor executor = new ImportCommandExecutor(configuration, importerFactory, extension);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(IMPORT_COMMAND);
         spec.mixinStandardHelpOptions(true);

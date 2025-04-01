@@ -25,12 +25,12 @@ public class PortImporterFactory {
             ImporterExtension importSchemaExtension
     ) {
         validateDescriptorFilePath(descriptorFilePath);
-        PortImporterParameterOutboundPort parameterOutboundPort = new PortImporterParameterOutboundPortImpl(
+        ImporterParameterOutboundPort parameterOutboundPort = new ImporterParameterOutboundPortImpl(
                 odmCliConfiguration,
                 descriptorFilePath,
                 importSchemaCommandParams
         );
-        PortImporterParserOutboundPort parserOutboundPort = new PortPortImporterParserOutboundPortImpl(Paths.get(descriptorFilePath), odmCliConfiguration);
+        ImporterParserOutboundPort parserOutboundPort = new PortImporterParserOutboundPortImpl(Paths.get(descriptorFilePath), odmCliConfiguration);
         return new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtension);
     }
 

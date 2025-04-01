@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -18,11 +19,11 @@ import java.util.regex.Pattern;
 class PortImporter implements UseCase {
 
     private static final Logger log = LoggerFactory.getLogger(PortImporter.class);
-    private final PortImporterParameterOutboundPort parameterOutboundPort;
-    private final PortImporterParserOutboundPort parserOutboundPort;
+    private final ImporterParameterOutboundPort parameterOutboundPort;
+    private final ImporterParserOutboundPort parserOutboundPort;
     private final ImporterExtension<Port> importerExtension;
 
-    PortImporter(PortImporterParameterOutboundPort parameterOutboundPort, PortImporterParserOutboundPort parserOutboundPort, ImporterExtension<Port> importerExtension) {
+    PortImporter(ImporterParameterOutboundPort parameterOutboundPort, ImporterParserOutboundPort parserOutboundPort, ImporterExtension<Port> importerExtension) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
         this.importerExtension = importerExtension;
@@ -30,7 +31,7 @@ class PortImporter implements UseCase {
 
     @Override
     public void execute() {
-        DataProductVersion descriptor = parserOutboundPort.getDataProductVersion();
+        DataProductVersion descriptor = readAndParseDataProductVersion();
         ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
         arguments.setDataProductVersion(descriptor);
         Optional<Port> existingPort = findPortIfExists(descriptor, arguments);
@@ -38,6 +39,16 @@ class PortImporter implements UseCase {
         Port port = importerExtension.importElement(existingPort.orElse(null), arguments);
         addPortToDescriptor(descriptor, port);
         parserOutboundPort.saveDescriptor(descriptor);
+    }
+
+    private DataProductVersion readAndParseDataProductVersion() {
+        DataProductVersion descriptor;
+        try {
+            descriptor = parserOutboundPort.getDataProductVersion();
+            return descriptor;
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void logInformationAboutExistingPort(Optional<Port> existingPort, ImporterArguments arguments) {

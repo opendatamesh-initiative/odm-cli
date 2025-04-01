@@ -4,7 +4,7 @@ import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
-import org.opendatamesh.cli.usecases.importer.PortImporterFactory;
+import org.opendatamesh.cli.usecases.importer.ImporterFactory;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class ImportCommandExecutor extends PicoCliCommandExecutor {
 
-    private final PortImporterFactory portImporterFactory;
+    private final ImporterFactory portImporterFactory;
     private final ImporterExtension<?> importSchemaExtension;
 
     private String descriptorFilePath;
@@ -20,7 +20,7 @@ public class ImportCommandExecutor extends PicoCliCommandExecutor {
 
     public ImportCommandExecutor(
             OdmCliConfiguration odmCliConfiguration,
-            PortImporterFactory portImporterFactory,
+            ImporterFactory portImporterFactory,
             ImporterExtension<?> importSchemaExtension
     ) {
         super(odmCliConfiguration);
