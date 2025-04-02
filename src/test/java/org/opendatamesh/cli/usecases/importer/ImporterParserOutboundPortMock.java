@@ -2,11 +2,11 @@ package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.dpds.model.DataProductVersion;
 
-public class PortImporterParserOutboundPortMock implements PortImporterParserOutboundPort {
+public class ImporterParserOutboundPortMock implements ImporterParserOutboundPort {
 
-    private final ImportSchemaParserMockState state;
+    private final ImporterParserMockState state;
 
-    public PortImporterParserOutboundPortMock(ImportSchemaParserMockState state) {
+    public ImporterParserOutboundPortMock(ImporterParserMockState state) {
         this.state = state;
     }
 

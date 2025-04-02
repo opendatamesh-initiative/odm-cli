@@ -11,6 +11,8 @@ import org.opendatamesh.dpds.referencehandler.DescriptorFormat;
 import org.opendatamesh.dpds.referencehandler.ReferenceResolver;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,14 +20,14 @@ import java.nio.file.Path;
 
 import static org.opendatamesh.dpds.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
-class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutboundPort {
+class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
 
     private final Path descriptorPath;
     private final OdmCliConfiguration odmCliConfiguration;
     private final ObjectMapper jsonMapper;
     private final ObjectMapper yamlMapper;
 
-    PortPortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
+    PortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
         this.descriptorPath = descriptorPath;
         this.odmCliConfiguration = odmCliConfiguration;
         this.jsonMapper = new ObjectMapper();
@@ -35,9 +37,13 @@ class PortPortImporterParserOutboundPortImpl implements PortImporterParserOutbou
     }
 
     @Override
-    public DataProductVersion getDataProductVersion() {
+    public DataProductVersion getDataProductVersion() throws FileNotFoundException {
+        File descriptorPathFile = descriptorPath.toFile();
+        if (!descriptorPathFile.exists() || descriptorPathFile.isFile()) {
+            throw new FileNotFoundException("Descriptor file not found at path: " + descriptorPath.toAbsolutePath());
+        }
         try {
-            DataProductVersion dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPath.toFile(), DataProductVersion.class);
+            DataProductVersion dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPathFile, DataProductVersion.class);
             ReferenceResolver.resolveReferences(DescriptorFormat.CANONICAL, dataProductVersion, descriptorPath);
             return dataProductVersion;
         } catch (Exception e) {

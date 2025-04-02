@@ -2,11 +2,11 @@ package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 
-class PortImporterParameterOutboundPortMock implements PortImporterParameterOutboundPort {
+class ImporterParameterOutboundPortMock implements ImporterParameterOutboundPort {
 
     private final ImporterArguments importSchemaArguments;
 
-    PortImporterParameterOutboundPortMock(ImporterArguments importSchemaArguments) {
+    ImporterParameterOutboundPortMock(ImporterArguments importSchemaArguments) {
         this.importSchemaArguments = importSchemaArguments;
     }
 

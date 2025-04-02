@@ -2,7 +2,7 @@ package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.dpds.model.interfaces.Port;
 
-class ImporterExtensionMockState {
+class PortImporterExtensionMockState {
 
     private Port outputPort;
 

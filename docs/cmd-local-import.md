@@ -43,6 +43,15 @@ odmcli local import \
   --source myTemplate \
   --target myPortName 
 ```
+### Supported --to options
+The --to option specifies the target element within the Data Product Descriptor (DPD) where the imported data or 
+metadata will be integrated. Below is a list of supported types:
+* descriptor
+* output-port
+* input-port
+* discovery-port
+* observability-port
+* control-port
 
 ## Extensions
 
