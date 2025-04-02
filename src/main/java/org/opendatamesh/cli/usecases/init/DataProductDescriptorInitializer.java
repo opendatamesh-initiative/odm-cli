@@ -10,12 +10,12 @@ import org.opendatamesh.dpds.model.interfaces.*;
 import org.opendatamesh.dpds.model.internals.InternalComponents;
 import java.util.*;
 
-class Init implements UseCase {
+class DataProductDescriptorInitializer implements UseCase {
 
-    private final InitParameterOutboundPort parameterOutboundPort;
-    private final InitParserOutboundPort parserOutboundPort;
+    private final DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort;
+    private final DataProductDescriptorInitializerParserOutboundPort parserOutboundPort;
 
-    Init(InitParameterOutboundPort parameterOutboundPort, InitParserOutboundPort parserOutboundPort) {
+    DataProductDescriptorInitializer(DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort, DataProductDescriptorInitializerParserOutboundPort parserOutboundPort) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
     }
@@ -23,10 +23,12 @@ class Init implements UseCase {
     @Override
     public void execute() {
         ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
-        createDefaultDataProductVersionFile(arguments.getParentCommandOptions());
+        DataProductVersion defaultDescriptor = createDefaultDataProductVersionFile(arguments.getParentCommandOptions());
+        parserOutboundPort.saveObject(defaultDescriptor,
+                arguments.getParentCommandOptions().get("outputFile"), arguments.getParentCommandOptions().containsKey("force"));
     }
 
-    private void createDefaultDataProductVersionFile(Map<String, String> args) {
+    private DataProductVersion createDefaultDataProductVersionFile(Map<String, String> args) {
         DataProductVersion descriptor = new DataProductVersion();
         descriptor.setInfo(createDefaultInfo(args));
         descriptor.setInterfaceComponents(new InterfaceComponents());
@@ -34,7 +36,7 @@ class Init implements UseCase {
         descriptor.setComponents(new Components());
         descriptor.setTags(new ArrayList<>());
         descriptor.setExternalDocs(new ExternalDocs());
-        parserOutboundPort.saveObject(descriptor, args.get("outputFile"), args.containsKey("force"));
+        return descriptor;
     }
 
     private Info createDefaultInfo(Map<String, String> args) {

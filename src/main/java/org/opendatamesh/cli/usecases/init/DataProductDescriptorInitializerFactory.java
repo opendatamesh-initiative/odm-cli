@@ -4,11 +4,11 @@ import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import java.nio.file.Paths;
+
 import java.util.Map;
 
 @Component
-public class InitFactory {
+public class DataProductDescriptorInitializerFactory {
 
     @Autowired
     private OdmCliConfiguration odmCliConfiguration;
@@ -16,11 +16,11 @@ public class InitFactory {
     public UseCase getImportSchemaUseCase(
             Map<String, String> importSchemaCommandParams
     ) {
-        InitParameterOutboundPort parameterOutboundPort = new InitParameterOutboundPortImpl(
+        DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort = new DataProductDescriptorInitializerParameterOutboundPortImpl(
                 odmCliConfiguration,
                 importSchemaCommandParams
         );
-        InitParserOutboundPort parserOutboundPort = new InitParserOutboundPortImpl(odmCliConfiguration);
-        return new Init(parameterOutboundPort, parserOutboundPort);
+        DataProductDescriptorInitializerParserOutboundPort parserOutboundPort = new DataProductDescriptorInitializerParserOutboundPortImpl(odmCliConfiguration);
+        return new DataProductDescriptorInitializer(parameterOutboundPort, parserOutboundPort);
     }
 }

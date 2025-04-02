@@ -12,17 +12,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 public class InitCommandTest extends OdmCliCommandIT {
 
     @Test
-    @Disabled
     void testFailInteractive() {
         String[] args = {
                 "--interactive=false", //The command must fail if required options are not initialized.
                 "local",
                 "-s=NORMALIZED",
-                "init",
-                "--domain=testDomain",
-                "--name=testName",
-                "--force",
-                "--outputFile=~/git/odm-cli/test.json"
+                "init"
 
         };
         assertThatThrownBy(() -> invokeCommand(args))

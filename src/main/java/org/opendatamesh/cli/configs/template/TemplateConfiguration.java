@@ -1,12 +1,11 @@
 package org.opendatamesh.cli.configs.template;
-import org.opendatamesh.dpds.model.info.Owner;
 
 public class TemplateConfiguration {
-    private Owner owner;
-    public Owner getOwner() {
+    private TemplateOwner owner;
+    public TemplateOwner getOwner() {
         return owner;
     }
-    public void setOwner(Owner owner) {
+    public void setOwner(TemplateOwner owner) {
         this.owner = owner;
     }
 }

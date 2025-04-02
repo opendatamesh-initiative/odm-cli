@@ -3,7 +3,7 @@ package org.opendatamesh.cli.commands.local.init;
 import com.google.common.collect.Lists;
 import org.opendatamesh.cli.commands.PicoCliCommandBuilder;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.init.InitFactory;
+import org.opendatamesh.cli.usecases.init.DataProductDescriptorInitializerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -18,7 +18,7 @@ import static org.opendatamesh.cli.commands.local.LocalCommandBuilder.LOCAL_COMM
 public class InitCommandBuilder implements PicoCliCommandBuilder {
 
     @Autowired
-    private InitFactory initFactory;
+    private DataProductDescriptorInitializerFactory dataProductDescriptorInitializerFactory;
     @Autowired
     private OdmCliConfiguration configuration;
 
@@ -27,7 +27,7 @@ public class InitCommandBuilder implements PicoCliCommandBuilder {
     @Override
     public CommandLine buildCommand(String... args) {
 
-        InitCommandExecutor executor = new InitCommandExecutor(configuration, initFactory);
+        InitCommandExecutor executor = new InitCommandExecutor(configuration, dataProductDescriptorInitializerFactory);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
 
         spec.name(INIT_COMMAND);

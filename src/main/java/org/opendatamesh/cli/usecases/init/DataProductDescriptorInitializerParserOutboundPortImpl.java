@@ -14,13 +14,13 @@ import java.nio.file.Path;
 import java.util.List;
 
 
-class InitParserOutboundPortImpl implements InitParserOutboundPort {
+class DataProductDescriptorInitializerParserOutboundPortImpl implements DataProductDescriptorInitializerParserOutboundPort {
 
     private final OdmCliConfiguration odmCliConfiguration;
     private final ObjectMapper jsonMapper;
     private final ObjectMapper yamlMapper;
 
-    InitParserOutboundPortImpl(OdmCliConfiguration odmCliConfiguration) {
+    DataProductDescriptorInitializerParserOutboundPortImpl(OdmCliConfiguration odmCliConfiguration) {
         this.odmCliConfiguration = odmCliConfiguration;
         this.jsonMapper = new ObjectMapper();
         configObjectMapper(jsonMapper);

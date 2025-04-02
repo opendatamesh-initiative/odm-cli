@@ -4,12 +4,12 @@ import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import java.util.Map;
 
-class InitParameterOutboundPortImpl implements InitParameterOutboundPort {
+class DataProductDescriptorInitializerParameterOutboundPortImpl implements DataProductDescriptorInitializerParameterOutboundPort {
 
     private final OdmCliConfiguration odmCliBaseConfiguration;
     private final Map<String, String> importSchemaCommandParams;
 
-    InitParameterOutboundPortImpl(
+    DataProductDescriptorInitializerParameterOutboundPortImpl(
             OdmCliConfiguration odmCliBaseConfiguration,
             Map<String, String> importSchemaCommandParams
     ) {
