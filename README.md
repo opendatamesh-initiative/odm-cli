@@ -65,6 +65,10 @@ cli:
       user: 'root'
       password: 'root'
       driver: JDBC
+  template:
+    owner:
+      id: "ownerId"
+      name: "ownerName"
   <customEnv>:
     <customEnvField>: <customEnvValue>
 extensions:
@@ -84,6 +88,8 @@ Where:
     - **endpoint**: the connection url of the remote system.
     - **user** & **password** : credentials needed for authentication.
     - **driver**: the driver name (if required for the connection).
+- **cli.template**:
+  - **owner**: the default owner for data products.
 - **\<customEnv>**: section for additional default values used by CLI extensions.
 - **extensions**: configuration for automatically downloading CLI extensions jar files.
     - **name**: the name of the extension (should be unique).

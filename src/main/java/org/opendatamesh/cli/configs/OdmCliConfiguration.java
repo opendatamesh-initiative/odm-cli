@@ -1,6 +1,7 @@
 package org.opendatamesh.cli.configs;
 
 import org.opendatamesh.cli.configs.platform.PlatformConfiguration;
+import org.opendatamesh.cli.configs.template.TemplateConfiguration;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.opendatamesh.cli.usecases.config.reader.ConfigReaderFactory;
 import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterFactory;
@@ -29,6 +30,7 @@ public class OdmCliConfiguration {
     private Config cliConfiguration;
     private List<OdmCliBaseConfiguration.SystemConfig> systems;
     private PlatformConfiguration platform;
+    private TemplateConfiguration template;
 
     @Autowired
     @Lazy
@@ -75,6 +77,14 @@ public class OdmCliConfiguration {
 
     public void setPlatform(PlatformConfiguration platform) {
         this.platform = platform;
+    }
+
+    public TemplateConfiguration getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(TemplateConfiguration template) {
+        this.template = template;
     }
 
     public static class Config extends OdmCliBaseConfiguration.Config {
