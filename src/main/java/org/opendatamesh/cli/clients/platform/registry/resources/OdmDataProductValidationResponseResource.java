@@ -34,13 +34,15 @@ public class OdmDataProductValidationResponseResource {
         private String name;
         private boolean validated;
         private Object validationOutput;
+        private Boolean blockingFlag;
 
         public OdmDataProductValidationResult() {
         }
 
-        public OdmDataProductValidationResult(boolean validated, JsonNode validationOutput) {
+        public OdmDataProductValidationResult(boolean validated, JsonNode validationOutput, Boolean blockingFlag) {
             this.validated = validated;
             this.validationOutput = validationOutput;
+            this.blockingFlag = blockingFlag;
         }
 
         public boolean isValidated() {
@@ -65,6 +67,14 @@ public class OdmDataProductValidationResponseResource {
 
         public void setValidationOutput(Object validationOutput) {
             this.validationOutput = validationOutput;
+        }
+
+        public Boolean getBlockingFlag() {
+            return blockingFlag;
+        }
+
+        public void setBlockingFlag(Boolean blockingFlag) {
+            this.blockingFlag = blockingFlag;
         }
     }
 }

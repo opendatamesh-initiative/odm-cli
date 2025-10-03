@@ -63,7 +63,7 @@ public class ValidateCommandExecutor extends PicoCliCommandExecutor {
         for (DataProductValidationResults.Result result : results.getResults()) {
             if ("true".equalsIgnoreCase(this.isVerbose)) {
                 String validationOutputStr = result.getValidationOutput() != null ? result.getValidationOutput().toString() : "none";
-                logger.info("[Validation Result] Name: {}, Validated: {}, Output: {}", result.getName(), result.isValidated(), validationOutputStr);
+                logger.info("[Validation Result] Name: {}, Validated: {}, Blocking: {}, Output: {}", result.getName(), result.isValidated(), result.getBlockingFlag(), validationOutputStr);
             } else {
                 logger.info("[Validation Result] Name: {}, Validated: {}", result.getName(), result.isValidated());
             }

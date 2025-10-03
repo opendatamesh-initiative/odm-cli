@@ -27,13 +27,15 @@ class DescriptorValidatorOdmOutboundPortImpl implements DescriptorValidatorOdmOu
         results.getResults().add(new DataProductValidationResults.Result(
                 "Data Product Descriptor Syntax",
                 response.getSyntaxValidationResult().isValidated(),
-                response.getSyntaxValidationResult().getValidationOutput()
+                response.getSyntaxValidationResult().getValidationOutput(),
+                response.getSyntaxValidationResult().getBlockingFlag()
         ));
         response.getPoliciesValidationResults()
                 .forEach((policyName, output) -> results.getResults().add(new DataProductValidationResults.Result(
                         policyName,
                         output.isValidated(),
-                        output.getValidationOutput()
+                        output.getValidationOutput(),
+                        output.getBlockingFlag()
                 )));
         return results;
     }
