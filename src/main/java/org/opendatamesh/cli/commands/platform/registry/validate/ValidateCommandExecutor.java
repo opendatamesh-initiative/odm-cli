@@ -59,16 +59,32 @@ public class ValidateCommandExecutor extends PicoCliCommandExecutor {
             logger.info("No validation results to log.");
             return;
         }
+        int total = results.getResults().size();
+        int validatedCount = 0;
+        int blockingCount = 0;
+        int warningCount = 0;
 
         for (DataProductValidationResults.Result result : results.getResults()) {
+            if (result.isValidated()) validatedCount++;
+            if (Boolean.TRUE.equals(result.getBlockingFlag())) blockingCount++;
+            else if (Boolean.FALSE.equals(result.getBlockingFlag()) && !result.isValidated()) warningCount++;
+
             if ("true".equalsIgnoreCase(this.isVerbose)) {
-                String validationOutputStr = result.getValidationOutput() != null ? result.getValidationOutput().toString() : "none";
-                logger.info("[Validation Result] Name: {}, Validated: {}, Blocking: {}, Output: {}", result.getName(), result.isValidated(), result.getBlockingFlag(), validationOutputStr);
+                String validationOutputStr = result.getValidationOutput() != null
+                        ? result.getValidationOutput().toString()
+                        : "none";
+                logger.info("[Validation Result] Name: {}, Validated: {}, Blocking: {}, Output: {}",
+                        result.getName(), result.isValidated(), result.getBlockingFlag(), validationOutputStr);
             } else {
-                logger.info("[Validation Result] Name: {}, Validated: {}", result.getName(), result.isValidated());
+                logger.info("[Validation Result] Name: {}, Validated: {}, Blocking: {}",
+                        result.getName(), result.isValidated(), result.getBlockingFlag());
             }
         }
+
+        logger.info("✅ Validated: {}/{} — ⚠️ Warning: {} — ❌ Blocking: {}",
+                 validatedCount, total, warningCount, blockingCount);
     }
+
 
     public void setValidateCommandParams(String commandName, String commandValue) {
         if (commandValue == null) {
