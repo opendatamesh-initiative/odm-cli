@@ -49,6 +49,6 @@ class DescriptorValidatorParserOutboundPortImpl implements DescriptorValidatorPa
 
     private void configObjectMapper(ObjectMapper mapper) {
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 }
