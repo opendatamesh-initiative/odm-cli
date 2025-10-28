@@ -5,6 +5,7 @@
 * [Open Data Mesh Command Line](#open-data-mesh-command-line)
     * [About](#about)
     * [Setup](#setup)
+    * [Updates](#updates)
     * [Configuration](#configuration)
     * [Usage](#usage)
         * [Commands](#commands)
@@ -41,6 +42,16 @@ Test the cli.
 ```bash
 ./odmcli --version
 ```
+
+## Updates
+
+The ODM CLI manages updates automatically:
+
+- **Automatic Version Detection**: When you run the CLI, it automatically fetches the latest release version from the GitHub API and downloads the corresponding JAR file (`odm-cli-{version}.jar`) to `~/.odmcli/`
+- **Version Caching**: The CLI checks if the current version is already installed by comparing the version stored in `~/.odmcli/version.txt` with the latest available version
+- **Smart Downloads**: Only downloads a new version if it's not already present, avoiding unnecessary network requests
+- **Update Notifications**: If a newer version is available than what you're currently running, the CLI will display a notification: "A newer version ({version}) is available. Consider upgrading!"
+- **Rollback Support**: To roll back to a previous version, you can manually replace the JAR file in `~/.odmcli/` with the specific version you need, or modify the `VERSION` variable in the `odm-cli` executable script
 
 ## Configuration
 
