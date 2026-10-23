@@ -40,7 +40,8 @@ public class InitCommandExecutor extends PicoCliCommandExecutor {
     @Override
     protected void executeUseCase() {
         dataProductDescriptorInitializerFactory.getImportSchemaUseCase(
-                importSchemaCommandParams
+                importSchemaCommandParams,
+                descriptor -> { }
         ).execute();
     }
 

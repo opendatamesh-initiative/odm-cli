@@ -1,7 +1,7 @@
 package org.opendatamesh.cli.usecases.config.updater;
 
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
@@ -19,9 +19,9 @@ public class ConfigUpdaterFactory {
     @Autowired
     private ResourceLoader resourceLoader;
 
-    public UseCase getConfigUpdater(Map<String, String> simpleEntriesToAdd, Set<String> keysToDelete, Map<String, Map<String, String>> arrayAttributesEntriesToAdd, Map<String, Map<String, String>> arrayAttributesEntriesToDelete) {
+    public UseCase getConfigUpdater(Map<String, String> simpleEntriesToAdd, Set<String> keysToDelete, Map<String, Map<String, String>> arrayAttributesEntriesToAdd, Map<String, Map<String, String>> arrayAttributesEntriesToDelete, ConfigUpdaterPresenter presenter) {
         ConfigUpdaterParametersOutboundPort parametersOutboundPort = new ConfigUpdaterParametersOutboundPortImpl(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete);
         ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort = new ConfigUpdaterPersistenceOutboundPortImpl(environment, resourceLoader);
-        return new ConfigUpdater(persistenceOutboundPort, parametersOutboundPort);
+        return new ConfigUpdater(persistenceOutboundPort, parametersOutboundPort, presenter);
     }
 }

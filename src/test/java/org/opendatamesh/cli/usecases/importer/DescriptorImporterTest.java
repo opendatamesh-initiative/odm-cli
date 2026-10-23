@@ -34,7 +34,7 @@ public class DescriptorImporterTest {
 
         DescriptorImporterExtensionMock importSchemaExtensionMock = new DescriptorImporterExtensionMock(extensionState);
 
-        new DescriptorImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new DescriptorImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock, descriptor -> { })
                 .execute();
 
         ImporterParserMockState parserExpectedState = new ImporterParserMockState();

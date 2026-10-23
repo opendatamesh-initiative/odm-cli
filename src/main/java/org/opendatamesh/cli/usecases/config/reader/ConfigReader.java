@@ -1,24 +1,30 @@
 package org.opendatamesh.cli.usecases.config.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.opendatamesh.cli.usecases.UseCaseReturning;
+import org.opendatamesh.cli.utils.usecases.UseCase;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ConfigReader implements UseCaseReturning<Map<String, String>> {
+class ConfigReader implements UseCase {
 
     private final ConfigReaderPersistenceOutboundPort persistenceOutboundPort;
+    private final ConfigReaderPresenter presenter;
 
-    ConfigReader(ConfigReaderPersistenceOutboundPort persistenceOutboundPort) {
+    ConfigReader(ConfigReaderPersistenceOutboundPort persistenceOutboundPort, ConfigReaderPresenter presenter) {
         this.persistenceOutboundPort = persistenceOutboundPort;
+        this.presenter = presenter;
     }
 
     @Override
-    public Map<String, String> execute() {
-        JsonNode configuration = persistenceOutboundPort.getConfigContent();
-        return flatten(configuration);
+    public void execute() {
+        try {
+            JsonNode configuration = persistenceOutboundPort.getConfigContent();
+            presenter.presentConfiguration(flatten(configuration));
+        } catch (Exception e) {
+            presenter.presentException(e);
+        }
     }
 
     private Map<String, String> flatten(JsonNode configuration) {

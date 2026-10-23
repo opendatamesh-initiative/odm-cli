@@ -2,7 +2,7 @@ package org.opendatamesh.cli.usecases.descriptorvalidator;
 
 import org.opendatamesh.cli.clients.platform.registry.PlatformRegistryClientFactory;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.UseCaseReturning;
+import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +22,10 @@ public class DescriptorValidatorFactory {
     @Autowired
     private PlatformRegistryClientFactory registryClientFactory;
 
-    public UseCaseReturning<DataProductValidationResults> getDescriptorValidatorUseCase(
+    public UseCase getDescriptorValidatorUseCase(
             String descriptorFilePath,
-            Map<String, String> validateCommandParams
+            Map<String, String> validateCommandParams,
+            DescriptorValidatorPresenter presenter
     ) {
         validateDescriptorFilePath(descriptorFilePath);
         DescriptorValidatorParserOutboundPort parserOutboundPort = new DescriptorValidatorParserOutboundPortImpl(Paths.get(descriptorFilePath));
@@ -34,7 +35,7 @@ public class DescriptorValidatorFactory {
                 descriptorFilePath,
                 validateCommandParams
         );
-        return new DescriptorValidator(odmOutboundPort, parserOutboundPort, parametersOutboundPort);
+        return new DescriptorValidator(odmOutboundPort, parserOutboundPort, parametersOutboundPort, presenter);
     }
 
     private void validateDescriptorFilePath(String descriptorRootFilePath) {

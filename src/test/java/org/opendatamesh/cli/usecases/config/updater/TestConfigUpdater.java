@@ -27,7 +27,7 @@ public class TestConfigUpdater {
         ConfigUpdaterParametersOutboundPort parametersOutboundPort = new ConfigUpdaterParametersOutboundPortMock(initialState);
         ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort = new ConfigUpdaterPersistenceOutboundPortMock(initialState, finalState);
 
-        new ConfigUpdater(persistenceOutboundPort, parametersOutboundPort).execute();
+        new ConfigUpdater(persistenceOutboundPort, parametersOutboundPort, savedConfiguration -> { }).execute();
 
         TestConfigUpdaterFinalState expectedFinalState = objectMapper.readValue(
                 getClass().getResource("test_config_updater_final_state.json"),

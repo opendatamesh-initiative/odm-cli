@@ -48,10 +48,9 @@ public class ValidateCommandExecutor extends PicoCliCommandExecutor {
     @Override
     protected void executeUseCase() {
         super.executeUseCase();
-        DataProductValidationResults validationResults = validatorFactory
-                .getDescriptorValidatorUseCase(descriptorFilePath, validateCommandParams)
+        validatorFactory
+                .getDescriptorValidatorUseCase(descriptorFilePath, validateCommandParams, this::logValidationResults)
                 .execute();
-        logValidationResults(validationResults);
     }
 
     private void logValidationResults(DataProductValidationResults results) {

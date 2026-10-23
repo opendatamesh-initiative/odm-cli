@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This beans has "thread" scope. This allows its state to be accessed and modified
@@ -41,11 +42,13 @@ public class OdmCliConfiguration {
     private ConfigUpdaterFactory updaterFactory;
 
     public Map<String, String> getAllConfiguration() {
-        return readerFactory.getConfigReader().execute();
+        AtomicReference<Map<String, String>> configuration = new AtomicReference<>();
+        readerFactory.getConfigReader(configuration::set).execute();
+        return configuration.get();
     }
 
     public void updateConfiguration(Map<String, String> simpleEntriesToAdd, Set<String> keysToDelete, Map<String, Map<String, String>> arrayAttributesEntriesToAdd, Map<String, Map<String, String>> arrayAttributesEntriesToDelete) {
-        updaterFactory.getConfigUpdater(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete).execute();
+        updaterFactory.getConfigUpdater(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete, savedConfiguration -> { }).execute();
     }
 
     public OdmCliBaseConfiguration getBaseConfiguration() {

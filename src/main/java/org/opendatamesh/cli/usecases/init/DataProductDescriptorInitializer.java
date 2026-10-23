@@ -1,6 +1,6 @@
 package org.opendatamesh.cli.usecases.init;
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
-import org.opendatamesh.cli.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.model.components.Components;
 import org.opendatamesh.dpds.model.core.ExternalDocs;
@@ -14,18 +14,25 @@ class DataProductDescriptorInitializer implements UseCase {
 
     private final DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort;
     private final DataProductDescriptorInitializerParserOutboundPort parserOutboundPort;
+    private final DataProductDescriptorInitializerPresenter presenter;
 
-    DataProductDescriptorInitializer(DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort, DataProductDescriptorInitializerParserOutboundPort parserOutboundPort) {
+    DataProductDescriptorInitializer(DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort, DataProductDescriptorInitializerParserOutboundPort parserOutboundPort, DataProductDescriptorInitializerPresenter presenter) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
+        this.presenter = presenter;
     }
 
     @Override
     public void execute() {
-        ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
-        DataProductVersion defaultDescriptor = createDefaultDataProductVersionFile(arguments.getParentCommandOptions());
-        parserOutboundPort.saveObject(defaultDescriptor,
-                arguments.getParentCommandOptions().get("outputFile"), arguments.getParentCommandOptions().containsKey("force"));
+        try {
+            ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
+            DataProductVersion defaultDescriptor = createDefaultDataProductVersionFile(arguments.getParentCommandOptions());
+            parserOutboundPort.saveObject(defaultDescriptor,
+                    arguments.getParentCommandOptions().get("outputFile"), arguments.getParentCommandOptions().containsKey("force"));
+            presenter.presentDescriptorInitialized(defaultDescriptor);
+        } catch (Exception e) {
+            presenter.presentException(e);
+        }
     }
 
     private DataProductVersion createDefaultDataProductVersionFile(Map<String, String> args) {

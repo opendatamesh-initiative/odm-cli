@@ -62,7 +62,8 @@ public class ImportCommandExecutor extends PicoCliCommandExecutor {
         portImporterFactory.getImportSchemaUseCase(
                 descriptorFilePath,
                 importSchemaCommandParams,
-                importSchemaExtension
+                importSchemaExtension,
+                descriptor -> { }
         ).execute();
     }
 

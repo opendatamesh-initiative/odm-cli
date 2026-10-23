@@ -2,7 +2,8 @@ package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
-import org.opendatamesh.cli.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCaseException;
 import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.model.interfaces.Port;
 import org.slf4j.Logger;
@@ -22,32 +23,37 @@ class PortImporter implements UseCase {
     private final ImporterParameterOutboundPort parameterOutboundPort;
     private final ImporterParserOutboundPort parserOutboundPort;
     private final ImporterExtension<Port> importerExtension;
+    private final ImporterPresenter presenter;
 
-    PortImporter(ImporterParameterOutboundPort parameterOutboundPort, ImporterParserOutboundPort parserOutboundPort, ImporterExtension<Port> importerExtension) {
+    PortImporter(ImporterParameterOutboundPort parameterOutboundPort, ImporterParserOutboundPort parserOutboundPort, ImporterExtension<Port> importerExtension, ImporterPresenter presenter) {
         this.parameterOutboundPort = parameterOutboundPort;
         this.parserOutboundPort = parserOutboundPort;
         this.importerExtension = importerExtension;
+        this.presenter = presenter;
     }
 
     @Override
     public void execute() {
-        DataProductVersion descriptor = readAndParseDataProductVersion();
-        ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
-        arguments.setDataProductVersion(descriptor);
-        Optional<Port> existingPort = findPortIfExists(descriptor, arguments);
-        logInformationAboutExistingPort(existingPort, arguments);
-        Port port = importerExtension.importElement(existingPort.orElse(null), arguments);
-        addPortToDescriptor(descriptor, port);
-        parserOutboundPort.saveDescriptor(descriptor);
+        try {
+            DataProductVersion descriptor = readAndParseDataProductVersion();
+            ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
+            arguments.setDataProductVersion(descriptor);
+            Optional<Port> existingPort = findPortIfExists(descriptor, arguments);
+            logInformationAboutExistingPort(existingPort, arguments);
+            Port port = importerExtension.importElement(existingPort.orElse(null), arguments);
+            addPortToDescriptor(descriptor, port);
+            parserOutboundPort.saveDescriptor(descriptor);
+            presenter.presentDescriptorImported(descriptor);
+        } catch (Exception e) {
+            presenter.presentException(e);
+        }
     }
 
     private DataProductVersion readAndParseDataProductVersion() {
-        DataProductVersion descriptor;
         try {
-            descriptor = parserOutboundPort.getDataProductVersion();
-            return descriptor;
+            return parserOutboundPort.getDataProductVersion();
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new UseCaseException(UseCaseException.Reason.NOT_FOUND, e.getMessage(), e);
         }
     }
 
@@ -76,7 +82,7 @@ class PortImporter implements UseCase {
         Consumer<DataProductVersion> handler = handlers.getOrDefault(
                 toOption,
                 d -> {
-                    throw new IllegalArgumentException("Invalid to option for port importer command: " + toOption);
+                    throw new UseCaseException(UseCaseException.Reason.INVALID, "Invalid to option for port importer command: " + toOption);
                 }
         );
 
@@ -86,7 +92,7 @@ class PortImporter implements UseCase {
     private String getToOption() {
         String toOption = parameterOutboundPort.getImporterArguments().getParentCommandOptions().get("to");
         if (!StringUtils.hasText(toOption)) {
-            throw new IllegalArgumentException("'to' option for import command is not specified.");
+            throw new UseCaseException(UseCaseException.Reason.INVALID, "'to' option for import command is not specified.");
         }
         return toOption;
     }
@@ -147,14 +153,14 @@ class PortImporter implements UseCase {
 
     private String extractMajorVersion(String version) {
         if (version == null || version.trim().isEmpty()) {
-            throw new IllegalArgumentException("Version string cannot be null or empty.");
+            throw new UseCaseException(UseCaseException.Reason.INVALID, "Version string cannot be null or empty.");
         }
         Pattern pattern = Pattern.compile("^(\\d+)");
         Matcher matcher = pattern.matcher(version);
         if (matcher.find()) {
             return matcher.group(1);
         } else {
-            throw new IllegalArgumentException("Invalid version format: " + version);
+            throw new UseCaseException(UseCaseException.Reason.INVALID, "Invalid version format: " + version);
         }
     }
 

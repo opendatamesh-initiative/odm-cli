@@ -42,7 +42,7 @@ public class PortImporterTest {
         );
         PortImporterExtensionMock importSchemaExtensionMock = new PortImporterExtensionMock(extensionState);
 
-        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock, descriptor -> { })
                 .execute();
 
 
@@ -83,7 +83,7 @@ public class PortImporterTest {
         );
         PortImporterExtensionMock importSchemaExtensionMock = new PortImporterExtensionMock(extensionState);
 
-        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock, descriptor -> { })
                 .execute();
 
 
