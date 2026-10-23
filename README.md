@@ -22,36 +22,55 @@ compliance with Open Data Mesh standards.
 ## Setup
 
 ---
-To run the application properly, you must have a Java JDK installed.
+To run the application properly, you must have **Java 21 or newer** installed.
 
   ```sh
-  sudo apt update && sudo apt install -y openjdk-17-jdk
+  sudo apt update && sudo apt install -y openjdk-21-jdk
   ```
+
+If your distribution does not provide an `openjdk-21-jdk` package (e.g. Debian 12), install a Java 21 distribution
+such as [Eclipse Temurin](https://adoptium.net/installation/linux/) or use [SDKMAN!](https://sdkman.io/).
+You can check the installed version with `java -version`.
 
 ---
 
 Download the cli.
 
 ```bash
-wget -qO odm-cli $(wget -qO- https://api.github.com/repos/opendatamesh-initiative/odm-cli/releases/latest | grep -Eo '"browser_download_url": *"[^"]+"' | grep odm-cli | sed -E 's/.*"([^"]+)".*/\1/' | head -n1) && chmod +x odm-cli
+wget -qO odm-cli $(wget -qO- https://api.github.com/repos/opendatamesh-initiative/odm-cli/releases/latest | grep -Eo '"browser_download_url": *"[^"]+/odm-cli"' | sed -E 's/.*"([^"]+)".*/\1/' | head -n1) && chmod +x odm-cli
 ```
 
 ---
 Test the cli.
 
 ```bash
-./odmcli --version
+./odm-cli --version
 ```
 
 ## Updates
 
-The ODM CLI manages updates automatically:
+Each released `odm-cli` script is bound to the version it was released with:
 
-- **Automatic Version Detection**: When you run the CLI, it automatically fetches the latest release version from the GitHub API and downloads the corresponding JAR file (`odm-cli-{version}.jar`) to `~/.odmcli/`
-- **Version Caching**: The CLI checks if the current version is already installed by comparing the version stored in `~/.odmcli/version.txt` with the latest available version
-- **Smart Downloads**: Only downloads a new version if it's not already present, avoiding unnecessary network requests
-- **Update Notifications**: If a newer version is available than what you're currently running, the CLI will display a notification: "A newer version ({version}) is available. Consider upgrading!"
-- **Rollback Support**: To roll back to a previous version, you can manually replace the JAR file in `~/.odmcli/` with the specific version you need, or modify the `VERSION` variable in the `odm-cli` executable script
+- **Pinned Version**: During the release, the version is injected into the `VERSION` variable of the `odm-cli` script.
+  When you run the CLI, the script downloads the corresponding JAR file (`odm-cli-{version}.jar`) to `~/.odmcli/` and
+  runs it. The script does not switch to a newer version on its own.
+- **Version Caching**: The CLI checks if the pinned version is already installed by comparing the version stored in
+  `~/.odmcli/version.txt` with the script's version, and only downloads the JAR if it's not already present.
+- **Update Notifications**: The CLI fetches the latest release version from the GitHub API. If a newer version is
+  available than the one you're running, it displays a notification:
+  "A newer version ({version}) is available. Consider upgrading!"
+- **Upgrading**: To upgrade, download the latest `odm-cli` script again using the command in the [Setup](#setup)
+  section. The new script will download the new JAR on its first run.
+- **Rollback Support**: To roll back to a previous version, download the `odm-cli` script of that release, or modify
+  the `VERSION` variable in the `odm-cli` executable script.
+
+The `odm-cli` script in the repository (not attached to a release) uses `VERSION="latest"` and always downloads the
+latest released JAR.
+
+> **Java requirement**: Upgrading does **not** install or update Java. Since version 2.0.0, the CLI requires Java 21
+> or newer: before upgrading from an older version, make sure Java 21 is installed (see [Setup](#setup)). If an
+> incompatible Java version is found, the `odm-cli` script stops with an error message. Previous releases also run on
+> Java 21.
 
 ## Configuration
 
