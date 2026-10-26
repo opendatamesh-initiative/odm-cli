@@ -9,12 +9,12 @@ import java.util.Map;
 
 class ConfigReader implements UseCase {
 
-    private final ConfigReaderPersistenceOutboundPort persistenceOutboundPort;
     private final ConfigReaderPresenter presenter;
+    private final ConfigReaderPersistenceOutboundPort persistenceOutboundPort;
 
-    ConfigReader(ConfigReaderPersistenceOutboundPort persistenceOutboundPort, ConfigReaderPresenter presenter) {
-        this.persistenceOutboundPort = persistenceOutboundPort;
+    ConfigReader(ConfigReaderPresenter presenter, ConfigReaderPersistenceOutboundPort persistenceOutboundPort) {
         this.presenter = presenter;
+        this.persistenceOutboundPort = persistenceOutboundPort;
     }
 
     @Override

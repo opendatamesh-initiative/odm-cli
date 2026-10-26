@@ -1,5 +1,6 @@
 package org.opendatamesh.cli.clients.platform.registry;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationRequestResource;
 import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationResponseResource;
 import org.opendatamesh.cli.configs.platform.PlatformServiceCredentials;
@@ -28,7 +29,12 @@ class PlatformRegistryClientImpl implements PlatformRegistryClient {
     }
 
     @Override
-    public OdmDataProductValidationResponseResource testValidateDataProduct(OdmDataProductValidationRequestResource validationRequest) {
+    public DataProductValidationResults validateDataProduct(JsonNode dataProductDescriptor) {
+        OdmDataProductValidationResponseResource response = postValidationReport(toValidationRequest(dataProductDescriptor));
+        return toValidationResults(response);
+    }
+
+    private OdmDataProductValidationResponseResource postValidationReport(OdmDataProductValidationRequestResource validationRequest) {
         try {
             return restUtils.genericPost(
                     registryServiceCredential.getUrl() + "/api/v1/pp/registry/validate/report",
@@ -41,5 +47,30 @@ class PlatformRegistryClientImpl implements PlatformRegistryClient {
         } catch (ClientResourceMappingException e) {
             throw new InternalException("Unable to read the ODM Platform registry service validation response: " + e.getMessage(), e);
         }
+    }
+
+    private OdmDataProductValidationRequestResource toValidationRequest(JsonNode dataProductDescriptor) {
+        OdmDataProductValidationRequestResource validationRequest = new OdmDataProductValidationRequestResource();
+        validationRequest.setValidatePolicies(true);
+        validationRequest.setValidateSyntax(true);
+        validationRequest.setDataProductVersion(dataProductDescriptor);
+        return validationRequest;
+    }
+
+    private DataProductValidationResults toValidationResults(OdmDataProductValidationResponseResource response) {
+        DataProductValidationResults results = new DataProductValidationResults();
+        results.getResults().add(toValidationResult("Data Product Descriptor Syntax", response.getSyntaxValidationResult()));
+        response.getPoliciesValidationResults()
+                .forEach((policyName, output) -> results.getResults().add(toValidationResult(policyName, output)));
+        return results;
+    }
+
+    private DataProductValidationResults.Result toValidationResult(String name, OdmDataProductValidationResponseResource.OdmDataProductValidationResult output) {
+        return new DataProductValidationResults.Result(
+                name,
+                output.isValidated(),
+                output.getValidationOutput(),
+                output.getBlockingFlag()
+        );
     }
 }

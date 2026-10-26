@@ -22,7 +22,7 @@ public class TestConfigReader {
         );
 
         AtomicReference<Map<String, String>> presentedConfiguration = new AtomicReference<>();
-        new ConfigReader(persistenceOutboundPort, presentedConfiguration::set).execute();
+        new ConfigReader(presentedConfiguration::set, persistenceOutboundPort).execute();
         Map<String, String> result = presentedConfiguration.get();
         Map<String, String> expectedResult = new ObjectMapper().readValue(new File(getClass().getResource("test_config_reader_expected_result.json").getPath()), Map.class);
         Assertions.assertThat(result).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedResult);

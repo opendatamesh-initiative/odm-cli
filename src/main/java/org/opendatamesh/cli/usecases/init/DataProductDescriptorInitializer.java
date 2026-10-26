@@ -1,5 +1,4 @@
 package org.opendatamesh.cli.usecases.init;
-import org.opendatamesh.cli.extensions.importer.ImporterArguments;
 import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.model.components.Components;
@@ -8,36 +7,34 @@ import org.opendatamesh.dpds.model.info.Info;
 import org.opendatamesh.dpds.model.info.Owner;
 import org.opendatamesh.dpds.model.interfaces.*;
 import org.opendatamesh.dpds.model.internals.InternalComponents;
-import java.util.*;
+import java.util.ArrayList;
 
 class DataProductDescriptorInitializer implements UseCase {
 
-    private final DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort;
-    private final DataProductDescriptorInitializerParserOutboundPort parserOutboundPort;
+    private final DataProductDescriptorInitializerCommand command;
     private final DataProductDescriptorInitializerPresenter presenter;
+    private final DataProductDescriptorInitializerParserOutboundPort parserOutboundPort;
 
-    DataProductDescriptorInitializer(DataProductDescriptorInitializerParameterOutboundPort parameterOutboundPort, DataProductDescriptorInitializerParserOutboundPort parserOutboundPort, DataProductDescriptorInitializerPresenter presenter) {
-        this.parameterOutboundPort = parameterOutboundPort;
-        this.parserOutboundPort = parserOutboundPort;
+    DataProductDescriptorInitializer(DataProductDescriptorInitializerCommand command, DataProductDescriptorInitializerPresenter presenter, DataProductDescriptorInitializerParserOutboundPort parserOutboundPort) {
+        this.command = command;
         this.presenter = presenter;
+        this.parserOutboundPort = parserOutboundPort;
     }
 
     @Override
     public void execute() {
         try {
-            ImporterArguments arguments = parameterOutboundPort.getImporterArguments();
-            DataProductVersion defaultDescriptor = createDefaultDataProductVersionFile(arguments.getParentCommandOptions());
-            parserOutboundPort.saveObject(defaultDescriptor,
-                    arguments.getParentCommandOptions().get("outputFile"), arguments.getParentCommandOptions().containsKey("force"));
+            DataProductVersion defaultDescriptor = createDefaultDataProductVersionFile();
+            parserOutboundPort.saveObject(defaultDescriptor, command.outputFile(), command.force());
             presenter.presentDescriptorInitialized(defaultDescriptor);
         } catch (Exception e) {
             presenter.presentException(e);
         }
     }
 
-    private DataProductVersion createDefaultDataProductVersionFile(Map<String, String> args) {
+    private DataProductVersion createDefaultDataProductVersionFile() {
         DataProductVersion descriptor = new DataProductVersion();
-        descriptor.setInfo(createDefaultInfo(args));
+        descriptor.setInfo(createDefaultInfo());
         descriptor.setInterfaceComponents(new InterfaceComponents());
         descriptor.setInternalComponents(new InternalComponents());
         descriptor.setComponents(new Components());
@@ -46,31 +43,32 @@ class DataProductDescriptorInitializer implements UseCase {
         return descriptor;
     }
 
-    private Info createDefaultInfo(Map<String, String> args) {
+    private Info createDefaultInfo() {
 
         Info descriptorInfo = new Info();
 
-        descriptorInfo.setDomain(args.get("domain"));
-        descriptorInfo.setName(args.get("name"));
-        descriptorInfo.setVersion(args.get("descriptorVersion"));
-        descriptorInfo.setDescription(args.get("description"));
+        descriptorInfo.setDomain(command.domain());
+        descriptorInfo.setName(command.name());
+        descriptorInfo.setVersion(command.descriptorVersion());
+        descriptorInfo.setDescription(command.description());
 
         Owner infoOwner = new Owner();
-        infoOwner.setId(args.getOrDefault("ownerId", "{defaultOwnerId}"));
-        infoOwner.setName(args.getOrDefault("ownerName", "{defaultOwnerName}"));
+        infoOwner.setId(command.ownerId() != null ? command.ownerId() : "{defaultOwnerId}");
+        infoOwner.setName(command.ownerName() != null ? command.ownerName() : "{defaultOwnerName}");
         descriptorInfo.setOwner(infoOwner);
 
-        if (args.containsKey("displayName")) {
-            descriptorInfo.setDisplayName(args.get("displayName"));
+        if (command.displayName() != null) {
+            descriptorInfo.setDisplayName(command.displayName());
         } else {
-            descriptorInfo.setDisplayName(args.get("name"));
+            descriptorInfo.setDisplayName(command.name());
         }
 
-        if (args.containsKey("fullyQualifiedName")) {
-            descriptorInfo.setFullyQualifiedName(args.get("fullyQualifiedName"));
+        if (command.fullyQualifiedName() != null) {
+            descriptorInfo.setFullyQualifiedName(command.fullyQualifiedName());
         } else {
+            //The last segment has always been "null": the CLI never provided the "version" option it was read from
             descriptorInfo.setFullyQualifiedName(String.format("%s:%s:%s",
-                    args.get("domain"), args.get("name"), args.get("version")));
+                    command.domain(), command.name(), null));
         }
 
         return descriptorInfo;

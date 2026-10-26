@@ -1,8 +1,7 @@
 package org.opendatamesh.cli.clients.platform.registry;
 
-import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationRequestResource;
-import org.opendatamesh.cli.clients.platform.registry.resources.OdmDataProductValidationResponseResource;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public interface PlatformRegistryClient {
-    OdmDataProductValidationResponseResource testValidateDataProduct(OdmDataProductValidationRequestResource validationRequest);
+    DataProductValidationResults validateDataProduct(JsonNode dataProductDescriptor);
 }

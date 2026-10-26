@@ -1,4 +1,4 @@
-package org.opendatamesh.cli.usecases.descriptorvalidator;
+package org.opendatamesh.cli.clients.platform.registry;
 
 import java.util.ArrayList;
 import java.util.List;

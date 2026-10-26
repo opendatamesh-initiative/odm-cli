@@ -35,7 +35,7 @@ public class PortImporterParserOutboundPortImplTest {
         EmptySerializationExtensionMock importSchemaExtensionMock = new EmptySerializationExtensionMock();
         DataProductVersion emptyFieldsDataProductVersion = importSchemaExtensionMock.importElement(null, null);
         PortImporterParserOutboundPortImpl parserOutboundPort = new PortImporterParserOutboundPortImpl(
-            emptySerializationFilePath, configuration
+            emptySerializationFilePath.toString(), configuration
         );
 
         parserOutboundPort.saveDescriptor(emptyFieldsDataProductVersion);

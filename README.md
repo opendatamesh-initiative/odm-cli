@@ -141,5 +141,5 @@ Where:
 
 | Command             | Default                                               | Description                                                                                                        |
 |---------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `--version, -v`     |                                                       | Version o the command                                                                                              |
+| `--version, -v`     |                                                       | Version of the command                                                                                             |
 | `--interactive, -i` | true (can be overwritten in the application.yml file) | When set to `false`, the CLI will not prompt the user for required options and will fail if they are not provided. |

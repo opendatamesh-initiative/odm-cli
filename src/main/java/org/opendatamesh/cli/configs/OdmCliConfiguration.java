@@ -4,6 +4,7 @@ import org.opendatamesh.cli.configs.platform.PlatformConfiguration;
 import org.opendatamesh.cli.configs.template.TemplateConfiguration;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.opendatamesh.cli.usecases.config.reader.ConfigReaderFactory;
+import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterCommand;
 import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -43,12 +44,13 @@ public class OdmCliConfiguration {
 
     public Map<String, String> getAllConfiguration() {
         AtomicReference<Map<String, String>> configuration = new AtomicReference<>();
-        readerFactory.getConfigReader(configuration::set).execute();
+        readerFactory.buildConfigReader(configuration::set).execute();
         return configuration.get();
     }
 
     public void updateConfiguration(Map<String, String> simpleEntriesToAdd, Set<String> keysToDelete, Map<String, Map<String, String>> arrayAttributesEntriesToAdd, Map<String, Map<String, String>> arrayAttributesEntriesToDelete) {
-        updaterFactory.getConfigUpdater(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete, savedConfiguration -> { }).execute();
+        ConfigUpdaterCommand command = new ConfigUpdaterCommand(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete);
+        updaterFactory.buildConfigUpdater(command, savedConfiguration -> { }).execute();
     }
 
     public OdmCliBaseConfiguration getBaseConfiguration() {

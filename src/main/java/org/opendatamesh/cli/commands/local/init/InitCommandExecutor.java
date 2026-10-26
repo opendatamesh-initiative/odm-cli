@@ -2,6 +2,7 @@ package org.opendatamesh.cli.commands.local.init;
 
 import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
+import org.opendatamesh.cli.usecases.init.DataProductDescriptorInitializerCommand;
 import org.opendatamesh.cli.usecases.init.DataProductDescriptorInitializerFactory;
 
 import java.util.HashMap;
@@ -39,10 +40,19 @@ public class InitCommandExecutor extends PicoCliCommandExecutor {
 
     @Override
     protected void executeUseCase() {
-        dataProductDescriptorInitializerFactory.getImportSchemaUseCase(
-                importSchemaCommandParams,
-                descriptor -> { }
-        ).execute();
+        DataProductDescriptorInitializerCommand command = new DataProductDescriptorInitializerCommand(
+                importSchemaCommandParams.get("domain"),
+                importSchemaCommandParams.get("name"),
+                importSchemaCommandParams.get("displayName"),
+                importSchemaCommandParams.get("descriptorVersion"),
+                importSchemaCommandParams.get("fullyQualifiedName"),
+                importSchemaCommandParams.get("description"),
+                importSchemaCommandParams.get("ownerId"),
+                importSchemaCommandParams.get("ownerName"),
+                importSchemaCommandParams.get("outputFile"),
+                importSchemaCommandParams.containsKey("force")
+        );
+        dataProductDescriptorInitializerFactory.buildDataProductDescriptorInitializer(command, descriptor -> { }).execute();
     }
 
     public void setImportSchemaCommandParam(String commandName, String commandValue) {

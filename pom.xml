@@ -118,6 +118,13 @@
                     <layout>ZIP</layout>
                     <mainClass>org.opendatamesh.cli.OdmCliApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

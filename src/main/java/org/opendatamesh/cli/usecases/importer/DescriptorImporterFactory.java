@@ -6,9 +6,6 @@ import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
-import java.util.Map;
-
 @Component
 public class DescriptorImporterFactory {
 
@@ -19,13 +16,9 @@ public class DescriptorImporterFactory {
         this.odmCliConfiguration = odmCliConfiguration;
     }
 
-    UseCase getImportSchemaUseCase(String descriptorFilePath, Map<String, String> importSchemaCommandParams, ImporterExtension importerExtension, ImporterPresenter presenter) {
-        ImporterParameterOutboundPort parameterOutboundPort = new ImporterParameterOutboundPortImpl(
-                odmCliConfiguration,
-                descriptorFilePath,
-                importSchemaCommandParams
-        );
-        ImporterParserOutboundPort parserOutboundPort = new PortImporterParserOutboundPortImpl(Paths.get(descriptorFilePath), odmCliConfiguration);
-        return new DescriptorImporter(parameterOutboundPort, parserOutboundPort, importerExtension, presenter);
+    UseCase buildDescriptorImporter(ImporterCommand command, ImporterExtension importerExtension, ImporterPresenter presenter) {
+        ImporterConfigurationOutboundPort configurationOutboundPort = new ImporterConfigurationOutboundPortImpl(odmCliConfiguration);
+        ImporterParserOutboundPort parserOutboundPort = new PortImporterParserOutboundPortImpl(command.descriptorFilePath(), odmCliConfiguration);
+        return new DescriptorImporter(command, presenter, configurationOutboundPort, parserOutboundPort, importerExtension);
     }
 }
