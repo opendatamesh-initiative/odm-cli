@@ -8,8 +8,13 @@ import org.opendatamesh.dpds.model.info.Owner;
 import org.opendatamesh.dpds.model.interfaces.*;
 import org.opendatamesh.dpds.model.internals.InternalComponents;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class DataProductDescriptorInitializer implements UseCase {
+
+    private static final Pattern MAJOR_VERSION_PATTERN = Pattern.compile("^(\\d+)");
 
     private final DataProductDescriptorInitializerCommand command;
     private final DataProductDescriptorInitializerPresenter presenter;
@@ -66,12 +71,26 @@ class DataProductDescriptorInitializer implements UseCase {
         if (command.fullyQualifiedName() != null) {
             descriptorInfo.setFullyQualifiedName(command.fullyQualifiedName());
         } else {
-            //The last segment has always been "null": the CLI never provided the "version" option it was read from
-            descriptorInfo.setFullyQualifiedName(String.format("%s:%s:%s",
-                    command.domain(), command.name(), null));
+            descriptorInfo.setFullyQualifiedName(buildDefaultFullyQualifiedName());
         }
 
         return descriptorInfo;
 
+    }
+
+    //DPDS convention: urn:dpds:{domain}:dataproducts:{name}:{major version}, the version segment only when known
+    private String buildDefaultFullyQualifiedName() {
+        String fullyQualifiedName = String.format("urn:dpds:%s:dataproducts:%s", command.domain(), command.name());
+        return extractMajorVersion(command.descriptorVersion())
+                .map(majorVersion -> fullyQualifiedName + ":" + majorVersion)
+                .orElse(fullyQualifiedName);
+    }
+
+    private Optional<String> extractMajorVersion(String version) {
+        if (version == null) {
+            return Optional.empty();
+        }
+        Matcher matcher = MAJOR_VERSION_PATTERN.matcher(version.trim());
+        return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
     }
 }

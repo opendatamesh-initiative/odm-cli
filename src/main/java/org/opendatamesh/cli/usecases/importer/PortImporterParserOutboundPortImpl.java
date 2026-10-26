@@ -43,7 +43,7 @@ class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
     public DataProductVersion getDataProductVersion() throws FileNotFoundException {
         Path descriptorPath = descriptorPath();
         File descriptorPathFile = descriptorPath.toFile();
-        if (!descriptorPathFile.exists() || descriptorPathFile.isFile()) {
+        if (!descriptorPathFile.isFile()) {
             throw new FileNotFoundException("Descriptor file not found at path: " + descriptorPath.toAbsolutePath());
         }
         try {

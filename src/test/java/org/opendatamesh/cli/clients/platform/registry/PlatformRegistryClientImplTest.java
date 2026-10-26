@@ -11,10 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -51,7 +53,7 @@ public class PlatformRegistryClientImplTest {
                          }}
                         """, MediaType.APPLICATION_JSON));
 
-        DataProductValidationResults results = registryClient.validateDataProduct(descriptor);
+        DataProductValidationResults results = registryClient.validateDataProduct(descriptor, List.of());
 
         registryServer.verify();
         assertThat(results.getResults()).hasSize(2);
@@ -72,8 +74,24 @@ public class PlatformRegistryClientImplTest {
         registryServer.expect(requestTo(VALIDATE_URL))
                 .andRespond(withServerError().body("registry down"));
 
-        assertThatThrownBy(() -> registryClient.validateDataProduct(new ObjectMapper().createObjectNode()))
+        assertThatThrownBy(() -> registryClient.validateDataProduct(new ObjectMapper().createObjectNode(), List.of()))
                 .isInstanceOf(InternalException.class)
                 .hasMessageStartingWith("ODM Platform registry service failed to validate the data product: ");
+    }
+
+    @Test
+    void testValidateDataProductSendsThePolicyEvents() throws Exception {
+        JsonNode descriptor = new ObjectMapper().readTree("{\"dataProductDescriptor\":\"1.0.0\"}");
+        registryServer.expect(requestTo(VALIDATE_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.policyEventTypes").value(contains("DATA_PRODUCT_CREATION")))
+                .andRespond(withSuccess("""
+                        {"syntaxValidationResult":{"validated":true,"blockingFlag":true},"policiesValidationResults":{}}
+                        """, MediaType.APPLICATION_JSON));
+
+        DataProductValidationResults results = registryClient.validateDataProduct(descriptor, List.of("DATA_PRODUCT_CREATION"));
+
+        registryServer.verify();
+        assertThat(results.getResults()).hasSize(1);
     }
 }

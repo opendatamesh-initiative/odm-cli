@@ -10,6 +10,7 @@
     * [Usage](#usage)
         * [Commands](#commands)
         * [Options](#options)
+        * [Exit codes](#exit-codes)
 
 <!-- TOC -->
 
@@ -141,5 +142,14 @@ Where:
 
 | Command             | Default                                               | Description                                                                                                        |
 |---------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `--version, -v`     |                                                       | Version of the command                                                                                             |
+| `--version, -V`     |                                                       | Version of the command                                                                                             |
 | `--interactive, -i` | true (can be overwritten in the application.yml file) | When set to `false`, the CLI will not prompt the user for required options and will fail if they are not provided. |
+### Exit codes
+
+| Code | Meaning                                                                                                     |
+|------|-------------------------------------------------------------------------------------------------------------|
+| `0`  | The command completed successfully.                                                                         |
+| `1`  | The command failed (e.g. invalid or missing descriptor file, ODM Platform service error, a required value not provided with `--interactive=false`). |
+| `2`  | Invalid usage detected while parsing the command line: unknown option or missing required option.          |
+
+Before version 2.0.0 the CLI always exited with `0`, even when a command failed.

@@ -15,8 +15,7 @@ class DescriptorValidatorOdmOutboundPortImpl implements DescriptorValidatorOdmOu
 
     @Override
     public DataProductValidationResults validateDataProduct(JsonNode rawDescriptor, List<String> policyEvents) {
-        //The policy events are not sent to the registry service yet: the descriptor is validated against all the policies
-        return registryClient.validateDataProduct(rawDescriptor);
+        return registryClient.validateDataProduct(rawDescriptor, policyEvents);
     }
 
 }

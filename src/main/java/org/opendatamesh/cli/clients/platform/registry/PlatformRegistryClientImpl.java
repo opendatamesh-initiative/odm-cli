@@ -11,6 +11,9 @@ import org.opendatamesh.cli.utils.client.RestUtils;
 import org.opendatamesh.cli.utils.client.RestUtilsFactory;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class PlatformRegistryClientImpl implements PlatformRegistryClient {
 
     private final RestUtils restUtils;
@@ -29,8 +32,8 @@ class PlatformRegistryClientImpl implements PlatformRegistryClient {
     }
 
     @Override
-    public DataProductValidationResults validateDataProduct(JsonNode dataProductDescriptor) {
-        OdmDataProductValidationResponseResource response = postValidationReport(toValidationRequest(dataProductDescriptor));
+    public DataProductValidationResults validateDataProduct(JsonNode dataProductDescriptor, List<String> policyEvents) {
+        OdmDataProductValidationResponseResource response = postValidationReport(toValidationRequest(dataProductDescriptor, policyEvents));
         return toValidationResults(response);
     }
 
@@ -49,10 +52,11 @@ class PlatformRegistryClientImpl implements PlatformRegistryClient {
         }
     }
 
-    private OdmDataProductValidationRequestResource toValidationRequest(JsonNode dataProductDescriptor) {
+    private OdmDataProductValidationRequestResource toValidationRequest(JsonNode dataProductDescriptor, List<String> policyEvents) {
         OdmDataProductValidationRequestResource validationRequest = new OdmDataProductValidationRequestResource();
         validationRequest.setValidatePolicies(true);
         validationRequest.setValidateSyntax(true);
+        validationRequest.setPolicyEventTypes(new ArrayList<>(policyEvents));
         validationRequest.setDataProductVersion(dataProductDescriptor);
         return validationRequest;
     }
