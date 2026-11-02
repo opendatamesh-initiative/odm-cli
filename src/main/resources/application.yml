@@ -20,6 +20,14 @@ cli:
     services:
       registry:
         url: http://localhost:8001
+    devops:
+      pollInterval: 5s
+      activityApprovalTimeout: 30m
+      taskApprovalTimeout: 10m
+      runIdLookupAttempts: 5
+      runIdLookupInterval: 2s
+      conflictRetries: 3
+      conflictRetryInterval: 1s
   template:
     owner:
       id: "testId"
