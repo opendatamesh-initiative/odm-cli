@@ -1,0 +1,37 @@
+#!/bin/sh
+# Starts the ODM CLI from its bundle (/opt/odm-cli in the Docker image, or wherever the bundle was copied).
+# Unlike the workstation script, it never downloads anything: the jar and the Java runtime are part of the bundle.
+
+# Resolve the bundle directory from the real location of this script, following links such as /usr/local/bin/odm-cli
+SCRIPT_PATH=$(readlink -f "$0")
+ODM_CLI_HOME=$(dirname "$(dirname "$SCRIPT_PATH")")
+
+# Prefer the bundled Java runtime, fall back to the one on PATH
+if [ -x "$ODM_CLI_HOME/runtime/bin/java" ]; then
+  JAVA="$ODM_CLI_HOME/runtime/bin/java"
+elif command -v java >/dev/null 2>&1; then
+  JAVA=java
+else
+  echo "Error: Java runtime not found in $ODM_CLI_HOME/runtime or on PATH." >&2
+  exit 1
+fi
+
+# Optional external configuration file, created when its location is writable.
+# It is passed with the "file:" prefix only when it exists, because the config command writes to that location as is.
+CONFIG_FILE="${ODM_CLI_CONFIG_FILE:-${HOME:-/nonexistent}/.odmcli/application.yml}"
+if [ ! -f "$CONFIG_FILE" ]; then
+  { mkdir -p "$(dirname "$CONFIG_FILE")" && echo "# ODM CLI configuration" > "$CONFIG_FILE"; } 2>/dev/null
+fi
+
+# Extensions are loaded through Spring Boot's PropertiesLauncher, which reads loader.path
+EXTENSIONS_DIR="${ODM_CLI_EXTENSIONS_DIR:-$ODM_CLI_HOME/extensions}"
+
+set -- -jar "$ODM_CLI_HOME/lib/odm-cli.jar" "$@"
+if [ -d "$EXTENSIONS_DIR" ]; then
+  set -- "-Dloader.path=$EXTENSIONS_DIR" "$@"
+fi
+if [ -f "$CONFIG_FILE" ]; then
+  set -- "-Dspring.config.additional-location=file:$CONFIG_FILE" "$@"
+fi
+
+exec "$JAVA" "$@"

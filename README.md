@@ -48,6 +48,17 @@ Test the cli.
 ./odm-cli --version
 ```
 
+### Docker
+
+The CLI is also available as a Docker image, with Java included:
+
+```bash
+docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/opendatamesh-initiative/odm-cli:X.Y.Z --version
+```
+
+In GitLab CI, use it as the job image and call `odm-cli` in the script. Tags, configuration, GitLab examples and how to add
+the CLI to your own build image are in [docs/docker.md](docs/docker.md).
+
 ## Updates
 
 Each released `odm-cli` script is bound to the version it was released with:

@@ -107,6 +107,8 @@ started is not closed.
 `complete-task` runs only when `start-task` succeeded: a marker file is written right after it. Without the marker, a job whose
 `start-task` failed would still close a task by that run id. The run id is the job id, so parallel jobs never share it.
 
+To run this job without installing the CLI, copy it into the build image from the [Docker image](./docker.md#gitlab-ci).
+
 ```yaml
 build:
   script:

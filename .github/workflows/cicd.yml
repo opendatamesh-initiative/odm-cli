@@ -99,3 +99,86 @@ jobs:
           files: |
             target/odm-cli-${{ env.JAR_VERSION }}.jar
             odm-cli
+      - name: Keep the JAR for the image job
+        uses: actions/upload-artifact@v7
+        with:
+          name: odm-cli-jar
+          path: target/odm-cli-${{ env.JAR_VERSION }}.jar
+          if-no-files-found: error
+
+  publish-image:
+    runs-on: ubuntu-latest
+    needs: build-and-release-jar
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_NAME: ghcr.io/opendatamesh-initiative/odm-cli
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Download the released JAR
+        uses: actions/download-artifact@v8
+        with:
+          name: odm-cli-jar
+          path: target
+      - name: Get Release Version
+        run: |
+          IMAGE_VERSION=$(echo "${{ github.ref_name }}" | sed 's/[^0-9.]//g')
+          echo "IMAGE_VERSION=${IMAGE_VERSION}" >> $GITHUB_ENV
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute image tags
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !github.event.release.prerelease }}
+            type=semver,pattern={{major}},enable=${{ !github.event.release.prerelease }}
+            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
+      - name: Build image for testing
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: odm-cli:smoke
+          build-args: |
+            VERSION=${{ env.IMAGE_VERSION }}
+            REVISION=${{ github.sha }}
+          cache-to: type=gha,mode=max
+      - name: Run smoke tests
+        run: docker/smoke-test.sh odm-cli:smoke "${{ env.IMAGE_VERSION }}"
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: odm-cli:smoke
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ env.IMAGE_VERSION }}
+            REVISION=${{ github.sha }}
+          cache-from: type=gha
+          sbom: true
+          provenance: mode=max
