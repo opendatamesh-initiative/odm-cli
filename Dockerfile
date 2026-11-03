@@ -3,6 +3,8 @@
 # so the bundle can be copied into another image with its CA certificates.
 FROM amazoncorretto:21-al2023-headless AS runtime
 RUN set -eu; \
+    dnf -y upgrade; \
+    dnf clean all; \
     mkdir -p /opt/odm-cli; \
     cp -a "$(readlink -f "$JAVA_HOME")" /opt/odm-cli/runtime; \
     cacerts=/opt/odm-cli/runtime/lib/security/cacerts; \
@@ -10,7 +12,8 @@ RUN set -eu; \
     chmod 644 "$cacerts"
 
 # Amazon Linux 2023, the OS the Corretto image is built on, which has the runtime's native libraries.
-# Copying the runtime onto it keeps a single copy in the image.
+# Copying the runtime onto it keeps a single copy in the image. Both stages install the available package updates,
+# so the image ships the security fixes available at build time.
 FROM amazonlinux:2023
 
 ARG VERSION
@@ -30,6 +33,9 @@ COPY ${JAR_FILE} /opt/odm-cli/lib/odm-cli.jar
 COPY --chmod=755 docker/odm-cli docker/docker-entrypoint /opt/odm-cli/bin/
 
 RUN set -eu; \
+    dnf -y upgrade; \
+    dnf clean all; \
+    rm -rf /var/cache/dnf; \
     mkdir -p /opt/odm-cli/extensions; \
     ln -s /opt/odm-cli/bin/odm-cli /usr/local/bin/odm-cli; \
     echo "odmcli:x:10001:" >> /etc/group; \

@@ -19,6 +19,7 @@ The ODM CLI runs inside the customer's pipeline and keeps DevOps V2 in sync (BDM
 | 1 | 2026-10-27 | First draft, written for GitHub Actions and before the devops commands existed. |
 | 2 | 2026-11-02 | Updated after the functional slice was implemented and tested with GitLab. GitLab first. New questions: how instrumented jobs, which run the CLI and the build in one job, can use the image (D1); the entrypoint under GitLab's Docker executor (D2); which GitLab executors to support (D3). Configuration keys, command names and the first release are now known from the code. |
 | 3 | 2026-11-02 | **Team:** all recommendations accepted (DD-01 to DD-15, D1 to D13). The base image is Amazon Corretto 21, the distribution of the other platform services, instead of Eclipse Temurin (DD-01). |
+| 4 | 2026-11-03 | Verified on GitLab with a Docker-executor runner: the image stays non-root (D4). The first Trivy scan found 8 fixable critical issues in the jar (embedded Tomcat and Spring MVC, brought in by the unused `spring-boot-starter-data-rest`) and high issues in other dependencies and OS packages, which would have blocked the release (DD-13). Fixed by removing the starter and the unused `log4j-api` pin, updating Spring Boot to 3.5.16, Jackson to 2.21.8, Log4j to 2.25.5 and Guava to 33.8.0, and applying OS package updates in the image build. The scan then reported no vulnerabilities. |
 
 ## Domain Concept Identification
 

@@ -164,6 +164,7 @@ SmokeTests --> CliImage : verifies before push
 1. Stages: `runtime` on `amazoncorretto:21-al2023-headless`; the final stage on `amazonlinux:2023`.
 2. Build arguments: `VERSION`, `REVISION` (commit SHA), `JAR_FILE` (default `target/odm-cli-${VERSION}.jar`).
 3. Steps:
+   - Both stages first apply the available OS package updates (`dnf upgrade`) and clean the package cache in the same layer, so the image ships the fixed packages available at build time, including the current CA trust store copied into the bundle.
    - `runtime` stage: copy the Corretto Java home into `/opt/odm-cli/runtime`, resolving the real directory at build time rather than hard-coding it (it is architecture-specific, for example `java-21-amazon-corretto.x86_64`). Replace `runtime/lib/security/cacerts`, a link to the system trust store, with a regular-file copy of the store it resolves to.
    - Final stage: copy `/opt/odm-cli/runtime` from the `runtime` stage; create `/opt/odm-cli/{bin,lib,extensions}`; set `JAVA_HOME=/opt/odm-cli/runtime` and put `/opt/odm-cli/runtime/bin` on `PATH`.
    - Copy the jar to `/opt/odm-cli/lib/odm-cli.jar`, the launcher and the entrypoint to `/opt/odm-cli/bin/` with mode 0755; link `/usr/local/bin/odm-cli` to the launcher.
