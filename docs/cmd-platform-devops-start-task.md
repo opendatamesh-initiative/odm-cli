@@ -27,7 +27,7 @@ Pass the same `--provider-run-id` to [`complete-task`](cmd-platform-devops-compl
 | `--data-product-version` | yes      | Version of the data product. It must equal the descriptor's `info.version`, which is the Registry `versionNumber`.            |
 | `--activity`             | yes      | Name of the activity: the stage of the descriptor's `lifecycleInfo`.                                                                                 |
 | `--task`                 | yes      | Name of the task to start (see [how the commands find the task](cmd-platform-devops.md#how-the-commands-find-the-task)).                            |
-| `--provider-run-id`      | yes      | Run id of the task, for example the CI pipeline id. It must be unique among the tasks running at the same time (see [the run id](#the-run-id)). |
+| `--provider-run-id`      | yes      | Run id of the task: the id of the pipeline run, such as `$CI_PIPELINE_ID` (see [the run id](#the-run-id)). |
 | `--force-start`          | no       | Operator override (see below).                                                                                                                       |
 | `--poll-interval`        | no       | Interval between two polls while waiting, at least 1s. Default `cli.platform.devops.pollInterval` (5s).                                                     |
 | `--activity-timeout`     | no       | Maximum wait for the activity approval. Default `cli.platform.devops.activityApprovalTimeout` (30m).                                                 |
@@ -59,76 +59,20 @@ so the flag can close the activity of a run that is still going.
 
 ## The run id
 
-DevOps finds the task of `complete-task` by its run id, among the tasks that are `RUNNING`. When two jobs of one pipeline can
-run instrumented tasks at the same time, the run id must be **unique per job**: for example `$CI_JOB_ID`, or the pipeline id
-plus the job name. If two running tasks share a run id, DevOps refuses the close as ambiguous (error 400) and may not close the
-right task. A run id shared by tasks that run one after the other (a multi-task stage in one job) is fine.
+DevOps finds the task of `complete-task` by its run id, among the tasks that are `RUNNING`. Use the id of the pipeline run
+(`$CI_PIPELINE_ID` on GitLab, `github.run_id` on GitHub), and pass the same value to `complete-task`. DevOps runs one task
+of an activity at a time, so the tasks of one activity can share it.
 
-## GitHub Actions example
+One pipeline run must drive one activity: two tasks of different activities, running at the same time with the same run
+id, could not be closed (DevOps refuses an ambiguous run id with error 400). The value for each provider is in
+[what to pass on each provider](devops-pipelines.md#what-to-pass-on-each-provider).
 
-`complete-task` runs after a successful `start-task`, even when the steps in between fail (`if: always()` semantics), with the same run id.
+## Example
 
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      # unique per job: github.run_id alone is shared by every job of the workflow run
-      RUN_ID: ${{ github.run_id }}-${{ github.job }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Read the data product version
-        id: dp
-        run: echo "version=$(yq '.info.version' data-product-descriptor.yaml)" >> "$GITHUB_OUTPUT"
-      - name: Start the task
-        id: start
-        run: |
-          odm-cli platform devops start-task \
-            --data-product-fqn urn:dp:sales --data-product-version "${{ steps.dp.outputs.version }}" \
-            --activity dev --task build --provider-run-id "$RUN_ID"
-      - name: Build
-        run: ./build.sh > build.log 2>&1
-      - name: Complete the task (succeeded)
-        if: success()
-        run: odm-cli platform devops complete-task --provider-run-id "$RUN_ID" --status SUCCEEDED --logs-file build.log
-      - name: Complete the task (failed)
-        if: failure() && steps.start.outcome == 'success'
-        run: odm-cli platform devops complete-task --provider-run-id "$RUN_ID" --status FAILED --logs-file build.log
-      - name: Complete the task (canceled)
-        if: cancelled() && steps.start.outcome == 'success'
-        run: odm-cli platform devops complete-task --provider-run-id "$RUN_ID" --status CANCELED
+```bash
+odm-cli platform devops start-task --data-product-fqn urn:dpds:sales:dataproducts:orders:1 --data-product-version 1.2.0 \
+  --activity dev --task build --provider-run-id "$CI_PIPELINE_ID"
 ```
 
-`--status` accepts the three values in any case. The close steps run only when `start-task` succeeded, so a task that never
-started is not closed.
-
-## GitLab CI example
-
-`complete-task` runs only when `start-task` succeeded: a marker file is written right after it. Without the marker, a job whose
-`start-task` failed would still close a task by that run id. The run id is the job id, so parallel jobs never share it.
-
-To run this job without installing the CLI, copy it into the build image from the [Docker image](./docker.md#gitlab-ci).
-
-```yaml
-build:
-  script:
-    - export VERSION="$(yq '.info.version' data-product-descriptor.yaml)"
-    - odm-cli platform devops start-task --data-product-fqn urn:dp:sales --data-product-version "$VERSION"
-        --activity dev --task build --provider-run-id "$CI_JOB_ID"
-    - touch .odm-task-started
-    - ./build.sh > build.log 2>&1
-  after_script:
-    - |
-      if [ -f .odm-task-started ]; then
-        case "$CI_JOB_STATUS" in
-          success) STATUS=SUCCEEDED ;;
-          canceled) STATUS=CANCELED ;;
-          *) STATUS=FAILED ;;
-        esac
-        odm-cli platform devops complete-task --provider-run-id "$CI_JOB_ID" --status "$STATUS" --logs-file build.log
-      fi
-```
-
-`after_script` runs when the job fails too. In a multi-job pipeline, a job with `when: always` can close the task of an earlier
-job: it must be given that job's run id (for example `"$CI_PIPELINE_ID-build"` in both jobs), and it must only run when the
-`start-task` job succeeded.
+Complete pipelines for GitLab CI and GitHub Actions, where `start-task`, the build and `complete-task` run in separate jobs,
+are in [Run DevOps tasks from a pipeline](devops-pipelines.md).

@@ -8,7 +8,7 @@ import java.util.List;
 public interface PlatformDevOpsClient {
 
     /**
-     * {@code GET ?dataProductFqn=&dataProductVersionTag=&name=&statuses=PENDING,RUNNING&page=0&size=2&sort=}.
+     * {@code GET ?dataProductFqn=&dataProductVersionNumber=&name=&statuses=PENDING,RUNNING&page=0&size=2&sort=}.
      *
      * @return at most 2 open activities, without tasks
      */

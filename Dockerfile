@@ -1,20 +1,4 @@
-# Corretto 21 runtime, the Java distribution of the other platform services.
-# Its cacerts is a link to the system trust store, which other images do not have: replace it with a copy,
-# so the bundle can be copied into another image with its CA certificates.
-FROM amazoncorretto:21-al2023-headless AS runtime
-RUN set -eu; \
-    dnf -y upgrade; \
-    dnf clean all; \
-    mkdir -p /opt/odm-cli; \
-    cp -a "$(readlink -f "$JAVA_HOME")" /opt/odm-cli/runtime; \
-    cacerts=/opt/odm-cli/runtime/lib/security/cacerts; \
-    cp --remove-destination "$(readlink -f "$cacerts")" "$cacerts"; \
-    chmod 644 "$cacerts"
-
-# Amazon Linux 2023, the OS the Corretto image is built on, which has the runtime's native libraries.
-# Copying the runtime onto it keeps a single copy in the image. Both stages install the available package updates,
-# so the image ships the security fixes available at build time.
-FROM amazonlinux:2023
+FROM amazoncorretto:21-al2023-headless
 
 ARG VERSION
 ARG REVISION=unknown
@@ -27,11 +11,11 @@ LABEL org.opencontainers.image.title="odm-cli" \
       org.opencontainers.image.source="https://github.com/opendatamesh-initiative/odm-cli" \
       org.opencontainers.image.licenses="Apache-2.0"
 
-# The bundle: everything the CLI needs lives under /opt/odm-cli, so users can copy it into their own build image
-COPY --from=runtime /opt/odm-cli/runtime /opt/odm-cli/runtime
 COPY ${JAR_FILE} /opt/odm-cli/lib/odm-cli.jar
 COPY --chmod=755 docker/odm-cli docker/docker-entrypoint /opt/odm-cli/bin/
 
+# Install the available package updates, so the image ships the security fixes available at build time.
+# The user is written to /etc/passwd directly because the base image has no useradd.
 RUN set -eu; \
     dnf -y upgrade; \
     dnf clean all; \
@@ -43,9 +27,7 @@ RUN set -eu; \
     mkdir -p /home/odmcli /workspace; \
     chown 10001:10001 /home/odmcli /workspace
 
-ENV JAVA_HOME=/opt/odm-cli/runtime \
-    PATH=/opt/odm-cli/runtime/bin:$PATH \
-    ODM_CLI_HOME=/opt/odm-cli \
+ENV ODM_CLI_HOME=/opt/odm-cli \
     CLI_CLICONFIGURATION_INTERACTIVE=false
 
 USER 10001:10001

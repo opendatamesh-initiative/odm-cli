@@ -48,16 +48,17 @@ Test the cli.
 ./odm-cli --version
 ```
 
-### Docker
+### Run with Docker
 
 The CLI is also available as a Docker image, with Java included:
 
 ```bash
-docker run --rm -v "$PWD":/workspace -w /workspace ghcr.io/opendatamesh-initiative/odm-cli:X.Y.Z --version
+docker run --rm -v "$PWD":/workspace -w /workspace opendatamesh/odm-cli:X.Y.Z --version
 ```
 
-In GitLab CI, use it as the job image and call `odm-cli` in the script. Tags, configuration, GitLab examples and how to add
-the CLI to your own build image are in [docs/docker.md](docs/docker.md).
+In a CI job, use it as the job image and call `odm-cli` in the script. Configuration, extensions and certificates are in
+[Run with Docker](docs/run-with-docker.md); pipeline examples for the DevOps commands are in
+[Run DevOps tasks from a pipeline](docs/devops-pipelines.md).
 
 ## Updates
 
@@ -136,6 +137,31 @@ Where:
 - **extensions**: configuration for automatically downloading CLI extensions jar files.
     - **name**: the name of the extension (should be unique).
     - **url**: the url for downloading the .jar file of the extension.
+
+The ODM Platform service URLs and credentials (`cli.platform`) are described in [odmcli platform](docs/cmd-platform.md).
+They are not packaged with the CLI: set them in this file or with environment variables.
+
+### Environment variables
+
+Every configuration key can also be set with an environment variable, with the executable and with the Docker image.
+**An environment variable wins over the configuration file**, and the configuration file is used for the keys that no
+variable sets. Command options, where a command has one (such as `--poll-interval`), win over both.
+
+This is the usual way to configure the CLI in a pipeline: set the variables once, as CI variables shared by all
+pipelines, and store credentials as masked variables or secrets.
+
+The variable name is the key in upper case, with `.` replaced by `_`, dashes removed, and camelCase words merged
+(`pollInterval` → `POLLINTERVAL`). A list element is written with its index (`HEADERS_0_NAME`), and a list set this way
+replaces the whole list of the file.
+
+| Variable | Key | Purpose |
+| --- | --- | --- |
+| `CLI_PLATFORM_SERVICES_REGISTRY_URL` | `cli.platform.services.registry.url` | Registry URL. |
+| `CLI_PLATFORM_SERVICES_DEVOPS_URL` | `cli.platform.services.devops.url` | DevOps URL. |
+| `CLI_PLATFORM_SERVICES_<REGISTRY\|DEVOPS>_OAUTH2_URL`, `…_GRANTTYPE`, `…_SCOPE`, `…_CLIENTID`, `…_CLIENTSECRET`, `…_CLIENTCERTIFICATE`, `…_CLIENTCERTIFICATEPRIVATEKEY` | `cli.platform.services.<service>.oauth2.*` | OAuth2 authentication, when the platform requires it. |
+| `CLI_PLATFORM_SERVICES_<REGISTRY\|DEVOPS>_HEADERS_<n>_NAME`, `…_HEADERS_<n>_VALUE` | `cli.platform.services.<service>.headers[n]` | Extra request headers, for example an API key. |
+| `CLI_PLATFORM_DEVOPS_POLLINTERVAL`, `…_ACTIVITYAPPROVALTIMEOUT`, `…_TASKAPPROVALTIMEOUT`, `…_RUNIDLOOKUPATTEMPTS`, `…_RUNIDLOOKUPINTERVAL`, `…_CONFLICTRETRIES`, `…_CONFLICTRETRYINTERVAL` | `cli.platform.devops.*` | Timings of the devops commands. |
+| `CLI_CLICONFIGURATION_INTERACTIVE` | `cli.cliConfiguration.interactive` | Set it to `false` in CI, so the CLI never waits for input. |
 
 ## Usage
 

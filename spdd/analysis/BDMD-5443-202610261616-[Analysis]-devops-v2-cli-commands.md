@@ -2,7 +2,7 @@
 
 Story **BDMD-5443**. DevOps server counterpart: **BDMD-5442** (instrumented path, on `odm-platform-pp-devops-server` `main`). UI counterpart for the activity mapping: **BDMD-5518** (`blindata-ui`).
 
-**Status (2026-11-02).** No questions are open. The design below is implemented:
+**Status (2026-11-05, rev. 9).** No questions are open. The design below is implemented:
 - **CLI:** `odm-cli`, REASONS `spdd/prompt/BDMD-5443-202610291156-[Feat]-commands-devops-v2-start-complete-task.md`.
 - **DevOps:** run-id addressing in `odm-platform-pp-devops-server` (DD-17).
 
@@ -57,6 +57,7 @@ The analysis went through seven revisions with the team. The decisions themselve
 | 6 | 2026-10-29 | **Team:** the registry call stays in the CLI. `start-task` refuses a version that is not `APPROVED` unless `--force-start` is passed (DD-16). The stage restriction applies to the UI only (Q21). DevOps' Record Task Logs, Results and Status accept the provider run id as the task address, so `complete-task` needs only the run id (DD-17, Q12). |
 | 7 | 2026-10-29 | **Team:** one `--force-start` flag for both overrides (Q6). `--task` stays required (Q25). The version is always passed explicitly, from the descriptor in the checkout or from a CI variable; a lookup by git tag was rejected (Q24). |
 | 8 | 2026-11-02 | Aligned with the implementation, the review and the local end-to-end tests. Implementation details are added to DD-05, DD-07, DD-12, DD-14 and DD-17. The rule that an instrumented run id must be unique per CI job is added. |
+| 9 | 2026-11-05 | **PR #16 review and team call.** Instrumented tasks use the pipeline run id (`$CI_PIPELINE_ID`, `github.run_id`), like full-control tasks, instead of an id unique per job. `start-task`, the build and `complete-task` then run in separate jobs, each CLI job with the CLI image. DevOps already allows only one running task per activity, so the shared id is safe; the rule becomes "one pipeline run drives one activity". No CLI or DevOps change. The docs gain a pipelines page with GitLab and GitHub examples, a per-provider table and the cancel cases (`docs/devops-pipelines.md`). The configuration can come from environment variables, which win over the file; the packaged registry URL is removed. |
 
 ## Domain Concept Identification
 
@@ -83,16 +84,16 @@ The analysis went through seven revisions with the team. The decisions themselve
 
 **DevOps V2 server (BDMD-5436/5437/5440/5442, verified in code)**
 
-- **Activity:** one run of a named activity on a data product version. Identified by a uuid, and for the CLI by the natural key **data product FQN + version tag + activity name**, which only matches `PENDING` or `RUNNING` activities. At most one open activity per data product version uuid and name.
+- **Activity:** one run of a named activity on a data product version. Identified by a uuid, and for the CLI by the natural key **data product FQN + version number + activity name**, which only matches `PENDING` or `RUNNING` activities. At most one open activity per data product version uuid and name.
 - **Task:** a unit of an activity, ordered by `sortOrder`, addressed by name. Its executor name selects a mode declared in the server configuration (`full-control` or `instrumented`, e.g. an executor called `cli`). The mode is not exposed by any read. A task holds the `providerRunId`, logs and results.
 - **Execution status:** `PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELED`, shared by activity and task.
 - **Policy approval:** asynchronous and internal to DevOps (Policy V1 or auto-approval). It is visible only through status: `RUNNING` means approved, `FAILED` means rejected, with no stored reason.
-- **DevOps commands the CLI calls:** Execute Activity, Request Task Execution, Record Task Logs, Record Task Results, Record Task Status, plus the activity reads (by uuid with tasks, search by natural key without tasks). The search filters only on version uuid, FQN, version tag, name and statuses.
-- **Task address on the task endpoints:** `{activityUuid, taskName}` or `{dataProductFqn, dataProductVersionTag, activityName, taskName}`. The name must match exactly one task. The server does not enforce unique task names; the UI and the CLI do.
+- **DevOps commands the CLI calls:** Execute Activity, Request Task Execution, Record Task Logs, Record Task Results, Record Task Status, plus the activity reads (by uuid with tasks, search by natural key without tasks). The search filters only on version uuid, FQN, version number, name and statuses.
+- **Task address on the task endpoints:** `{activityUuid, taskName}` or `{dataProductFqn, dataProductVersionNumber, activityName, taskName}`. The name must match exactly one task. The server does not enforce unique task names; the UI and the CLI do.
 - **Mode checks:** Record Task Logs and Record Task Status refuse a task that is not instrumented ("Task X is not instrumented"). Record Task Results accepts both modes.
 - **Task results:** text rows appended to a task while it is `RUNNING`. A succeeded task's results feed the `${<activity>.results.<task>.<path>}` placeholders of later full-control tasks, which read only JSON objects.
 - **Placeholders:** resolved only for full-control tasks, just before the executor start call (`ExecuteTask`). `${<activity>.results.<task>.<path>}` is the only resolved syntax; anything else stays as written, with a warning. No built-in placeholders exist.
-- **Executor start command:** `POST {executor}/api/v2/up/executor/tasks/start` with only `executorParameters` and the resolved `pipelineParameters`, plus the executor secrets as headers. There is no activity uuid, task uuid, task name, activity name, FQN or version tag, and no callback. The executor returns the `providerRunId`, which DevOps stores after the call returns.
+- **Executor start command:** `POST {executor}/api/v2/up/executor/tasks/start` with only `executorParameters` and the resolved `pipelineParameters`, plus the executor secrets as headers. There is no activity uuid, task uuid, task name, activity name, FQN or version number, and no callback. The executor returns the `providerRunId`, which DevOps stores after the call returns.
 - **Cancel:** cancel does not close a `RUNNING` instrumented task (`CancelActivity.leaveInstrumentedTaskRunning`). It cancels the pending tasks, then waits for Record Task Status. If nothing reports, it fails with "did not reach a terminal status". Only Record Task Status closes an abandoned instrumented task.
 - **Refused task request:** a refused Request Task Execution changes no state. The causes are activity not `RUNNING`, task not `PENDING`, task not next, and another task running.
 - **Instrumented task on Execute Activity:** needs only a name and a declared instrumented executor name. Executor parameters, pipeline parameters and secrets are optional for it.
@@ -112,7 +113,7 @@ The analysis went through seven revisions with the team. The decisions themselve
 - **Activity mapping:** the UI builds the Execute Activity body from the Registry V2 data product and release (version):
   - **Version uuid:** the release uuid.
   - **FQN:** the data product's `fqn`.
-  - **Version tag:** the descriptor's `info.version`.
+  - **Version number:** the descriptor's `info.version`.
   - **Activity name:** the stage the user picks among the keys of `internalComponents.lifecycleInfo`.
   - **Activity sort order:** the 0-based position of that stage key.
   - **Tasks:** that stage's entries, ordered by `order` (or position).
@@ -130,7 +131,7 @@ The analysis went through seven revisions with the team. The decisions themselve
 - **Lookup:** a data product version is found with `GET /api/v2/pp/registry/products?fqn=` → `GET /api/v2/pp/registry/products-versions?dataProductUuid=&versionNumber=` → `GET /api/v2/pp/registry/products-versions/{uuid}` (descriptor `content`).
 - **Uuid:** generated at random (`@GeneratedValue(strategy = UUID)`). It is not in the descriptor, and nobody can compute it.
 - **Publication state:** each version has a `validationState`: `PENDING` when publication is requested, then `APPROVED` or `REJECTED` by policy (`DataProductVersionPublisher`, `DataProductVersionApprover`, `DataProductVersionRejector`). It is in both the search result and the full version. A version is "published" when it is `APPROVED`.
-- **`versionNumber`:** extracted from the descriptor's `info.version` at publish time. Registry's `tag` is the release's git tag, used as the executor `ref`. So DevOps' "version tag" is Registry's `versionNumber`, not Registry's `tag`.
+- **`versionNumber`:** extracted from the descriptor's `info.version` at publish time. Registry's `tag` is the release's git tag, used as the executor `ref`. So DevOps' `dataProductVersionNumber` is Registry's `versionNumber`, not Registry's `tag`.
 - **Reference client:** `odm-platform-pp-blueprint-server` is the only project that calls Registry V2. It runs the same three-call lookup:
   - **Classes:** `RegistryClientImpl`, the `Registry*SearchOptions` and `Registry*Res` classes, and the caller `ReconstructPublicationRequestedService`.
   - **Duplicates:** it calls `getPage(Pageable.ofSize(2))` to detect them.
@@ -161,11 +162,11 @@ DevOps itself checks none of these. The task endpoints check only the role, not 
 
 - **Approval comes before work.** `start-task` succeeds only when both the activity and the task are `RUNNING`. `FAILED` on either wait fails the command, and with it the pipeline step.
 - **The CLI may request only the next pending instrumented task, and only while no other task is `RUNNING`.** DevOps enforces this and refuses with a 400 and a message. The CLI shows that message as it is and fails. The CLI does not re-implement the check.
-- **The pipeline is the source of the task coordinates.** The FQN, version, activity name and task name are options the pipeline passes to `start-task`. `complete-task` needs only the run id. The CLI never derives them from the descriptor and never returns them. When `start-task` creates the activity, it sets `dataProductFqn`, `dataProductVersionTag` and `name` from those options. It also takes the stage named by `--activity` from the descriptor. So the activity's natural key in DevOps equals the options by construction, and every later call with the same options finds it.
+- **The pipeline is the source of the task coordinates.** The FQN, version, activity name and task name are options the pipeline passes to `start-task`. `complete-task` needs only the run id. The CLI never derives them from the descriptor and never returns them. When `start-task` creates the activity, it sets `dataProductFqn`, `dataProductVersionNumber` and `name` from those options. It also takes the stage named by `--activity` from the descriptor. So the activity's natural key in DevOps equals the options by construction, and every later call with the same options finds it.
 - **The descriptor is needed once per activity run.** It is used only to plan the activity, when none is open. Once the activity exists, DevOps holds its tasks, order and executors, and later calls need only the coordinates.
 - **The activity is created once.** `start-task` reuses the open activity with the same FQN, version and activity name. It executes a new activity only when there is none. Registry is called only in that case.
 - **Only published versions run, unless forced.** The activity is planned from the descriptor of the Registry version, never from a local file. A version that is not in Registry cannot be run, even with `--force-start`: there is no uuid and no descriptor. A version that is in Registry but not `APPROVED` (`PENDING` or `REJECTED`) is refused unless `--force-start` is passed (DD-16).
-- **The run id addresses the running task.** Once a task is `RUNNING`, the pipeline addresses it by the run id alone. For GitLab full-control tasks that is `CI_PIPELINE_ID`. For instrumented tasks the pipeline chooses the id, and it must be unique per CI job (`$CI_JOB_ID` on GitLab, `github.run_id-github.job` on GitHub), so that parallel jobs never share one. DevOps matches only `RUNNING` tasks and refuses an ambiguous id (DD-17).
+- **The run id addresses the running task.** Once a task is `RUNNING`, the pipeline addresses it by the run id alone. For GitLab full-control tasks that is `CI_PIPELINE_ID`. Instrumented tasks use the same pipeline run id (`$CI_PIPELINE_ID` on GitLab, `github.run_id` on GitHub; rev. 9, replacing the rev. 8 "unique per CI job" rule), so `start-task` and `complete-task` can run in separate jobs. DevOps runs one task of an activity at a time (`RequestTaskExecution.requireNoOtherTaskRunning`) and keeps one open activity per version and name, so the tasks of one activity never share the id while running. **One pipeline run drives one activity.** DevOps matches only `RUNNING` tasks and refuses an ambiguous id (DD-17).
 - **Repeating a task request is allowed** while the task is still the next `PENDING` one. It overwrites the provider run id, so a retried `start-task` is safe.
 - **The upload order is logs → results → status, inside one command.** Logs and results are accepted only while the task is `RUNNING`, and the status ends `RUNNING`, so it is always last.
 - **The status always gets written.** A task left `RUNNING` blocks the activity and every later run with the same name. Cancel does not close an instrumented task, and DevOps has no timeout. `complete-task` writes the status even when the work failed.
@@ -341,7 +342,7 @@ A full-control pipeline started by a DevOps executor calls `complete-task --resu
 | Q7  | Poll every 5 s. Time out after 30 min waiting for activity approval and 10 min for task approval, all configurable by option and configuration. On timeout the command fails and writes no DevOps state. | Rev. 3 |
 | Q8  | One results file holding a JSON object, validated before any call. | Rev. 3 |
 | Q9  | Zero or more log files, one log row each; no size cap in this story. | Rev. 3 |
-| Q10 | The DevOps version tag is the descriptor's `info.version`, which is Registry's `versionNumber`. The option is `--data-product-version`. | Rev. 2, amended rev. 4 |
+| Q10 | The DevOps version number is the descriptor's `info.version`, which is Registry's `versionNumber`. The option is `--data-product-version`. | Rev. 2, amended rev. 4 |
 | Q11 | A stage with full-control tasks is refused by DevOps; the CLI shows the message, and the docs mention mixed stages. | Rev. 3 |
 | Q12 | A full-control pipeline addresses its task by its run id (`CI_PIPELINE_ID` on GitLab): `complete-task --results-only --provider-run-id …`. Needs the DevOps change (DD-17). Placeholders and literal params are set aside. | Rev. 6 |
 | Q13 | Exit `1` for every command failure and `2` for usage, with a final message naming the cause and the step. | Rev. 3 |
@@ -378,8 +379,8 @@ Answers Q12 (team, rev. 6). This is a DevOps server change. The CLI depends on i
 | Full control: does the pipeline know the id? | Yes, for GitLab. The executor returns the created pipeline's id, which is `CI_PIPELINE_ID` inside it (`TaskStartResultRes`: "GitLab pipeline id"). | Pass `$CI_PIPELINE_ID`. In a child or downstream pipeline `CI_PIPELINE_ID` is different, so the parent's id must be passed down. This goes in the docs. Other executors must document which variable equals their run id. |
 
 **Where it can still be ambiguous (limit 1).** Two `RUNNING` tasks with the same id:
-- **Parallel jobs of one CI run sharing a pipeline-level id.** For example, two instrumented jobs that both pass `CI_PIPELINE_ID` or `GITHUB_RUN_ID`. That is why the docs use an id that is unique per job for instrumented tasks (`$CI_JOB_ID`, `github.run_id-github.job`).
-- **One CI run working on two activities at once.** For example, a monorepo pipeline that runs tasks of two data products in parallel jobs, with the same `CI_PIPELINE_ID`. Within one activity, DevOps allows only one running task, so the same activity cannot cause it.
+- ~~**Parallel jobs of one CI run sharing a pipeline-level id.**~~ Rev. 9: not possible within one activity, because DevOps runs one task of an activity at a time. The docs use the pipeline id for instrumented tasks too.
+- **One CI run working on two activities at once.** For example, a monorepo pipeline that runs tasks of two data products in parallel jobs, with the same `CI_PIPELINE_ID`. Within one activity, DevOps allows only one running task, so the same activity cannot cause it. Rev. 9: the docs state that one pipeline run drives one activity.
 - **Two CI systems whose ids collide.** For example, two GitLab instances. This is unlikely, and only a problem if both tasks are `RUNNING` at the same moment.
 
 DevOps refuses an ambiguous id with 400 and names the matching tasks. No write goes to the wrong task, except in a narrower case (limit 2).

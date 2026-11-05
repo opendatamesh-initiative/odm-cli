@@ -17,7 +17,7 @@ cli:
   platform:
     services:
       registry:
-        url: http://localhost:8001 #(mandatory)
+        url: https://odm.example.com/registry #(mandatory for the registry commands)
         headers: #(optional) Can be used to authenticate via ApiKey
           - name: 
             value: 
@@ -30,7 +30,7 @@ cli:
           clientCertificate: 
           clientCertificatePrivateKey:         
       devops: #(mandatory for the devops commands) Same shape as registry
-        url: http://localhost:8002
+        url: https://odm.example.com/devops
         headers: []
         oauth2:
     devops: #(optional) Timings of the devops commands, shown with their defaults
@@ -48,10 +48,13 @@ cli:
 without any `/api/...` path. This holds for `registry` (the V1 validate call and the V2 lookups) and for `devops`. The
 commands add the API paths themselves.
 
-The `devops` service URL is environment specific, so it is not packaged with the CLI: set it in the configuration file or
-with the environment variable `CLI_PLATFORM_SERVICES_DEVOPS_URL`. A `devops` command that runs without it fails and names
-the missing key. The `cli.platform.devops` timings are safe everywhere and have the defaults above. Durations are written as
-`30s`, `10m` or `PT10M`.
+The service URLs are environment specific, so they are not packaged with the CLI: set them in the configuration file or
+with the environment variables `CLI_PLATFORM_SERVICES_REGISTRY_URL` and `CLI_PLATFORM_SERVICES_DEVOPS_URL`. A command that
+runs without the URL it needs fails and names the variable and the key. An environment variable wins over the file (see
+[Environment variables](../README.md#environment-variables)), so a pipeline can set the URLs once, as CI variables.
+
+The `cli.platform.devops` timings are safe everywhere and have the defaults above. Durations are written as `30s`, `10m`
+or `PT10M`.
 
 ## Commands
 

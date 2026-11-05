@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class OdmCliConfiguration {
 
     private Config cliConfiguration;
-    private List<OdmCliBaseConfiguration.SystemConfig> systems;
+    private List<OdmCliBaseConfiguration.SystemConfig> systems = new ArrayList<>();
     private PlatformConfiguration platform;
     private TemplateConfiguration template;
 

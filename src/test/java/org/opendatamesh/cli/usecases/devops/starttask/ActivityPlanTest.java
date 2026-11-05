@@ -56,7 +56,7 @@ class ActivityPlanTest {
         assertThat(activity.status()).isNull();
         assertThat(activity.dataProductVersionUuid()).isEqualTo("version-uuid");
         assertThat(activity.dataProductFqn()).isEqualTo("urn:dp:sales");
-        assertThat(activity.dataProductVersionTag()).isEqualTo("1.2.0");
+        assertThat(activity.dataProductVersionNumber()).isEqualTo("1.2.0");
         assertThat(activity.name()).isEqualTo("dev");
         assertThat(activity.sortOrder()).isEqualTo(1);
         assertThat(activity.tasks()).extracting("name").containsExactly("from-template", "second", "task_3");

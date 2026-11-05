@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DevOpsActivitySearchOptions {
     private String dataProductFqn;
-    private String dataProductVersionTag;
+    private String dataProductVersionNumber;
     private String name;
     private String statuses;
 
-    public DevOpsActivitySearchOptions(String dataProductFqn, String dataProductVersionTag, String name, String statuses) {
+    public DevOpsActivitySearchOptions(String dataProductFqn, String dataProductVersionNumber, String name, String statuses) {
         this.dataProductFqn = dataProductFqn;
-        this.dataProductVersionTag = dataProductVersionTag;
+        this.dataProductVersionNumber = dataProductVersionNumber;
         this.name = name;
         this.statuses = statuses;
     }
@@ -25,12 +25,12 @@ public class DevOpsActivitySearchOptions {
         this.dataProductFqn = dataProductFqn;
     }
 
-    public String getDataProductVersionTag() {
-        return dataProductVersionTag;
+    public String getDataProductVersionNumber() {
+        return dataProductVersionNumber;
     }
 
-    public void setDataProductVersionTag(String dataProductVersionTag) {
-        this.dataProductVersionTag = dataProductVersionTag;
+    public void setDataProductVersionNumber(String dataProductVersionNumber) {
+        this.dataProductVersionNumber = dataProductVersionNumber;
     }
 
     public String getName() {

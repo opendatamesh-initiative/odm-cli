@@ -50,14 +50,14 @@ class PlatformDevOpsClientImplTest {
     }
 
     private static final String ACTIVITY = """
-            {"activity":{"uuid":"a1","dataProductVersionUuid":"v1","dataProductFqn":"urn:dp:sales","dataProductVersionTag":"1.2.0",
+            {"activity":{"uuid":"a1","dataProductVersionUuid":"v1","dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0",
              "name":"dev","sortOrder":0,"status":"PENDING","unknownField":1,
              "tasks":[{"name":"build","status":"PENDING","executorName":"gh","providerRunId":null,"pipelineParameters":{"k":"v"}}]}}
             """;
 
     @Test
     void whenFindingOpenActivitiesThenSearchesByNaturalKeyAndOpenStatusesWithPageSizeTwo() {
-        server.expect(requestTo(BASE + "?dataProductFqn=urn:dp:sales&dataProductVersionTag=1.2.0&name=dev&statuses=PENDING,RUNNING&page=0&size=2&sort="))
+        server.expect(requestTo(BASE + "?dataProductFqn=urn:dp:sales&dataProductVersionNumber=1.2.0&name=dev&statuses=PENDING,RUNNING&page=0&size=2&sort="))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("""
                         {"content":[{"uuid":"a1","name":"dev","status":"RUNNING"}],"number":0,"size":2,"totalElements":1}
@@ -91,7 +91,7 @@ class PlatformDevOpsClientImplTest {
     void whenExecutingThenPostsThePlanWithoutStatusesOrSecrets() {
         server.expect(requestTo(BASE + "/execute")).andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("""
-                        {"activity":{"dataProductVersionUuid":"v1","dataProductFqn":"urn:dp:sales","dataProductVersionTag":"1.2.0","name":"dev","sortOrder":0,
+                        {"activity":{"dataProductVersionUuid":"v1","dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0","name":"dev","sortOrder":0,
                          "tasks":[{"name":"build","description":"Build","executorName":"gh","pipelineParameters":{"k":"v"}}]}}
                         """, true))
                 .andRespond(withStatus(org.springframework.http.HttpStatus.CREATED).body(ACTIVITY).contentType(MediaType.APPLICATION_JSON));
@@ -107,7 +107,7 @@ class PlatformDevOpsClientImplTest {
     void whenRequestingTaskExecutionThenPostsTheKeyTheTaskAndTheRunId() {
         server.expect(requestTo(BASE + "/tasks/request-execution")).andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("""
-                        {"dataProductFqn":"urn:dp:sales","dataProductVersionTag":"1.2.0","activityName":"dev","taskName":"build","providerRunId":"run-1"}
+                        {"dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0","activityName":"dev","taskName":"build","providerRunId":"run-1"}
                         """, true))
                 .andRespond(withSuccess(ACTIVITY, MediaType.APPLICATION_JSON));
 
@@ -131,7 +131,7 @@ class PlatformDevOpsClientImplTest {
     void whenRecordingStatusByKeyThenPostsTheKeyTheTaskAndTheStatus() {
         server.expect(requestTo(BASE + "/tasks/status")).andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("""
-                        {"dataProductFqn":"urn:dp:sales","dataProductVersionTag":"1.2.0","activityName":"dev","taskName":"build","status":"CANCELED"}
+                        {"dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0","activityName":"dev","taskName":"build","status":"CANCELED"}
                         """, true))
                 .andRespond(withSuccess(ACTIVITY, MediaType.APPLICATION_JSON));
 

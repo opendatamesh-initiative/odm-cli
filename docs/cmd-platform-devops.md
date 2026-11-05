@@ -11,6 +11,9 @@ platform governance with two commands: `start-task` brings the task to `RUNNING`
 uploading its logs and results and recording its final status. A full-control pipeline, which reports its own status,
 uses `complete-task --results-only` to upload its results.
 
+How to write the pipeline, for GitLab CI and GitHub Actions, is in
+[Run DevOps tasks from a pipeline](devops-pipelines.md).
+
 **Note:** To function correctly, the CLI must be configured with the `devops` service (see
 [odmcli platform](cmd-platform.md)), and with the `registry` service when `start-task` has to create the activity. The DevOps
 service must support addressing a task by its run id (see [DevOps prerequisite](#devops-prerequisite)).
@@ -36,8 +39,21 @@ service must support addressing a task by its run id (see [DevOps prerequisite](
 | `1`  | The command failed. The last log lines name the step that failed and the cause. DevOps refusals are shown verbatim.                      |
 | `2`  | Invalid usage: a required option is missing, an option is empty or still an unresolved variable (`${...}`, `$NAME`, `$(...)`), a status or duration is invalid, or `--status` and `--results-only` are used together or both missing. |
 
-The commands never prompt, whatever the `--interactive` setting, and the CLI keeps no state between commands and reads no
-CI environment variable: the pipeline passes every value as an option.
+The commands never prompt, whatever the `--interactive` setting, and the CLI keeps no state between commands. The
+pipeline passes every value of a task as an option: the CLI never reads CI variables such as `CI_PIPELINE_ID`. Only the
+configuration (the service URLs and credentials) comes from environment variables or the configuration file.
+
+## Provider run id
+
+Pass the id of the **whole pipeline run**, not the id of a job, to both `start-task` and `complete-task`:
+
+| Provider | `--provider-run-id` |
+| --- | --- |
+| GitLab CI | `$CI_PIPELINE_ID` |
+| GitHub Actions | `${{ github.run_id }}`, the workflow run id (not the job id) |
+
+Child pipelines, the other values to pass, and examples are in
+[what to pass on each provider](devops-pipelines.md#what-to-pass-on-each-provider).
 
 ## How the commands find the task
 
