@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
       - name: Get Git Tag
@@ -61,10 +61,10 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
       - name: Set up Maven settings
@@ -99,3 +99,41 @@ jobs:
           files: |
             target/odm-cli-${{ env.JAR_VERSION }}.jar
             odm-cli
+      - name: Keep the JAR for the image job
+        uses: actions/upload-artifact@v7
+        with:
+          name: odm-cli-jar
+          path: target/odm-cli-${{ env.JAR_VERSION }}.jar
+          if-no-files-found: error
+
+  publish-image:
+    runs-on: ubuntu-latest
+    needs: build-and-release-jar
+    permissions:
+      contents: read
+    env:
+      IMAGE_NAME: opendatamesh/odm-cli
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Download the released JAR
+        uses: actions/download-artifact@v8
+        with:
+          name: odm-cli-jar
+          path: target
+      - name: Get Release Version
+        run: |
+          IMAGE_VERSION=$(echo "${{ github.ref_name }}" | sed 's/[^0-9.]//g')
+          echo "IMAGE_VERSION=${IMAGE_VERSION}" >> $GITHUB_ENV
+      - name: Build Docker image
+        run: >
+          docker build . --file Dockerfile
+          --build-arg VERSION=${{ env.IMAGE_VERSION }} --build-arg REVISION=${{ github.sha }}
+          --tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+      - name: DockerHub login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PWD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin
+      - name: DockerHub image push
+        run: docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}

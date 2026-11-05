@@ -5,20 +5,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.referencehandler.DescriptorFormat;
 import org.opendatamesh.dpds.referencehandler.ReferenceResolver;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 class DescriptorValidatorParserOutboundPortImpl implements DescriptorValidatorParserOutboundPort {
-    private final Path descriptorPath;
+    private final String descriptorFilePath;
     private final ObjectMapper jsonMapper;
     private final ObjectMapper yamlMapper;
 
-    DescriptorValidatorParserOutboundPortImpl(Path descriptorPath) {
-        this.descriptorPath = descriptorPath;
+    DescriptorValidatorParserOutboundPortImpl(String descriptorFilePath) {
+        this.descriptorFilePath = descriptorFilePath;
         this.jsonMapper = new ObjectMapper();
         configObjectMapper(jsonMapper);
         this.yamlMapper = new ObjectMapper(new YAMLFactory());
@@ -27,6 +31,7 @@ class DescriptorValidatorParserOutboundPortImpl implements DescriptorValidatorPa
 
     @Override
     public JsonNode getCanonicalRawDescriptor() {
+        Path descriptorPath = descriptorPath();
         try {
             DataProductVersion dataProductVersion = getMapper(descriptorPath.toString()).readValue(descriptorPath.toFile(), DataProductVersion.class);
             ReferenceResolver.resolveReferences(DescriptorFormat.CANONICAL, dataProductVersion, descriptorPath);
@@ -36,6 +41,32 @@ class DescriptorValidatorParserOutboundPortImpl implements DescriptorValidatorPa
         }
     }
 
+    @Override
+    public boolean descriptorExists() {
+        return Files.exists(descriptorPath());
+    }
+
+    @Override
+    public boolean isDescriptorDirectory() {
+        return Files.isDirectory(descriptorPath());
+    }
+
+    @Override
+    public boolean isDescriptorEmpty() {
+        try {
+            return Files.size(descriptorPath()) == 0;
+        } catch (IOException ex) {
+            throw new UncheckedIOException("Unable to read the descriptor file: " + ex.getMessage(), ex);
+        }
+    }
+
+    private Path descriptorPath() {
+        try {
+            return Paths.get(descriptorFilePath);
+        } catch (InvalidPathException ex) {
+            throw new IllegalArgumentException("Invalid descriptor root path: " + ex.getMessage(), ex);
+        }
+    }
 
     private ObjectMapper getMapper(String ref) {
         if (ref.endsWith(".json")) {

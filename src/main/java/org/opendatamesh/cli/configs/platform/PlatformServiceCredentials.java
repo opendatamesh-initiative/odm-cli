@@ -1,14 +1,13 @@
 package org.opendatamesh.cli.configs.platform;
 
-
-import org.opendatamesh.cli.configs.generic.GenericConnectionHeader;
-import org.opendatamesh.cli.configs.generic.Oauth2;
+import org.opendatamesh.cli.utils.client.http.HttpHeader;
+import org.opendatamesh.cli.utils.client.http.Oauth2;
 
 import java.util.List;
 
 public class PlatformServiceCredentials {
     private String url;
-    private List<GenericConnectionHeader> headers;
+    private List<HttpHeader> headers;
     private Oauth2 oauth2;
 
     public String getUrl() {
@@ -19,11 +18,11 @@ public class PlatformServiceCredentials {
         this.url = url;
     }
 
-    public List<GenericConnectionHeader> getHeaders() {
+    public List<HttpHeader> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(List<GenericConnectionHeader> headers) {
+    public void setHeaders(List<HttpHeader> headers) {
         this.headers = headers;
     }
 

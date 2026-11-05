@@ -14,21 +14,24 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.opendatamesh.dpds.referencehandler.utils.JacksonUtils.mergeJsonNodes;
 
 class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
 
-    private final Path descriptorPath;
+    private final String descriptorFilePath;
     private final OdmCliConfiguration odmCliConfiguration;
     private final ObjectMapper jsonMapper;
     private final ObjectMapper yamlMapper;
 
-    PortImporterParserOutboundPortImpl(Path descriptorPath, OdmCliConfiguration odmCliConfiguration) {
-        this.descriptorPath = descriptorPath;
+    PortImporterParserOutboundPortImpl(String descriptorFilePath, OdmCliConfiguration odmCliConfiguration) {
+        this.descriptorFilePath = descriptorFilePath;
         this.odmCliConfiguration = odmCliConfiguration;
         this.jsonMapper = new ObjectMapper();
         configObjectMapper(jsonMapper);
@@ -38,8 +41,9 @@ class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
 
     @Override
     public DataProductVersion getDataProductVersion() throws FileNotFoundException {
+        Path descriptorPath = descriptorPath();
         File descriptorPathFile = descriptorPath.toFile();
-        if (!descriptorPathFile.exists() || descriptorPathFile.isFile()) {
+        if (!descriptorPathFile.isFile()) {
             throw new FileNotFoundException("Descriptor file not found at path: " + descriptorPath.toAbsolutePath());
         }
         try {
@@ -53,6 +57,7 @@ class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
 
     @Override
     public void saveDescriptor(DataProductVersion descriptor) {
+        Path descriptorPath = descriptorPath();
         try {
             DescriptorFormat saveFormat = DescriptorFormat.valueOf(StringUtils.capitalize(odmCliConfiguration.getCliConfiguration().getSaveFormat()));
             ReferenceResolver.resolveReferences(saveFormat, descriptor, descriptorPath);
@@ -71,6 +76,33 @@ class PortImporterParserOutboundPortImpl implements ImporterParserOutboundPort {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to descriptor in file: " + descriptorPath.toAbsolutePath(), e);
+        }
+    }
+
+    @Override
+    public boolean descriptorExists() {
+        return Files.exists(descriptorPath());
+    }
+
+    @Override
+    public boolean isDescriptorDirectory() {
+        return Files.isDirectory(descriptorPath());
+    }
+
+    @Override
+    public boolean isDescriptorEmpty() {
+        try {
+            return Files.size(descriptorPath()) == 0;
+        } catch (IOException ex) {
+            throw new UncheckedIOException("Unable to read the descriptor file: " + ex.getMessage(), ex);
+        }
+    }
+
+    private Path descriptorPath() {
+        try {
+            return Paths.get(descriptorFilePath);
+        } catch (InvalidPathException ex) {
+            throw new IllegalArgumentException("Invalid descriptor root path: " + ex.getMessage(), ex);
         }
     }
 

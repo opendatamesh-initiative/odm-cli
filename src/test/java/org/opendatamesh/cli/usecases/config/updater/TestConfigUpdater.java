@@ -24,10 +24,15 @@ public class TestConfigUpdater {
                 TestConfigUpdaterInitialState.class
         );
         TestConfigUpdaterFinalState finalState = new TestConfigUpdaterFinalState();
-        ConfigUpdaterParametersOutboundPort parametersOutboundPort = new ConfigUpdaterParametersOutboundPortMock(initialState);
+        ConfigUpdaterCommand command = new ConfigUpdaterCommand(
+                initialState.getFieldsToAdd(),
+                initialState.getFieldsToDelete(),
+                initialState.getArraysEntriesToAdd(),
+                initialState.getArraysEntriesToDelete()
+        );
         ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort = new ConfigUpdaterPersistenceOutboundPortMock(initialState, finalState);
 
-        new ConfigUpdater(persistenceOutboundPort, parametersOutboundPort).execute();
+        new ConfigUpdater(command, savedConfiguration -> { }, persistenceOutboundPort).execute();
 
         TestConfigUpdaterFinalState expectedFinalState = objectMapper.readValue(
                 getClass().getResource("test_config_updater_final_state.json"),

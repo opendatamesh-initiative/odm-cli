@@ -1,8 +1,9 @@
 package org.opendatamesh.cli.commands.platform.registry.validate;
 
+import org.opendatamesh.cli.clients.platform.registry.DataProductValidationResults;
 import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
-import org.opendatamesh.cli.usecases.descriptorvalidator.DataProductValidationResults;
+import org.opendatamesh.cli.usecases.descriptorvalidator.DescriptorValidatorCommand;
 import org.opendatamesh.cli.usecases.descriptorvalidator.DescriptorValidatorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +49,10 @@ public class ValidateCommandExecutor extends PicoCliCommandExecutor {
     @Override
     protected void executeUseCase() {
         super.executeUseCase();
-        DataProductValidationResults validationResults = validatorFactory
-                .getDescriptorValidatorUseCase(descriptorFilePath, validateCommandParams)
+        DescriptorValidatorCommand command = new DescriptorValidatorCommand(descriptorFilePath, validateCommandParams.get("event"));
+        validatorFactory
+                .buildDescriptorValidator(command, this::logValidationResults)
                 .execute();
-        logValidationResults(validationResults);
     }
 
     private void logValidationResults(DataProductValidationResults results) {

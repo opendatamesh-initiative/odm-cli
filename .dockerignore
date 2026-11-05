@@ -1,0 +1,4 @@
+# Only the released jar and the image scripts enter the build context
+*
+!target/odm-cli-*.jar
+!docker/

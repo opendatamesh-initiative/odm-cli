@@ -33,7 +33,6 @@ public class ValidateCommandBuilder implements PicoCliCommandBuilder {
         ValidateCommandExecutor executor = new ValidateCommandExecutor(odmCliConfiguration, validatorFactory);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(REGISTRY_VALIDATE_COMMAND);
-        spec.version("1.0.0");
         spec.usageMessage().description("Command to validate a data product descriptor.");
         spec.mixinStandardHelpOptions(true);
 

@@ -5,12 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.io.Resources;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.cli.extensions.importer.ImporterArguments;
+
+import org.opendatamesh.cli.exceptions.NotFoundException;
+import org.opendatamesh.cli.extensions.importer.ImporterExtension;
+import org.opendatamesh.dpds.model.interfaces.Port;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 
 public class PortImporterTest {
@@ -27,12 +33,12 @@ public class PortImporterTest {
                 ImporterParserMockState.class
         );
         ImporterParserOutboundPortMock parserOutboundPort = new ImporterParserOutboundPortMock(parserState);
-        ImporterArguments importSchemaArguments = new ImporterArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of(
-                "to", "output-port",
-                "target", "output_port_name")
+        ImporterCommand command = new ImporterCommand(
+                "data-product-descriptor.json",
+                "output-port",
+                "output_port_name",
+                Map.of("to", "output-port", "target", "output_port_name")
         );
-        ImporterParameterOutboundPortMock parameterOutboundPort = new ImporterParameterOutboundPortMock(importSchemaArguments);
 
         PortImporterExtensionMockState extensionState = objectMapper.readValue(
                 Resources.toByteArray(
@@ -42,7 +48,7 @@ public class PortImporterTest {
         );
         PortImporterExtensionMock importSchemaExtensionMock = new PortImporterExtensionMock(extensionState);
 
-        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(command, descriptor -> { }, () -> null, parserOutboundPort, importSchemaExtensionMock)
                 .execute();
 
 
@@ -67,13 +73,12 @@ public class PortImporterTest {
                 ImporterParserMockState.class
         );
         ImporterParserOutboundPortMock parserOutboundPort = new ImporterParserOutboundPortMock(parserState);
-        ImporterArguments importSchemaArguments = new ImporterArguments();
-        importSchemaArguments.setParentCommandOptions(Map.of(
-                "to", "output-port",
-                "target", "another_output_port_name")
+        ImporterCommand command = new ImporterCommand(
+                "data-product-descriptor.json",
+                "output-port",
+                "another_output_port_name",
+                Map.of("to", "output-port", "target", "another_output_port_name")
         );
-
-        ImporterParameterOutboundPortMock parameterOutboundPort = new ImporterParameterOutboundPortMock(importSchemaArguments);
 
         PortImporterExtensionMockState extensionState = objectMapper.readValue(
                 Resources.toByteArray(
@@ -83,7 +88,7 @@ public class PortImporterTest {
         );
         PortImporterExtensionMock importSchemaExtensionMock = new PortImporterExtensionMock(extensionState);
 
-        new PortImporter(parameterOutboundPort, parserOutboundPort, importSchemaExtensionMock)
+        new PortImporter(command, descriptor -> { }, () -> null, parserOutboundPort, importSchemaExtensionMock)
                 .execute();
 
 
@@ -99,4 +104,28 @@ public class PortImporterTest {
                 .isEqualTo(parserExpectedState);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMissingDescriptorIsPresentedAsNotFound() throws IOException {
+        ImporterParserOutboundPort parserOutboundPort = mock(ImporterParserOutboundPort.class);
+        when(parserOutboundPort.descriptorExists()).thenReturn(false);
+        ImporterExtension<Port> importerExtension = mock(ImporterExtension.class);
+        ImporterPresenter presenter = mock(ImporterPresenter.class, CALLS_REAL_METHODS);
+        ImporterCommand command = new ImporterCommand(
+                "nope.json",
+                "output-port",
+                "output_port_name",
+                Map.of("to", "output-port", "target", "output_port_name")
+        );
+
+        PortImporter portImporter = new PortImporter(command, presenter, () -> null, parserOutboundPort, importerExtension);
+
+        assertThatThrownBy(portImporter::execute)
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Descriptor root path does not exist: nope.json");
+        verify(parserOutboundPort, never()).getDataProductVersion();
+        verify(parserOutboundPort, never()).saveDescriptor(any());
+        verifyNoInteractions(importerExtension);
+        verify(presenter, never()).presentDescriptorImported(any());
+    }
 }

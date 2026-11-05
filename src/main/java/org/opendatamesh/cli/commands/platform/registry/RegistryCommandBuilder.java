@@ -27,7 +27,6 @@ public class RegistryCommandBuilder implements PicoCliCommandBuilder {
         RegistryCommandExecutor executor = new RegistryCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(REGISTRY_COMMAND);
-        spec.version("1.0.0");
         spec.usageMessage().description("Command to manage the ODM Platform functionalities exposed by the Registry Service.");
         spec.mixinStandardHelpOptions(true);
 

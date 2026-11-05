@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -25,6 +27,9 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
     @Autowired
     private OdmCliConfiguration odmCliConfiguration;
 
+    @Autowired
+    private ObjectProvider<BuildProperties> buildProperties;
+
     @Override
     public CommandLine buildCommand(String... args) {
         try {
@@ -32,7 +37,6 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
             CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
             spec.name(ODM_CLI_COMMAND);
             spec.usageMessage().description("ODM CLI init method");
-            spec.version("1.0.0");
             spec.mixinStandardHelpOptions(true);
 
             handleWithOrder(Lists.newArrayList(
@@ -41,7 +45,9 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
 
             commands.stream().filter(command -> ODM_CLI_COMMAND.equals(command.getParentCommandName()))
                     .forEach(command -> spec.addSubcommand(command.getCommandName(), command.buildCommand(args)));
-            return new CommandLine(spec);
+            CommandLine commandLine = new CommandLine(spec);
+            applyCliVersion(commandLine, getCliVersion());
+            return commandLine;
         } catch (Exception e) {
             log.error("Failed to build command, cause: {}", e.getMessage(), e);
             return new CommandLine(CommandLine.Model.CommandSpec.create());
@@ -76,6 +82,22 @@ public class OdmCliRootCommandBuilder implements PicoCliCommandBuilder {
                 })
                 .build();
         spec.addOption(descriptorFilePathOption);
+    }
+
+    /**
+     * Sets the CLI version, taken from the build, on this command and all its subcommands.
+     * A version declared by a command builder is kept as a prefix (e.g. "odm-cli config 2.0.0").
+     */
+    private void applyCliVersion(CommandLine commandLine, String cliVersion) {
+        CommandLine.Model.CommandSpec spec = commandLine.getCommandSpec();
+        String[] declaredVersion = spec.version();
+        spec.version(declaredVersion.length == 0 ? cliVersion : declaredVersion[0] + " " + cliVersion);
+        commandLine.getSubcommands().values().forEach(subcommand -> applyCliVersion(subcommand, cliVersion));
+    }
+
+    private String getCliVersion() {
+        BuildProperties properties = buildProperties.getIfAvailable();
+        return properties != null ? properties.getVersion() : "unknown";
     }
 
     //============= Utility code ===============================================================

@@ -8,4 +8,10 @@ interface ImporterParserOutboundPort {
     DataProductVersion getDataProductVersion() throws FileNotFoundException;
 
     void saveDescriptor(DataProductVersion descriptor);
+
+    boolean descriptorExists();
+
+    boolean isDescriptorDirectory();
+
+    boolean isDescriptorEmpty();
 }

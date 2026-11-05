@@ -1,0 +1,19 @@
+#!/bin/sh
+# Image entrypoint. "docker run <image> <odm-cli arguments>" runs the CLI; a command such as "sh -c ..." runs that
+# command instead, which is how GitLab's Docker executor starts a job, so GitLab jobs need no entrypoint override.
+
+ODM_CLI="$(dirname "$(readlink -f "$0")")/odm-cli"
+
+# Top-level CLI commands; keep in sync with the root command's subcommands
+case "${1:-}" in
+  "" | -* | config | local | platform)
+    exec "$ODM_CLI" "$@"
+    ;;
+esac
+
+if command -v "$1" >/dev/null 2>&1; then
+  exec "$@"
+fi
+
+# Anything else goes to the CLI, which reports invalid usage with its own exit code
+exec "$ODM_CLI" "$@"

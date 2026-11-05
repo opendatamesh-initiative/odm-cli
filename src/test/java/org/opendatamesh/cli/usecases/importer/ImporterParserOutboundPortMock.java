@@ -19,4 +19,19 @@ public class ImporterParserOutboundPortMock implements ImporterParserOutboundPor
     public void saveDescriptor(DataProductVersion descriptor) {
         state.setDataProductVersion(descriptor);
     }
+
+    @Override
+    public boolean descriptorExists() {
+        return true;
+    }
+
+    @Override
+    public boolean isDescriptorDirectory() {
+        return false;
+    }
+
+    @Override
+    public boolean isDescriptorEmpty() {
+        return false;
+    }
 }

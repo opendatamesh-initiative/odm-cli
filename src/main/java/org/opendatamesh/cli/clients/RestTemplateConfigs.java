@@ -14,8 +14,8 @@ public class RestTemplateConfigs {
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         long timeout = 180;
         return builder
-                .setConnectTimeout(Duration.ofSeconds(timeout))
-                .setReadTimeout(Duration.ofSeconds(timeout))
+                .connectTimeout(Duration.ofSeconds(timeout))
+                .readTimeout(Duration.ofSeconds(timeout))
                 .build();
     }
 
