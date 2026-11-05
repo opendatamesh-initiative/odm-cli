@@ -58,12 +58,12 @@ class PlatformDevOpsClientImpl implements PlatformDevOpsClient {
 
     @Override
     public List<DevOpsActivity> findOpenActivities(DevOpsActivityKey key) {
-        log.debug("DevOps: find open activities {} {} {}", key.dataProductFqn(), key.dataProductVersionTag(), key.activityName());
+        log.debug("DevOps: find open activities {} {} {}", key.dataProductFqn(), key.dataProductVersionNumber(), key.activityName());
         return call("find open activities", () -> restUtils.getPage(
                         activitiesUrl,
                         null,
                         Pageable.ofSize(2),
-                        new DevOpsActivitySearchOptions(key.dataProductFqn(), key.dataProductVersionTag(), key.activityName(), OPEN_STATUSES),
+                        new DevOpsActivitySearchOptions(key.dataProductFqn(), key.dataProductVersionNumber(), key.activityName(), OPEN_STATUSES),
                         DevOpsActivityRes.class
                 ).getContent().stream()
                 .map(this::toActivity)
@@ -78,7 +78,7 @@ class PlatformDevOpsClientImpl implements PlatformDevOpsClient {
 
     @Override
     public DevOpsActivity executeActivity(DevOpsActivity plan) {
-        log.debug("DevOps: execute activity {} {} {}", plan.dataProductFqn(), plan.dataProductVersionTag(), plan.name());
+        log.debug("DevOps: execute activity {} {} {}", plan.dataProductFqn(), plan.dataProductVersionNumber(), plan.name());
         return call("execute activity", () -> toActivity(restUtils.genericPost(
                 activitiesUrl + "/execute",
                 null,
@@ -90,7 +90,7 @@ class PlatformDevOpsClientImpl implements PlatformDevOpsClient {
     @Override
     public DevOpsActivity requestTaskExecution(DevOpsActivityKey key, String taskName, String providerRunId) {
         log.debug("DevOps: request execution of task {} of activity {} with run id {}", taskName, key.activityName(), providerRunId);
-        DevOpsTaskCommandRes body = new DevOpsTaskCommandRes(providerRunId, key.dataProductFqn(), key.dataProductVersionTag(),
+        DevOpsTaskCommandRes body = new DevOpsTaskCommandRes(providerRunId, key.dataProductFqn(), key.dataProductVersionNumber(),
                 key.activityName(), taskName, null, null, null);
         return call("request task execution", () -> toActivity(restUtils.genericPost(
                 activitiesUrl + "/tasks/request-execution",
@@ -115,7 +115,7 @@ class PlatformDevOpsClientImpl implements PlatformDevOpsClient {
     @Override
     public void recordTaskStatus(DevOpsActivityKey key, String taskName, ExecutionStatus status) {
         log.debug("DevOps: record status {} of task {} of activity {}", status, taskName, key.activityName());
-        DevOpsTaskCommandRes body = new DevOpsTaskCommandRes(null, key.dataProductFqn(), key.dataProductVersionTag(),
+        DevOpsTaskCommandRes body = new DevOpsTaskCommandRes(null, key.dataProductFqn(), key.dataProductVersionNumber(),
                 key.activityName(), taskName, status.name(), null, null);
         post("record task status", "/tasks/status", body);
     }
@@ -179,13 +179,13 @@ class PlatformDevOpsClientImpl implements PlatformDevOpsClient {
         List<DevOpsTaskRes> tasks = plan.tasks().stream()
                 .map(task -> new DevOpsTaskRes(task.name(), task.description(), null, null, task.executorName(), task.pipelineParameters()))
                 .toList();
-        return new DevOpsActivityRes(null, plan.dataProductVersionUuid(), plan.dataProductFqn(), plan.dataProductVersionTag(),
+        return new DevOpsActivityRes(null, plan.dataProductVersionUuid(), plan.dataProductFqn(), plan.dataProductVersionNumber(),
                 plan.name(), plan.sortOrder(), null, tasks);
     }
 
     private DevOpsActivity toActivity(DevOpsActivityRes res) {
         List<DevOpsTask> tasks = res.tasks() == null ? List.of() : res.tasks().stream().map(this::toTask).toList();
-        return new DevOpsActivity(res.uuid(), res.dataProductVersionUuid(), res.dataProductFqn(), res.dataProductVersionTag(),
+        return new DevOpsActivity(res.uuid(), res.dataProductVersionUuid(), res.dataProductFqn(), res.dataProductVersionNumber(),
                 res.name(), res.sortOrder(), toStatus(res.status()), tasks);
     }
 

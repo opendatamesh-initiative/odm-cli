@@ -14,7 +14,7 @@ import java.util.List;
 public record DevOpsTaskCommandRes(
         String providerRunId,
         String dataProductFqn,
-        String dataProductVersionTag,
+        String dataProductVersionNumber,
         String activityName,
         String taskName,
         String status,

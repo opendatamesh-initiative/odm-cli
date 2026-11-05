@@ -1,18 +1,17 @@
 #!/bin/sh
-# Starts the ODM CLI from its bundle (/opt/odm-cli in the Docker image, or wherever the bundle was copied).
-# Unlike the workstation script, it never downloads anything: the jar and the Java runtime are part of the bundle.
+# Starts the ODM CLI in the Docker image. Unlike the workstation script, it never downloads anything:
+# the jar and the Java runtime are part of the image.
 
-# Resolve the bundle directory from the real location of this script, following links such as /usr/local/bin/odm-cli
+# Resolve the installation directory from the real location of this script, following links such as /usr/local/bin/odm-cli
 SCRIPT_PATH=$(readlink -f "$0")
 ODM_CLI_HOME=$(dirname "$(dirname "$SCRIPT_PATH")")
 
-# Prefer the bundled Java runtime, fall back to the one on PATH
-if [ -x "$ODM_CLI_HOME/runtime/bin/java" ]; then
-  JAVA="$ODM_CLI_HOME/runtime/bin/java"
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+  JAVA="$JAVA_HOME/bin/java"
 elif command -v java >/dev/null 2>&1; then
   JAVA=java
 else
-  echo "Error: Java runtime not found in $ODM_CLI_HOME/runtime or on PATH." >&2
+  echo "Error: Java runtime not found in JAVA_HOME or on PATH." >&2
   exit 1
 fi
 

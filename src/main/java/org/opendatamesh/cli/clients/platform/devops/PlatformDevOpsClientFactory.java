@@ -23,7 +23,8 @@ public class PlatformDevOpsClientFactory {
                 || configuration.getPlatform().getServices() == null
                 || configuration.getPlatform().getServices().getDevops() == null
                 || !StringUtils.hasText(configuration.getPlatform().getServices().getDevops().getUrl())) {
-            throw new IllegalStateException("Missing configuration for odm-platform devops service: cli.platform.services.devops.url");
+            throw new IllegalStateException("Missing configuration for odm-platform devops service: set the environment variable "
+                    + "CLI_PLATFORM_SERVICES_DEVOPS_URL or cli.platform.services.devops.url in the configuration file");
         }
         PlatformServiceCredentials credentials = configuration.getPlatform().getServices().getDevops();
         DevOpsCommandsConfiguration commands = configuration.getPlatform().getDevops() != null

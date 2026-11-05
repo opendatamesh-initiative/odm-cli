@@ -42,7 +42,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
 
     private static final String DEVOPS = "http://devops.test/api/v2/pp/devops/activities";
     private static final String SEARCH = DEVOPS
-            + "?dataProductFqn=urn:dp:sales&dataProductVersionTag=1.2.0&name=dev&statuses=PENDING,RUNNING&page=0&size=2&sort=";
+            + "?dataProductFqn=urn:dp:sales&dataProductVersionNumber=1.2.0&name=dev&statuses=PENDING,RUNNING&page=0&size=2&sort=";
     private static final String BUILD_PENDING = activity("RUNNING", "PENDING");
     private static final String BUILD_RUNNING = activity("RUNNING", "RUNNING");
 
@@ -60,21 +60,23 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
 
     private MockRestServiceServer server;
     private ClientHttpRequestFactory originalRequestFactory;
-    private PlatformServiceCredentials originalDevops;
-    private String originalRegistryUrl;
+    private PlatformServices originalServices;
     private DevOpsCommandsConfiguration originalTimings;
 
     @BeforeEach
     void prepareDevOpsServices() {
-        PlatformServices services = configuration.getPlatform().getServices();
-        originalDevops = services.getDevops();
-        originalRegistryUrl = services.getRegistry().getUrl();
+        originalServices = configuration.getPlatform().getServices();
         originalTimings = configuration.getPlatform().getDevops();
 
+        // The service URLs are not packaged, so the test sets its own
         PlatformServiceCredentials devops = new PlatformServiceCredentials();
         devops.setUrl("http://devops.test");
+        PlatformServiceCredentials registry = new PlatformServiceCredentials();
+        registry.setUrl("http://registry.test");
+        PlatformServices services = new PlatformServices();
         services.setDevops(devops);
-        services.getRegistry().setUrl("http://registry.test");
+        services.setRegistry(registry);
+        configuration.getPlatform().setServices(services);
         DevOpsCommandsConfiguration timings = new DevOpsCommandsConfiguration();
         timings.setPollInterval(Duration.ofMillis(10));
         timings.setRunIdLookupInterval(Duration.ofMillis(10));
@@ -88,9 +90,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
     @AfterEach
     void restoreServices() {
         restTemplate.setRequestFactory(originalRequestFactory);
-        PlatformServices services = configuration.getPlatform().getServices();
-        services.setDevops(originalDevops);
-        services.getRegistry().setUrl(originalRegistryUrl);
+        configuration.getPlatform().setServices(originalServices);
         configuration.getPlatform().setDevops(originalTimings);
     }
 
@@ -130,7 +130,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
         expectOpenActivityFound();
         server.expect(requestTo(DEVOPS + "/tasks/request-execution")).andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("""
-                        {"dataProductFqn":"urn:dp:sales","dataProductVersionTag":"1.2.0","activityName":"dev","taskName":"build","providerRunId":"run-1"}
+                        {"dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0","activityName":"dev","taskName":"build","providerRunId":"run-1"}
                         """, true))
                 .andRespond(withSuccess("{\"activity\":" + BUILD_PENDING + "}", MediaType.APPLICATION_JSON));
         expectGet(DEVOPS + "/a1", BUILD_RUNNING);

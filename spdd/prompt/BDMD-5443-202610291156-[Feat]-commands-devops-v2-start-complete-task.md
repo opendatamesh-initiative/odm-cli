@@ -51,7 +51,7 @@ class CompleteTaskCommand {
 class DevOpsActivityKey {
     <<record>>
     +String dataProductFqn
-    +String dataProductVersionTag
+    +String dataProductVersionNumber
     +String activityName
 }
 
@@ -60,7 +60,7 @@ class DevOpsActivity {
     +String uuid
     +String dataProductVersionUuid
     +String dataProductFqn
-    +String dataProductVersionTag
+    +String dataProductVersionNumber
     +String name
     +Integer sortOrder
     +ExecutionStatus status
@@ -326,15 +326,15 @@ Execution order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
    - `DevOpsTask`;
    - `ExecutionStatus`, with `isTerminal()`.
 3. Methods (base path `{url}/api/v2/pp/devops/activities`):
-   - **`List<DevOpsActivity> findOpenActivities(DevOpsActivityKey key)`:** `GET ?dataProductFqn=…&dataProductVersionTag=…&name=…&statuses=PENDING,RUNNING&page=0&size=2&sort=`, through `getPage` with `DevOpsActivitySearchOptions {dataProductFqn, dataProductVersionTag, name, statuses}`, where `statuses` is the string `"PENDING,RUNNING"`. Search results carry no tasks, so `tasks` is an empty list.
+   - **`List<DevOpsActivity> findOpenActivities(DevOpsActivityKey key)`:** `GET ?dataProductFqn=…&dataProductVersionNumber=…&name=…&statuses=PENDING,RUNNING&page=0&size=2&sort=`, through `getPage` with `DevOpsActivitySearchOptions {dataProductFqn, dataProductVersionNumber, name, statuses}`, where `statuses` is the string `"PENDING,RUNNING"`. Search results carry no tasks, so `tasks` is an empty list.
    - **`DevOpsActivity getActivity(String uuid)`:** `GET /{uuid}`, the full graph with tasks.
    - **`DevOpsActivity executeActivity(DevOpsActivity plan)`:**
-     - `POST /execute` with body `{activity: {dataProductVersionUuid, dataProductFqn, dataProductVersionTag, name, sortOrder, tasks: [{name, description, executorName, pipelineParameters}]}}`.
+     - `POST /execute` with body `{activity: {dataProductVersionUuid, dataProductFqn, dataProductVersionNumber, name, sortOrder, tasks: [{name, description, executorName, pipelineParameters}]}}`.
      - Returns the `activity` of the 201 response.
      - Sends no secret headers.
-   - **`DevOpsActivity requestTaskExecution(DevOpsActivityKey key, String taskName, String providerRunId)`:** `POST /tasks/request-execution` with body `{dataProductFqn, dataProductVersionTag, activityName, taskName, providerRunId}`.
+   - **`DevOpsActivity requestTaskExecution(DevOpsActivityKey key, String taskName, String providerRunId)`:** `POST /tasks/request-execution` with body `{dataProductFqn, dataProductVersionNumber, activityName, taskName, providerRunId}`.
    - **`DevOpsActivity cancelActivity(String uuid)`:** `POST /cancel` with body `{activity: {uuid}}`.
-   - **`void recordTaskStatus(DevOpsActivityKey key, String taskName, ExecutionStatus status)`:** `POST /tasks/status` with body `{dataProductFqn, dataProductVersionTag, activityName, taskName, status}`. Used only by force-start.
+   - **`void recordTaskStatus(DevOpsActivityKey key, String taskName, ExecutionStatus status)`:** `POST /tasks/status` with body `{dataProductFqn, dataProductVersionNumber, activityName, taskName, status}`. Used only by force-start.
    - **`void recordTaskLogsByRunId(String providerRunId, List<String> logs)`:** `POST /tasks/logs` with body `{providerRunId, logs: [{content}]}`.
    - **`void recordTaskResultsByRunId(String providerRunId, String results)`:** `POST /tasks/results` with body `{providerRunId, results: [{content}]}`.
    - **`void recordTaskStatusByRunId(String providerRunId, ExecutionStatus status)`:** `POST /tasks/status` with body `{providerRunId, status}`.
@@ -343,7 +343,7 @@ Execution order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
    - `DevOpsTaskRes`;
    - `DevOpsTaskTextRes {content}`;
    - `DevOpsActivityEnvelopeRes {activity}`;
-   - `DevOpsTaskCommandRes`: one class with the nullable fields `providerRunId`, `dataProductFqn`, `dataProductVersionTag`, `activityName`, `taskName`, `status`, `logs` and `results`, serialized with `@JsonInclude(NON_NULL)`;
+   - `DevOpsTaskCommandRes`: one class with the nullable fields `providerRunId`, `dataProductFqn`, `dataProductVersionNumber`, `activityName`, `taskName`, `status`, `logs` and `results`, serialized with `@JsonInclude(NON_NULL)`;
    - `DevOpsActivitySearchOptions`;
    - `DevOpsErrorRes {status, error, message, path}`.
 
@@ -351,7 +351,7 @@ Execution order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
 5. Error handling: every call goes through a private `call(String operation, Supplier<T>)`:
    - On `ClientException` 409, it retries up to `conflictRetries` times, sleeping `conflictRetryInterval`.
    - It then translates the error per Approach 3, naming the service `devops`. The 400 message is the server's `message`, verbatim.
-6. **`PlatformDevOpsClientFactory`** (`@Component`): throws `IllegalStateException("Missing configuration for odm-platform devops service: cli.platform.services.devops.url")` when `devops` or its `url` is missing. It passes the `RestTemplate`, the credentials and `DevOpsCommandsConfiguration` to the implementation.
+6. **`PlatformDevOpsClientFactory`** (`@Component`): throws `IllegalStateException("Missing configuration for odm-platform devops service: set the environment variable CLI_PLATFORM_SERVICES_DEVOPS_URL or cli.platform.services.devops.url in the configuration file")` when `devops` or its `url` is missing (message revised in the PR #16 review). It passes the `RestTemplate`, the credentials and `DevOpsCommandsConfiguration` to the implementation.
 7. Logging: DEBUG per call, with the method, path and identifiers (uuid, FQN, run id). No headers, no bodies.
 
 ### 4. Create Use Case - `StartTask` (`usecases/devops/starttask`)
@@ -445,7 +445,7 @@ Execution order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
      7. Build the activity:
         - `dataProductVersionUuid` = `versionUuid`;
         - `dataProductFqn` = the `--data-product-fqn` option;
-        - `dataProductVersionTag` = the `--data-product-version` option;
+        - `dataProductVersionNumber` = the `--data-product-version` option;
         - `name` = the `--activity` option;
         - `sortOrder` = the index of the stage among the `stages` keys;
         - `tasks` = the mapped tasks;
@@ -664,11 +664,15 @@ Execution order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11
    - the options and the procedure;
    - the publication check and `--force-start`, with a warning: never set it in pipeline files by default;
    - Q24 recipes: `yq '.info.version' <descriptor>`, else a CI variable;
-   - full GitHub Actions and GitLab examples, where `complete-task` runs after a successful `start-task`, with the same run id variable:
-     - **GitHub Actions:** `if: always()` on a step gated on the `start-task` outcome.
-     - **GitLab:** an `after_script`, gated on a marker file written right after `start-task`. It maps `CI_JOB_STATUS` to the status (`canceled` → `CANCELED`).
-   - the run id must be unique per job, so that parallel jobs never share it: `$CI_JOB_ID`, or `github.run_id-github.job`. A shared id is refused by DevOps with 400.
-4. **`docs/cmd-platform-devops-complete-task.md`:**
+   - the run id is the pipeline run id (`$CI_PIPELINE_ID`, `github.run_id`), the same for `complete-task`; one pipeline run drives one activity (analysis rev. 9, replacing the rev. 8 "unique per job" rule);
+   - one command example, and a link to the pipelines page for the full examples.
+4. **`docs/devops-pipelines.md`** _(added in analysis rev. 9, PR #16 review)_:
+   - how it works: each CLI call in its own job with the CLI image, one run id per pipeline run, one pipeline per activity, service URLs as shared CI variables;
+   - the per-provider table (run id, child pipelines, version, status mapping, "close only if started", artifacts, secrets, full control);
+   - **GitLab:** start / build / complete jobs; the start job writes a dotenv artifact, so the `when: on_failure` close job runs only for a started task; the `when: on_success` close job sends the results;
+   - **GitHub Actions:** start / build / complete jobs; the close job runs with `if: always() && needs.<start>.result == 'success'` and maps `needs.<build>.result` to the status (`cancelled` → `CANCELED`); marked as not verified yet;
+   - the cancel cases (a cancelled GitLab pipeline leaves the task `RUNNING`: manual `complete-task --status CANCELED` or `--force-start`), re-runs and troubleshooting.
+5. **`docs/cmd-platform-devops-complete-task.md`:**
    - the options, the order, and the partial-failure rules (Q19);
    - `--results-only` for full-control pipelines with `$CI_PIPELINE_ID`;
    - the child or downstream pipeline note: pass the parent's id down;
@@ -936,7 +940,7 @@ Implement every test in the table. Each test method's Javadoc quotes its Scenari
    - **DevOps paths and field names exactly as in `odm-platform-pp-devops-server` `rest/v2/resources`:**
      - `activities`, `/execute`, `/cancel`, `/{uuid}`;
      - `/tasks/request-execution`, `/tasks/logs`, `/tasks/results`, `/tasks/status`;
-     - `dataProductVersionTag` (not "versionTag"), `statuses`;
+     - `dataProductVersionNumber` (not "versionNumber"), `statuses`;
      - `CANCELED` with one L.
    - **DevOps prerequisite.** `complete-task` requires DevOps with run-id addressing (DD-17: `providerRunId` on the three record endpoints, 404 when no `RUNNING` task matches, 400 when ambiguous). Do not add coordinate fallbacks to the CLI.
    - **Race detection.** The race on Execute Activity is recognised only by the 400 message containing `is already PENDING or RUNNING`. This is one constant with one test.
@@ -945,7 +949,7 @@ Implement every test in the table. Each test method's Javadoc quotes its Scenari
    - **Version not in Registry:** fails with or without `--force-start`.
    - **`PENDING`/`REJECTED`:** fails without the flag; warns and continues with it.
    - **`--force-start` replaces** only a `RUNNING` open activity that is blocked for the requested task (the requested task is not `PENDING`, or another task is `RUNNING`). It never replaces a `PENDING` activity, or one without the requested task.
-   - **Execute Activity values:** `dataProductFqn`, `dataProductVersionTag` and `name` equal the options, and are always sent.
+   - **Execute Activity values:** `dataProductFqn`, `dataProductVersionNumber` and `name` equal the options, and are always sent.
    - **Execute Activity tasks:** only `name`, `description`, `executorName` and `pipelineParameters`. No `executorParameters`, no secrets.
    - **Results:** must be one JSON object file. Log files are one row each; blank logs are skipped.
 6. **Exception handling constraints:**

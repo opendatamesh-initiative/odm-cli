@@ -112,7 +112,7 @@ class OpenActivity {
     private UseCaseException moreThanOneOpen(DevOpsActivityKey key, List<DevOpsActivity> open) {
         String uuids = open.stream().map(DevOpsActivity::uuid).collect(Collectors.joining(", "));
         return new UseCaseException(CONFLICT, "More than one open activity " + key.activityName() + " for "
-                + key.dataProductFqn() + " " + key.dataProductVersionTag() + ": " + uuids);
+                + key.dataProductFqn() + " " + key.dataProductVersionNumber() + ": " + uuids);
     }
 
     private UseCaseException closeTimedOut(String uuid, Duration timeout) {

@@ -6,8 +6,8 @@
 
 ## Description
 
-Completes a running task, which it addresses by the pipeline's run id alone: no version, FQN, activity or task name is
-needed.
+Completes a running task, which it addresses by the pipeline's run id alone. The run id is the id of the pipeline run (`$CI_PIPELINE_ID` on GitLab, `github.run_id` on GitHub), for both kinds of
+task.
 
 **Instrumented task** (`--status`): the command uploads the logs, uploads the results, then records the final status,
 always in that order.
@@ -25,7 +25,7 @@ issues at once, and nothing is sent.
 
 | Option              | Required | Description                                                                                          |
 |---------------------|----------|------------------------------------------------------------------------------------------------------|
-| `--provider-run-id` | yes      | Run id of the task: the value given to `start-task`, or the pipeline id of a full-control task.      |
+| `--provider-run-id` | yes      | Run id of the task: the pipeline id, the same value given to `start-task`.                           |
 | `--status`          | one of   | Final status of the instrumented task: `SUCCEEDED`, `FAILED` or `CANCELED`, in any case.             |
 | `--results-only`    | one of   | Upload only the results of a full-control task. Exclusive with `--status`.                           |
 | `--logs-file`       | no       | File uploaded as one log row. Repeatable. A blank file is skipped. Not allowed with `--results-only`. |
@@ -64,3 +64,6 @@ The results file is a JSON object:
 ```json
 {"coverage": 80, "artifact": "registry.example.com/app:1.2.0"}
 ```
+
+Complete pipelines, and how to close a task when a pipeline is cancelled, are in
+[Run DevOps tasks from a pipeline](devops-pipelines.md).

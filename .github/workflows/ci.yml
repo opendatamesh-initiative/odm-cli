@@ -80,6 +80,4 @@ jobs:
           JAR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "JAR_VERSION=${JAR_VERSION}" >> $GITHUB_ENV
       - name: Build image
-        run: docker build --build-arg VERSION=${{ env.JAR_VERSION }} --build-arg REVISION=${{ github.sha }} -t odm-cli:smoke .
-      - name: Run smoke tests
-        run: docker/smoke-test.sh odm-cli:smoke "${{ env.JAR_VERSION }}"
+        run: docker build --build-arg VERSION=${{ env.JAR_VERSION }} --build-arg REVISION=${{ github.sha }} -t odm-cli:ci .

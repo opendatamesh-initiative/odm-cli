@@ -11,7 +11,7 @@ public record DevOpsActivityRes(
         String uuid,
         String dataProductVersionUuid,
         String dataProductFqn,
-        String dataProductVersionTag,
+        String dataProductVersionNumber,
         String name,
         Integer sortOrder,
         String status,
