@@ -48,19 +48,19 @@ class TaskReportCheckTest {
     }
 
     @Test
-    void whenLogsWithResultsOnlyThenFails() {
-        CompleteTaskCommand command = new CompleteTaskCommand("run-1", null, true, List.of("a.log"), "results.json", 5, Duration.ofSeconds(1));
+    void whenLogsWithoutStatusThenFails() {
+        CompleteTaskCommand command = new CompleteTaskCommand("run-1", null, List.of("a.log"), "results.json", 5, Duration.ofSeconds(1));
 
         assertThatThrownBy(() -> check.check(command)).isInstanceOf(UseCaseException.class)
-                .hasMessage("Invalid input: --logs-file cannot be used with --results-only: logs are refused for full-control tasks");
+                .hasMessage("Invalid input: --logs-file needs --status: logs are recorded only for instrumented tasks");
     }
 
     @Test
-    void whenResultsOnlyWithoutResultsFileThenFails() {
-        CompleteTaskCommand command = new CompleteTaskCommand("run-1", null, true, List.of(), null, 5, Duration.ofSeconds(1));
+    void whenNoStatusAndNoResultsFileThenFails() {
+        CompleteTaskCommand command = new CompleteTaskCommand("run-1", null, List.of(), null, 5, Duration.ofSeconds(1));
 
         assertThatThrownBy(() -> check.check(command)).isInstanceOf(UseCaseException.class)
-                .hasMessage("Invalid input: --results-only requires --results-file");
+                .hasMessage("Invalid input: --results-file is required without --status: a full-control task uploads only its results");
     }
 
     @Test

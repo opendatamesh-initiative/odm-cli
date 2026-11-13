@@ -4,12 +4,12 @@ Closes an instrumented task, or uploads the results of a full-control task. Ever
 
 ## Input and output
 
-- **In:** the run id, the final status, the results-only flag, the log files, the results file, and the run id lookup attempts and interval.
-- **Out:** `presentTaskCompleted` with the recorded status, or `presentResultsUploaded` for results only. Any failure goes to `presentFailedStep` with a `CompleteTaskStep`, then to the presenter's exception handling.
+- **In:** the run id, the final status (none for a full-control task, which uploads only its results), the log files, the results file, and the run id lookup attempts and interval.
+- **Out:** `presentTaskCompleted` with the recorded status, or `presentResultsUploaded` when there is no status (results only). Any failure goes to `presentFailedStep` with a `CompleteTaskStep`, then to the presenter's exception handling.
 
 ## Procedure
 
-Check the input. Then either upload the results (results only), or upload the logs, upload the results and record the status. The index README has the canonical script.
+Check the input. Then either upload the results (no status: results only), or upload the logs, upload the results and record the status. The index README has the canonical script.
 
 ## Cases handled
 
@@ -21,7 +21,7 @@ Check the input. Then either upload the results (results only), or upload the lo
 
 ## Step class and its rules
 
-- `TaskReportCheck` checks the input and reads the files into a `TaskReport`. Rules: `logsWithResultsOnly`, `resultsOnlyWithoutResults`, `unreadableFile`, `resultsNotJsonObject`, `emptyLog`.
+- `TaskReportCheck` checks the input and reads the files into a `TaskReport`. Rules: `logsWithoutStatus`, `resultsMissingWithoutStatus`, `unreadableFile`, `resultsNotJsonObject`, `emptyLog`.
 - The rules of the entry class, at the bottom of `CompleteTask`: `untilTaskFound`, `failIfPartial`, `attempt`.
 
 ## Ports

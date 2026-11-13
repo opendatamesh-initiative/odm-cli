@@ -111,7 +111,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
 
     private int startTask(String... extra) {
         String[] base = {"--interactive=false", "platform", "devops", "start-task",
-                "--data-product-fqn", "urn:dp:sales", "--data-product-version", "1.2.0",
+                "--data-product-fqn", "urn:dp:sales", "--data-product-version-number", "1.2.0",
                 "--activity", "dev", "--task", "build", "--provider-run-id", "run-1"};
         String[] args = new String[base.length + extra.length];
         System.arraycopy(base, 0, args, 0, base.length);
@@ -212,7 +212,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
     /**
      * Scenario: Results only.
      * Given a RUNNING full-control task whose provider run id is the pipeline's id
-     * When the pipeline runs complete-task --results-only --provider-run-id and a results file
+     * When the pipeline runs complete-task --provider-run-id and a results file, without --status
      * Then only the results are recorded and the command exits 0
      */
     @Test
@@ -223,7 +223,7 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         int exitCode = run("--interactive=false", "platform", "devops", "complete-task", "--provider-run-id", "4242",
-                "--results-only", "--results-file", results.toString());
+                "--results-file", results.toString());
 
         assertThat(exitCode).isZero();
         server.verify();
@@ -244,22 +244,50 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
     }
 
     /**
-     * Scenario: Status and results-only together.
-     * When complete-task runs with both --status and --results-only
-     * Then the command exits 2
+     * Scenario: No status and no results file.
+     * When complete-task runs without --status and without --results-file
+     * Then the command fails before any call
      */
     @Test
-    void whenStatusAndResultsOnlyThenExitsTwo() {
-        int exitCode = run("--interactive=false", "platform", "devops", "complete-task", "--provider-run-id", "run-1",
-                "--status", "SUCCEEDED", "--results-only");
+    void whenNoStatusAndNoResultsFileThenFailsBeforeAnyCall(CapturedOutput output) {
+        assertThat(run("--interactive=false", "platform", "devops", "complete-task", "--provider-run-id", "run-1")).isEqualTo(1);
 
-        assertThat(exitCode).isEqualTo(2);
         server.verify();
+        assertThat(output).contains("--results-file is required without --status");
     }
 
     @Test
-    void whenNeitherStatusNorResultsOnlyThenExitsTwo() {
-        assertThat(run("--interactive=false", "platform", "devops", "complete-task", "--provider-run-id", "run-1")).isEqualTo(2);
+    void whenLogsWithoutStatusThenFailsBeforeAnyCall(CapturedOutput output) throws Exception {
+        Path log = Files.writeString(directory.resolve("build.log"), "built\n");
+        Path results = Files.writeString(directory.resolve("results.json"), "{}");
+
+        assertThat(run("--interactive=false", "platform", "devops", "complete-task", "--provider-run-id", "run-1",
+                "--logs-file", log.toString(), "--results-file", results.toString())).isEqualTo(1);
+
+        server.verify();
+        assertThat(output).contains("--logs-file needs --status");
+    }
+
+    /**
+     * Scenario: Short options.
+     * When complete-task runs with -r, -s, -l and -o
+     * Then they work as the long options
+     */
+    @Test
+    void whenShortOptionsThenCompleteTaskExitsZero() throws Exception {
+        Path log = Files.writeString(directory.resolve("build.log"), "built\n");
+        Path results = Files.writeString(directory.resolve("results.json"), "{\"coverage\":80}");
+        server.expect(requestTo(DEVOPS + "/tasks/logs")).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(DEVOPS + "/tasks/results")).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(DEVOPS + "/tasks/status"))
+                .andExpect(content().json("{\"providerRunId\":\"run-1\",\"status\":\"FAILED\"}", true))
+                .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+        int exitCode = run("--interactive=false", "platform", "devops", "complete-task", "-r", "run-1", "-s", "FAILED",
+                "-l", log.toString(), "-o", results.toString());
+
+        assertThat(exitCode).isZero();
+        server.verify();
     }
 
     @Test
@@ -275,9 +303,31 @@ public class PlatformDevOpsCommandIT extends OdmCliCommandIT {
     @Test
     void whenActivityMissingThenExitsTwo() {
         int exitCode = run("--interactive=false", "platform", "devops", "start-task", "--data-product-fqn", "urn:dp:sales",
-                "--data-product-version", "1.2.0", "--task", "build", "--provider-run-id", "run-1");
+                "--data-product-version-number", "1.2.0", "--task", "build", "--provider-run-id", "run-1");
 
         assertThat(exitCode).isEqualTo(2);
+        server.verify();
+    }
+
+    /**
+     * Scenario: Short options.
+     * When start-task runs with -p, -n, -a, -t and -r
+     * Then they work as the long options
+     */
+    @Test
+    void whenShortOptionsThenStartTaskExitsZero() {
+        expectOpenActivityFound();
+        server.expect(requestTo(DEVOPS + "/tasks/request-execution")).andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("""
+                        {"dataProductFqn":"urn:dp:sales","dataProductVersionNumber":"1.2.0","activityName":"dev","taskName":"build","providerRunId":"run-1"}
+                        """, true))
+                .andRespond(withSuccess("{\"activity\":" + BUILD_PENDING + "}", MediaType.APPLICATION_JSON));
+        expectGet(DEVOPS + "/a1", BUILD_RUNNING);
+
+        int exitCode = run("--interactive=false", "platform", "devops", "start-task",
+                "-p", "urn:dp:sales", "-n", "1.2.0", "-a", "dev", "-t", "build", "-r", "run-1");
+
+        assertThat(exitCode).isZero();
         server.verify();
     }
 

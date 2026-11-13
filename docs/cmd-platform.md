@@ -44,8 +44,8 @@ cli:
     #[ ... ]
 ```
 
-**The `url` is the base address only.** It is the host of the service, or the prefix of the Agent proxy that forwards to it,
-without any `/api/...` path. This holds for `registry` (the V1 validate call and the V2 lookups) and for `devops`. The
+**The `url` is the base address only.** It is the host of the service, or the prefix of the Blindata Agent proxy that
+forwards to it (see [Connecting to ODM](devops-pipelines.md#connecting-to-odm)), without any `/api/...` path. This holds for `registry` (the V1 validate call and the V2 lookups) and for `devops`. The
 commands add the API paths themselves.
 
 The service URLs are environment specific, so they are not packaged with the CLI: set them in the configuration file or

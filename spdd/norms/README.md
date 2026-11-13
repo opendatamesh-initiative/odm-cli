@@ -57,7 +57,6 @@ If a module's norm file is missing, that module is not part of this service: ski
 | Entity CRUD with optional DTO mapping and/or filtered list APIs | [`GENERIC-CRUD-GUIDELINES.md`](./GENERIC-CRUD-GUIDELINES.md) (module `persistence`) |
 | Both (e.g. use case that delegates persistence to core CRUD services) | **Both** — use cases call core services **via outbound ports**, not directly from the use case class |
 | A call to, or a payload from, a system the service does not own | [`INTEGRATIONS.md`](./INTEGRATIONS.md) |
-| Work that runs in the background (async calls, fan-out, heavy computation) | [`ASYNC_EXECUTION.md`](./ASYNC_EXECUTION.md) |
 | New or changed configuration | [`CONFIGURATION.md`](./CONFIGURATION.md) |
 | New or changed public endpoint, or a new API version | [`API_DESIGN.md`](./API_DESIGN.md) |
 | A new or touched module with several units of one kind, or a unit whose steps outgrow one class (use cases of an aggregate, a job, a client, a parser) | [`PROGRESSIVE_DISCOVERY.md`](./PROGRESSIVE_DISCOVERY.md) |
@@ -72,7 +71,6 @@ If a module's norm file is missing, that module is not part of this service: ski
 | [PACKAGE_STRUCTURE.md](./PACKAGE_STRUCTURE.md) | core | Package by aggregate, versioned HTTP tree, version adapters, where each kind of class goes |
 | [INTEGRATIONS.md](./INTEGRATIONS.md) | core | Clients per external system, anti-corruption, error translation, resilience |
 | [TESTING.md](./TESTING.md) | core | `*Test` (unit) vs `*IT` (running application), tests per layer, traceability, isolation |
-| [ASYNC_EXECUTION.md](./ASYNC_EXECUTION.md) | core | `AsyncExecutorService` (virtual threads, I/O) vs `PlatformThreadExecutorService` (platform threads, CPU or pinning), concurrency caps, executor configuration |
 | [CONFIGURATION.md](./CONFIGURATION.md) | core | Typed, validated-at-startup configuration; behaviour selected by configuration; safe defaults |
 | [API_DESIGN.md](./API_DESIGN.md) | core | Versioning, version adapters, breaking changes, OpenAPI contract, uniform responses |
 | [PROGRESSIVE_DISCOVERY.md](./PROGRESSIVE_DISCOVERY.md) | core | Navigation levels of a module (index README → unit README → entry method → step class → rules → ports/adapters), one skeleton per kind of unit, earned sharing, structure test and README guard |

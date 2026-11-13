@@ -53,7 +53,7 @@ Test the cli.
 The CLI is also available as a Docker image, with Java included:
 
 ```bash
-docker run --rm -v "$PWD":/workspace -w /workspace opendatamesh/odm-cli:X.Y.Z --version
+docker run --rm -v "$PWD":/workspace opendatamesh/odm-cli:X.Y.Z odm-cli --version
 ```
 
 In a CI job, use it as the job image and call `odm-cli` in the script. Configuration, extensions and certificates are in
@@ -159,7 +159,7 @@ replaces the whole list of the file.
 | `CLI_PLATFORM_SERVICES_REGISTRY_URL` | `cli.platform.services.registry.url` | Registry URL. |
 | `CLI_PLATFORM_SERVICES_DEVOPS_URL` | `cli.platform.services.devops.url` | DevOps URL. |
 | `CLI_PLATFORM_SERVICES_<REGISTRY\|DEVOPS>_OAUTH2_URL`, `…_GRANTTYPE`, `…_SCOPE`, `…_CLIENTID`, `…_CLIENTSECRET`, `…_CLIENTCERTIFICATE`, `…_CLIENTCERTIFICATEPRIVATEKEY` | `cli.platform.services.<service>.oauth2.*` | OAuth2 authentication, when the platform requires it. |
-| `CLI_PLATFORM_SERVICES_<REGISTRY\|DEVOPS>_HEADERS_<n>_NAME`, `…_HEADERS_<n>_VALUE` | `cli.platform.services.<service>.headers[n]` | Extra request headers, for example an API key. |
+| `CLI_PLATFORM_SERVICES_<REGISTRY\|DEVOPS>_HEADERS_<n>_NAME`, `…_HEADERS_<n>_VALUE` | `cli.platform.services.<service>.headers[n]` | Extra request headers, for example the Blindata Agent credentials: API key or OAuth bearer token (see [Authentication through the Agent](docs/devops-pipelines.md#authentication-through-the-agent)). |
 | `CLI_PLATFORM_DEVOPS_POLLINTERVAL`, `…_ACTIVITYAPPROVALTIMEOUT`, `…_TASKAPPROVALTIMEOUT`, `…_RUNIDLOOKUPATTEMPTS`, `…_RUNIDLOOKUPINTERVAL`, `…_CONFLICTRETRIES`, `…_CONFLICTRETRYINTERVAL` | `cli.platform.devops.*` | Timings of the devops commands. |
 | `CLI_CLICONFIGURATION_INTERACTIVE` | `cli.cliConfiguration.interactive` | Set it to `false` in CI, so the CLI never waits for input. |
 

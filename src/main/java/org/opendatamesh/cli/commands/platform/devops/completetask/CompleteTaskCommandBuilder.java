@@ -37,12 +37,13 @@ public class CompleteTaskCommandBuilder implements PicoCliCommandBuilder {
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(DEVOPS_COMPLETE_TASK_COMMAND);
         spec.usageMessage().description("Command to complete a running task of a DevOps activity, addressed by the pipeline's run id: "
-                + "it uploads logs and results and records the final status, or, with --results-only, uploads only the results of a full-control task.");
+                + "with --status it uploads logs and results and records the final status of an instrumented task; without --status it uploads "
+                + "only the results of a full-control task.");
         spec.mixinStandardHelpOptions(true);
 
         handleWithOrder(Lists.newArrayList(
                 order -> handleProviderRunIdParam(spec, order, executor),
-                order -> handleStatusOrResultsOnlyGroup(spec, order, executor),
+                order -> handleStatusParam(spec, order, executor),
                 order -> handleLogsFileParam(spec, order, executor),
                 order -> handleResultsFileParam(spec, order, executor)
         ));
@@ -54,7 +55,7 @@ public class CompleteTaskCommandBuilder implements PicoCliCommandBuilder {
 
     private void handleProviderRunIdParam(CommandLine.Model.CommandSpec spec, int order, CompleteTaskCommandExecutor executor) {
         spec.addOption(CommandLine.Model.OptionSpec
-                .builder("--provider-run-id")
+                .builder("-r", "--provider-run-id")
                 .order(order)
                 .description("Run id of the task to complete. For an instrumented task, the value given to start-task; "
                         + "for a full-control task, the pipeline id. In a child pipeline, pass the parent's id.")
@@ -72,11 +73,12 @@ public class CompleteTaskCommandBuilder implements PicoCliCommandBuilder {
                 .build());
     }
 
-    private void handleStatusOrResultsOnlyGroup(CommandLine.Model.CommandSpec spec, int order, CompleteTaskCommandExecutor executor) {
-        CommandLine.Model.OptionSpec statusOption = CommandLine.Model.OptionSpec
-                .builder("--status")
+    private void handleStatusParam(CommandLine.Model.CommandSpec spec, int order, CompleteTaskCommandExecutor executor) {
+        spec.addOption(CommandLine.Model.OptionSpec
+                .builder("-s", "--status")
                 .order(order)
-                .description("Final status of the instrumented task: SUCCEEDED, FAILED or CANCELED.")
+                .description("Final status of an instrumented task: SUCCEEDED, FAILED or CANCELED. Without it, the command uploads "
+                        + "only the results of a full-control task, and --results-file is required.")
                 .paramLabel("STATUS")
                 .type(ExecutionStatus.class)
                 .converters(new TaskStatusConverter())
@@ -87,34 +89,14 @@ public class CompleteTaskCommandBuilder implements PicoCliCommandBuilder {
                         return value;
                     }
                 })
-                .build();
-        CommandLine.Model.OptionSpec resultsOnlyOption = CommandLine.Model.OptionSpec
-                .builder("--results-only")
-                .order(order + 1)
-                .description("Upload only the results, for a full-control task whose pipeline reports its own status.")
-                .arity("0")
-                .type(boolean.class)
-                .setter(new CommandLine.Model.ISetter() {
-                    @Override
-                    public <T> T set(T value) {
-                        executor.setResultsOnly(Boolean.TRUE.equals(value));
-                        return value;
-                    }
-                })
-                .build();
-        spec.addArgGroup(CommandLine.Model.ArgGroupSpec.builder()
-                .exclusive(true)
-                .multiplicity("1")
-                .addArg(statusOption)
-                .addArg(resultsOnlyOption)
                 .build());
     }
 
     private void handleLogsFileParam(CommandLine.Model.CommandSpec spec, int order, CompleteTaskCommandExecutor executor) {
         spec.addOption(CommandLine.Model.OptionSpec
-                .builder("--logs-file")
-                .order(order + 1)
-                .description("File whose content is uploaded as one log row. Repeatable. Not allowed with --results-only.")
+                .builder("-l", "--logs-file")
+                .order(order)
+                .description("File whose content is uploaded as one log row, for an instrumented task. Repeatable. Needs --status.")
                 .paramLabel("FILE")
                 .arity("1")
                 .type(List.class)
@@ -139,9 +121,9 @@ public class CompleteTaskCommandBuilder implements PicoCliCommandBuilder {
 
     private void handleResultsFileParam(CommandLine.Model.CommandSpec spec, int order, CompleteTaskCommandExecutor executor) {
         spec.addOption(CommandLine.Model.OptionSpec
-                .builder("--results-file")
-                .order(order + 1)
-                .description("File with the results, a single JSON object.")
+                .builder("-o", "--results-file")
+                .order(order)
+                .description("File with the results, a single JSON object. Required without --status.")
                 .paramLabel("FILE")
                 .type(String.class)
                 .setter(new CommandLine.Model.ISetter() {

@@ -4,7 +4,7 @@ import java.time.Duration;
 
 public record StartTaskCommand(
         String dataProductFqn,
-        String dataProductVersion,
+        String dataProductVersionNumber,
         String activityName,
         String taskName,
         String providerRunId,

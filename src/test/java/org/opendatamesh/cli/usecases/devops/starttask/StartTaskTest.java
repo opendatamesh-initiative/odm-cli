@@ -191,42 +191,40 @@ class StartTaskTest {
     }
 
     /**
-     * Scenario: Version not APPROVED is refused without the flag.
+     * Scenario: Version not APPROVED is refused.
      * Given the version is PENDING in Registry
-     * When start-task runs without --force-start
-     * Then the command exits 1 naming the state and the --force-start flag
-     * And DevOps is not called
+     * When start-task runs
+     * Then the command exits 1 naming the state
+     * And no activity is executed
      */
     @Test
-    void whenVersionPendingWithoutForceThenFailsBeforeDevOps() {
+    void whenVersionPendingThenFailsBeforeExecute() {
         registry.state = RegistryValidationState.PENDING;
 
         run(command(false));
 
         assertThat(presenter.failure).isInstanceOf(UseCaseException.class)
-                .hasMessage("Version 1.2.0 of urn:dp:sales is PENDING in Registry, not APPROVED. Pass --force-start to run it anyway.");
+                .hasMessage("Version 1.2.0 of urn:dp:sales is PENDING in Registry, not APPROVED: approve it in Registry before running it.");
         assertThat(devOps.calls).containsExactly("find-open");
     }
 
     /**
-     * Scenario: Version not APPROVED runs with the flag.
+     * Scenario: --force-start does not run a version that is not APPROVED.
      * Given the version is REJECTED in Registry
      * When start-task runs with --force-start
-     * Then a warning is logged and the activity is executed
+     * Then the command exits 1 as without the flag
+     * And no activity is executed
      */
     @Test
-    void whenVersionRejectedWithForceThenWarnsAndExecutes() {
+    void whenVersionRejectedWithForceThenStillFails() {
         registry.state = RegistryValidationState.REJECTED;
-        devOps.creation = new ActivityCreation.Created(activity("a1", PENDING, task("build", PENDING)));
-        devOps.read("a1",
-                activity("a1", RUNNING, task("build", PENDING)),
-                activity("a1", RUNNING, task("build", RUNNING)));
 
         run(command(true));
 
-        assertThat(presenter.failure).isNull();
-        assertThat(presenter.warnings).containsExactly("--force-start: running version 1.2.0 of urn:dp:sales in state REJECTED");
-        assertThat(devOps.calls).contains("execute");
+        assertThat(presenter.failure).isInstanceOf(UseCaseException.class)
+                .hasMessage("Version 1.2.0 of urn:dp:sales is REJECTED in Registry, not APPROVED: approve it in Registry before running it.");
+        assertThat(presenter.warnings).isEmpty();
+        assertThat(devOps.calls).doesNotContain("execute");
     }
 
     /**

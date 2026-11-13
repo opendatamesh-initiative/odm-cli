@@ -22,7 +22,6 @@ public class CompleteTaskCommandExecutor extends PicoCliCommandExecutor {
 
     private String providerRunId;
     private ExecutionStatus status;
-    private boolean resultsOnly;
     private List<String> logFiles = new ArrayList<>();
     private String resultsFile;
 
@@ -37,7 +36,6 @@ public class CompleteTaskCommandExecutor extends PicoCliCommandExecutor {
         CompleteTaskCommand command = new CompleteTaskCommand(
                 providerRunId,
                 status,
-                resultsOnly,
                 List.copyOf(logFiles),
                 resultsFile,
                 timings.getRunIdLookupAttempts(),
@@ -59,10 +57,6 @@ public class CompleteTaskCommandExecutor extends PicoCliCommandExecutor {
 
     void setStatus(ExecutionStatus status) {
         this.status = status;
-    }
-
-    void setResultsOnly(boolean resultsOnly) {
-        this.resultsOnly = resultsOnly;
     }
 
     List<String> getLogFiles() {

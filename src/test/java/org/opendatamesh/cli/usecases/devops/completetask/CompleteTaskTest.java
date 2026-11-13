@@ -120,7 +120,7 @@ class CompleteTaskTest {
     /**
      * Scenario: Results only.
      * Given a RUNNING full-control task whose provider run id is the pipeline's id
-     * When the pipeline runs complete-task --results-only --provider-run-id and a results file
+     * When the pipeline runs complete-task --provider-run-id (no --status) and a results file
      * Then only the results are recorded and the command exits 0
      */
     @Test

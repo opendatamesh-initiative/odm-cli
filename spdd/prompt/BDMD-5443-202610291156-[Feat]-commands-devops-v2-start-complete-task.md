@@ -2,6 +2,16 @@
 
 Source analysis: `spdd/analysis/BDMD-5443-202610261616-[Analysis]-devops-v2-cli-commands.md` (revision 7). The decisions referenced below as DD-xx and Qxx are defined there. The Docker image is out of scope.
 
+_Revised on 2026-11-13 for analysis rev. 11 (follow-up call). Where the sections below, or the rev. 10 notes, say otherwise, rev. 11 wins:_
+- _`--force-start` only replaces an open activity that blocks the task. `VersionLookup.publishedVersion(fqn, versionNumber)` takes no flag and has no presenter: a version that is not `APPROVED` is always `UseCaseException(INVALID, "Version <v> of <fqn> is <state> in Registry, not APPROVED: approve it in Registry before running it.")`, and no warning is logged. Running such a version (bypass policy) is a later admin-only command, not built (DD-16)._
+- _The Agent proxy enforces the approval on Execute and lets DataOps editors with team write and an allowed stage send the task commands (Limit 4). The task commands do not check the deploy stage; Execute and Cancel do. The docs describe the pipeline account (application user, DataOps viewer and editor, team write, no admin)._
+
+_Revised on 2026-11-12 for analysis rev. 10 (PR #16 review call). Where the sections below still describe rev. 9, rev. 10 wins:_
+- _`complete-task` has no `--results-only` and no argument group. `-s, --status` is optional and selects the mode: present → instrumented; absent → results only (`CompleteTaskCommand.resultsOnly()` is derived from `status == null`). `TaskReportCheck` rules are `logsWithoutStatus` and `resultsMissingWithoutStatus` (exit `1`, local-input failure), and `CHECK_INPUT` logs "no --status: uploading only the results of a full-control task" in that mode (Q18 revised)._
+- _`start-task` takes `-n, --data-product-version-number VERSION_NUMBER` (`StartTaskCommand.dataProductVersionNumber`). Short options: `start-task` `-p -n -a -t -r` (`--force-start` and the timings stay long only); `complete-task` `-r -s -l -o`._
+- _`--force-start` is described as an override for DataOps admins; its warning names the admin permission. The CLI checks no roles (DD-16)._
+- _No `@EnableAsync`, executors or `ASYNC_EXECUTION.md` norm: the CLI runs one blocking command per process._
+
 ## Requirements
 
 - **Let a CI pipeline run an instrumented DevOps V2 task under platform governance.** One command, `start-task`, brings the task to `RUNNING`. It finds the open activity, or creates it from the published Registry descriptor. It then waits for policy approval, requests the task with the pipeline's run id, and waits for the task's approval. A second command, `complete-task`, closes the task: it uploads logs and results, then records the terminal status.
@@ -723,16 +733,17 @@ Feature: Start an instrumented task
     Then it searches the open activity again and continues with it
 
 Feature: Publication check and force start
-  Scenario: Version not APPROVED is refused without the flag
+  Scenario: Version not APPROVED is refused
     Given the version is PENDING in Registry
-    When start-task runs without --force-start
-    Then the command exits 1 naming the state and the --force-start flag
-    And DevOps is not called
+    When start-task runs
+    Then the command exits 1 naming the state
+    And no activity is executed
 
-  Scenario: Version not APPROVED runs with the flag
+  Scenario: Force start does not run a version that is not APPROVED
     Given the version is REJECTED in Registry
     When start-task runs with --force-start
-    Then a warning is logged and the activity is executed
+    Then the command exits 1 as without the flag
+    And no activity is executed
 
   Scenario: Version missing from Registry fails even with the flag
     Given Registry has no version with that number
@@ -901,7 +912,7 @@ Implement every test in the table. Each test method's Javadoc quotes its Scenari
    - Typed groups (`PlatformServiceCredentials`, `DevOpsCommandsConfiguration`).
    - Packaged defaults only for values that are safe everywhere (timings). No packaged `devops.url`.
    - Missing service configuration fails when a devops command runs, naming the key. The CLI binds configuration per process, and local commands must work without platform configuration.
-9. **Asynchronous execution** ([`ASYNC_EXECUTION.md`](../norms/ASYNC_EXECUTION.md)): the waits are synchronous loops on the command thread, through the clock port. No executors and no hand-made threads.
+9. **Asynchronous execution** (no norm: the template's `ASYNC_EXECUTION.md`, `@EnableAsync` and executors were removed in the 2026-11-12 review, because the CLI runs one blocking command per process): the waits are synchronous loops on the command thread, through the clock port. No executors and no hand-made threads.
 10. **Testing** ([`TESTING.md`](../norms/TESTING.md)):
     - `*Test` for use cases (fake ports), step classes, port implementations and clients (`MockRestServiceServer`).
     - `*IT` for the commands running in the shared application context.

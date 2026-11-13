@@ -7,11 +7,9 @@ import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableAsync;
 import picocli.CommandLine;
 
 @SpringBootApplication
-@EnableAsync
 public class OdmCliApplication implements CommandLineRunner, ExitCodeGenerator {
 
     @Autowired

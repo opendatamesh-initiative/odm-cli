@@ -40,7 +40,7 @@ class StartTask implements UseCase {
         this.devOpsPort = devOpsPort;
         this.descriptorPort = descriptorPort;
         this.openActivity = new OpenActivity(devOpsPort, clockPort, presenter, command);
-        this.versionLookup = new VersionLookup(registryPort, presenter);
+        this.versionLookup = new VersionLookup(registryPort);
         this.activityPlan = new ActivityPlan();
         this.approval = new Approval(devOpsPort, clockPort, presenter, command.pollInterval());
     }
@@ -61,7 +61,7 @@ class StartTask implements UseCase {
 
     private DevOpsActivity obtainActivity() {
         enter(StartTaskStep.FIND_ACTIVITY, "looking for an open activity " + command.activityName()
-                + " of " + command.dataProductFqn() + " " + command.dataProductVersion());
+                + " of " + command.dataProductFqn() + " " + command.dataProductVersionNumber());
         Optional<DevOpsActivity> found = openActivity.find(key());
         if (found.isPresent()) {
             Optional<DevOpsActivity> prepared = openActivity.prepare(found.get(), this::announceReplacement);
@@ -73,10 +73,10 @@ class StartTask implements UseCase {
     }
 
     private DevOpsActivity createActivity() {
-        enter(StartTaskStep.LOOK_UP_VERSION, "looking up version " + command.dataProductVersion()
+        enter(StartTaskStep.LOOK_UP_VERSION, "looking up version " + command.dataProductVersionNumber()
                 + " of " + command.dataProductFqn() + " in Registry");
         RegistryDataProductVersion version = versionLookup.publishedVersion(
-                command.dataProductFqn(), command.dataProductVersion(), command.forceStart());
+                command.dataProductFqn(), command.dataProductVersionNumber());
         enter(StartTaskStep.PLAN_ACTIVITY, "planning activity " + command.activityName() + " from the descriptor");
         DevOpsActivity plan = activityPlan.plan(descriptorPort.readLifecycle(version.content()), version.uuid(), command);
         enter(StartTaskStep.EXECUTE_ACTIVITY, "executing activity " + command.activityName() + " with " + plan.tasks().size() + " tasks");
@@ -108,7 +108,7 @@ class StartTask implements UseCase {
     }
 
     private DevOpsActivityKey key() {
-        return new DevOpsActivityKey(command.dataProductFqn(), command.dataProductVersion(), command.activityName());
+        return new DevOpsActivityKey(command.dataProductFqn(), command.dataProductVersionNumber(), command.activityName());
     }
 
     private void announceReplacement() {
@@ -122,6 +122,6 @@ class StartTask implements UseCase {
 
     private UseCaseException openActivityMissing() {
         return new UseCaseException(CONFLICT, "DevOps reports an open activity " + command.activityName() + " for "
-                + command.dataProductFqn() + " " + command.dataProductVersion() + ", but none was found");
+                + command.dataProductFqn() + " " + command.dataProductVersionNumber() + ", but none was found");
     }
 }

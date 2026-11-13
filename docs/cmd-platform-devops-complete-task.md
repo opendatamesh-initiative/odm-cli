@@ -2,37 +2,42 @@
 
 ## Usage
 
-`odm-cli platform devops complete-task --provider-run-id RUN_ID (--status STATUS | --results-only) [--logs-file FILE]... [--results-file FILE]`
+`odm-cli platform devops complete-task --provider-run-id RUN_ID [--status STATUS] [--logs-file FILE]... [--results-file FILE]`
 
 ## Description
 
 Completes a running task, which it addresses by the pipeline's run id alone. The run id is the id of the pipeline run (`$CI_PIPELINE_ID` on GitLab, `github.run_id` on GitHub), for both kinds of
 task.
 
-**Instrumented task** (`--status`): the command uploads the logs, uploads the results, then records the final status,
+`--status` selects the kind of task:
+
+**Instrumented task**, with `--status`: the command uploads the logs, uploads the results, then records the final status,
 always in that order.
 
-**Full-control task** (`--results-only`): the pipeline reports its own status, so the command uploads only the results. The
-run id is the pipeline's id, for example `$CI_PIPELINE_ID` on GitLab. In a child or downstream pipeline, pass the parent's
-id down to the child and use it as the run id. When several full-control tasks of one pipeline run at the same time they must
+**Full-control task**, without `--status`: the pipeline reports its own status, so the command uploads only the results,
+and `--results-file` is required. The command logs that it is uploading only the results of a full-control task. The run
+id is the pipeline's id, for example `$CI_PIPELINE_ID` on GitLab. In a child or downstream pipeline, pass the parent's id
+down to the child and use it as the run id. When several full-control tasks of one pipeline run at the same time they must
 not share the id: DevOps refuses an id that matches more than one `RUNNING` task (error 400).
 
 Every local input is checked before any call to DevOps. A problem (a file that is missing or unreadable, results that are
-not a JSON object, `--logs-file` with `--results-only`, `--results-only` without `--results-file`) is reported with all its
-issues at once, and nothing is sent.
+not a JSON object, `--logs-file` without `--status`, no `--status` and no `--results-file`) is reported with all its
+issues at once, nothing is sent, and the exit code is `1`.
 
 ## Options
 
-| Option              | Required | Description                                                                                          |
-|---------------------|----------|------------------------------------------------------------------------------------------------------|
-| `--provider-run-id` | yes      | Run id of the task: the pipeline id, the same value given to `start-task`.                           |
-| `--status`          | one of   | Final status of the instrumented task: `SUCCEEDED`, `FAILED` or `CANCELED`, in any case.             |
-| `--results-only`    | one of   | Upload only the results of a full-control task. Exclusive with `--status`.                           |
-| `--logs-file`       | no       | File uploaded as one log row. Repeatable. A blank file is skipped. Not allowed with `--results-only`. |
-| `--results-file`    | no       | File with the results, one JSON object. Required with `--results-only`.                              |
+| Option                    | Required | Description                                                                                                  |
+|---------------------------|----------|--------------------------------------------------------------------------------------------------------------|
+| `-r`, `--provider-run-id` | yes      | Run id of the task: the pipeline id, the same value given to `start-task`.                                   |
+| `-s`, `--status`          | no       | Final status of an instrumented task: `SUCCEEDED`, `FAILED` or `CANCELED`, in any case. Without it, the task is a full-control task. |
+| `-l`, `--logs-file`       | no       | File uploaded as one log row, for an instrumented task. Repeatable. A blank file is skipped. Needs `--status`. |
+| `-o`, `--results-file`    | no       | File with the results, one JSON object. Required without `--status`.                                         |
 
-Exactly one of `--status` and `--results-only` is required, otherwise the exit code is `2`. An empty run id, or one that is
-still an unresolved variable (`$CI_PIPELINE_ID`, `${VAR}`, `$(cmd)`), is also a usage error (exit `2`).
+A status that is not final, an empty run id, or one that is still an unresolved variable (`$CI_PIPELINE_ID`, `${VAR}`,
+`$(cmd)`), is a usage error (exit `2`).
+
+**Watch out:** an instrumented close job that forgets `--status` but passes `--results-file` uploads the results and
+leaves the task `RUNNING`. The log says "no --status: uploading only the results of a full-control task".
 
 ## Partial failures
 
@@ -56,7 +61,11 @@ DevOps refuses a run id that matches more than one `RUNNING` task. This needs a 
 odm-cli platform devops complete-task --provider-run-id "$CI_PIPELINE_ID" --status SUCCEEDED \
   --logs-file build.log --results-file results.json
 
-odm-cli platform devops complete-task --provider-run-id "$CI_PIPELINE_ID" --results-only --results-file results.json
+# Full-control task: no --status, results only
+odm-cli platform devops complete-task --provider-run-id "$CI_PIPELINE_ID" --results-file results.json
+
+# The instrumented close, with the short options
+odm-cli platform devops complete-task -r "$CI_PIPELINE_ID" -s FAILED -l build.log
 ```
 
 The results file is a JSON object:

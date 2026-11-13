@@ -20,8 +20,8 @@ class TaskReportCheck {
 
     TaskReport check(CompleteTaskCommand command) {
         List<String> issues = new ArrayList<>();
-        logsWithResultsOnly(command, issues);
-        resultsOnlyWithoutResults(command, issues);
+        logsWithoutStatus(command, issues);
+        resultsMissingWithoutStatus(command, issues);
         List<String> logs = command.resultsOnly() ? List.of() : readLogs(command, issues);
         String results = readResults(command, issues);
         if (!issues.isEmpty()) {
@@ -30,15 +30,15 @@ class TaskReportCheck {
         return new TaskReport(logs, results);
     }
 
-    private void logsWithResultsOnly(CompleteTaskCommand command, List<String> issues) {
+    private void logsWithoutStatus(CompleteTaskCommand command, List<String> issues) {
         if (command.resultsOnly() && !command.logFiles().isEmpty()) {
-            issues.add("--logs-file cannot be used with --results-only: logs are refused for full-control tasks");
+            issues.add("--logs-file needs --status: logs are recorded only for instrumented tasks");
         }
     }
 
-    private void resultsOnlyWithoutResults(CompleteTaskCommand command, List<String> issues) {
+    private void resultsMissingWithoutStatus(CompleteTaskCommand command, List<String> issues) {
         if (command.resultsOnly() && command.resultsFile() == null) {
-            issues.add("--results-only requires --results-file");
+            issues.add("--results-file is required without --status: a full-control task uploads only its results");
         }
     }
 

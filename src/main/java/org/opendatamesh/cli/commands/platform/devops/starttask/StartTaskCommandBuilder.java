@@ -42,16 +42,16 @@ public class StartTaskCommandBuilder implements PicoCliCommandBuilder {
         spec.mixinStandardHelpOptions(true);
 
         handleWithOrder(Lists.newArrayList(
-                order -> handleRequiredParam(spec, order, "--data-product-fqn", "FQN",
+                order -> handleRequiredParam(spec, order, "-p", "--data-product-fqn", "FQN",
                         "Fully qualified name of the data product.", executor::setDataProductFqn),
-                order -> handleRequiredParam(spec, order, "--data-product-version", "VERSION",
-                        "Version of the data product. It must equal the descriptor's info.version (the Registry versionNumber), not the git tag.",
-                        executor::setDataProductVersion),
-                order -> handleRequiredParam(spec, order, "--activity", "STAGE",
+                order -> handleRequiredParam(spec, order, "-n", "--data-product-version-number", "VERSION_NUMBER",
+                        "Version number of the data product. It must equal the descriptor's info.version (the Registry versionNumber), not the git tag.",
+                        executor::setDataProductVersionNumber),
+                order -> handleRequiredParam(spec, order, "-a", "--activity", "STAGE",
                         "Name of the activity: the stage of the descriptor's lifecycleInfo.", executor::setActivityName),
-                order -> handleRequiredParam(spec, order, "--task", "TASK",
+                order -> handleRequiredParam(spec, order, "-t", "--task", "TASK",
                         "Name of the task to start.", executor::setTaskName),
-                order -> handleRequiredParam(spec, order, "--provider-run-id", "RUN_ID",
+                order -> handleRequiredParam(spec, order, "-r", "--provider-run-id", "RUN_ID",
                         "Run id of the pipeline, for example the CI pipeline id. complete-task must be given the same value.",
                         executor::setProviderRunId),
                 order -> handleForceStartParam(spec, order, executor),
@@ -65,10 +65,10 @@ public class StartTaskCommandBuilder implements PicoCliCommandBuilder {
         return new CommandLine(spec);
     }
 
-    private void handleRequiredParam(CommandLine.Model.CommandSpec spec, int order, String name, String label,
+    private void handleRequiredParam(CommandLine.Model.CommandSpec spec, int order, String shortName, String name, String label,
                                      String description, Consumer<String> target) {
         spec.addOption(CommandLine.Model.OptionSpec
-                .builder(name)
+                .builder(shortName, name)
                 .order(order)
                 .description(description)
                 .paramLabel(label)
@@ -89,8 +89,9 @@ public class StartTaskCommandBuilder implements PicoCliCommandBuilder {
         spec.addOption(CommandLine.Model.OptionSpec
                 .builder("--force-start")
                 .order(order)
-                .description("Operator override for manual re-runs: run a version that is not APPROVED in Registry, and replace an open "
-                        + "activity that cannot accept the task. It closes the activity of a run that may still be alive: do not set it in pipeline files by default.")
+                .description("Replace the open activity that cannot accept the task, left by a cancelled or failed run: record its task CANCELED, "
+                        + "cancel it and start a new one. It never runs a version that is not APPROVED and never skips a policy. It closes the "
+                        + "activity of a run that may still be alive: use it for manual re-runs, never in pipeline files.")
                 .arity("0")
                 .type(boolean.class)
                 .setter(new CommandLine.Model.ISetter() {

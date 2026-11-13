@@ -21,7 +21,7 @@ The units never depend on each other. They share no types: the client domain typ
 ## Canonical procedures
 
 - **start-task:** obtain the activity, await the activity approval, request the task, await the task approval, present.
-- **complete-task:** check the input, then either (results only) upload the results, or (instrumented) upload the logs, upload the results, record the status, then present.
+- **complete-task:** check the input, then either (no status: results only) upload the results, or (instrumented) upload the logs, upload the results, record the status, then present.
 
 The entry method of each unit is that script and nothing else. Failures never leave the entry method: they go to the presenter.
 

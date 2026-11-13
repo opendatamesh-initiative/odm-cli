@@ -16,18 +16,16 @@ import static org.opendatamesh.cli.utils.usecases.UseCaseException.Reason.NOT_FO
 class VersionLookup {
 
     private final StartTaskRegistryOutboundPort registryPort;
-    private final StartTaskPresenter presenter;
 
-    VersionLookup(StartTaskRegistryOutboundPort registryPort, StartTaskPresenter presenter) {
+    VersionLookup(StartTaskRegistryOutboundPort registryPort) {
         this.registryPort = registryPort;
-        this.presenter = presenter;
     }
 
-    RegistryDataProductVersion publishedVersion(String fqn, String versionNumber, boolean forceStart) {
+    RegistryDataProductVersion publishedVersion(String fqn, String versionNumber) {
         RegistryDataProduct product = uniqueProduct(fqn);
         RegistryDataProductVersionSummary summary = uniqueVersion(product, fqn, versionNumber);
         RegistryDataProductVersion version = registryPort.getDataProductVersion(summary.uuid());
-        checkPublication(version, fqn, versionNumber, forceStart);
+        checkPublication(version, fqn, versionNumber);
         checkDescriptorContent(version, versionNumber);
         return version;
     }
@@ -54,15 +52,10 @@ class VersionLookup {
         return versions.get(0);
     }
 
-    private void checkPublication(RegistryDataProductVersion version, String fqn, String versionNumber, boolean forceStart) {
-        if (version.validationState() == RegistryValidationState.APPROVED) {
-            return;
-        }
-        if (!forceStart) {
+    private void checkPublication(RegistryDataProductVersion version, String fqn, String versionNumber) {
+        if (version.validationState() != RegistryValidationState.APPROVED) {
             throw notApproved(fqn, versionNumber, version.validationState());
         }
-        presenter.presentWarning("--force-start: running version " + versionNumber + " of " + fqn
-                + " in state " + version.validationState());
     }
 
     private void checkDescriptorContent(RegistryDataProductVersion version, String versionNumber) {
@@ -93,6 +86,6 @@ class VersionLookup {
 
     private UseCaseException notApproved(String fqn, String versionNumber, RegistryValidationState state) {
         return new UseCaseException(INVALID, "Version " + versionNumber + " of " + fqn + " is " + state
-                + " in Registry, not APPROVED. Pass --force-start to run it anyway.");
+                + " in Registry, not APPROVED: approve it in Registry before running it.");
     }
 }

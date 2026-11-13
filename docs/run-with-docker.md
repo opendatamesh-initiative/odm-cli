@@ -10,25 +10,55 @@ opendatamesh/odm-cli:X.Y.Z
 
 Each release is published once, as `X.Y.Z`, for `linux/amd64`. The tag never changes, so pin it in pipelines.
 
+## What is in the image
+
+- The released jar and a Java 21 runtime.
+- The `odm-cli` command on the `PATH`. It starts the bundled jar and never downloads anything (unlike the workstation
+  script, which downloads the jar).
+- `/workspace`, the working directory, where you mount your files.
+- A non-root user (UID 10001).
+
+The image has no entrypoint: `docker run <image> odm-cli <arguments>` is the same as `odm-cli <arguments>`, and
+`docker run <image>` alone prints the help.
+
 ## Using the image
 
-`docker run <image> <arguments>` is the same as `odm-cli <arguments>`. The CLI reads files relative to its working
-directory, so mount the directory with your files and make it the working directory:
+Mount the directory with your files at `/workspace`:
 
 ```bash
-docker run --rm -v "$PWD":/workspace -w /workspace \
+docker run --rm -v "$PWD":/workspace \
   -e CLI_PLATFORM_SERVICES_REGISTRY_URL=https://odm.example.com/registry \
-  opendatamesh/odm-cli:X.Y.Z platform registry validate -f data-product-descriptor.json
+  opendatamesh/odm-cli:X.Y.Z odm-cli platform registry validate -f data-product-descriptor.json
 ```
 
-- **Paths** inside the container are not host paths: `~` is the container user's home, and an absolute host path does not
-  exist unless it is mounted.
+To work on another directory, mount that one instead: `-v /path/to/data-product:/workspace`.
+
+### How the CLI sees your files
+
+The CLI reads the files you name, such as `--results-file results.json`, from its working directory, `/workspace` in the
+image. Nothing is copied into the image: the directory is mounted.
+
+- **CI jobs** need no mount. GitLab mounts the checkout into the job container and starts the job in it, after
+  extracting the artifacts of earlier jobs there. GitHub mounts the workspace into `container:` jobs. A file written by
+  an earlier job, or by your build, is found by the same relative path.
+- **`docker run`** mounts only what you pass with `-v`. Paths outside the mounted directory, and `~`, do not exist in the
+  container.
+
+### Other notes
+
 - **User**: the image runs as a non-root user (UID 10001). If the CLI must write into the mounted directory (`local init`,
   `local import`), run it with your own user: `docker run --user "$(id -u):$(id -g)" …`.
 - **No prompts**: the image sets `CLI_CLICONFIGURATION_INTERACTIVE=false`, so a missing value fails instead of waiting
   for input. Set it to `true` only with `docker run -it`.
 - **CI jobs**: when a CI job uses the image as its job image, the job script calls `odm-cli` exactly like the executable.
-  No `entrypoint` override is needed, in GitLab or in GitHub Actions.
+  The image has no entrypoint, so no `entrypoint` override is needed, in GitLab or in GitHub Actions.
+- **Alias**: to type `odm-cli` on a workstation without installing it, define an alias. `-e NAME` without a value passes
+  the variable of your shell to the container.
+
+  ```bash
+  alias odm-cli='docker run --rm -v "$PWD":/workspace --user "$(id -u):$(id -g)" \
+    -e CLI_PLATFORM_SERVICES_DEVOPS_URL -e CLI_PLATFORM_SERVICES_REGISTRY_URL opendatamesh/odm-cli:X.Y.Z odm-cli'
+  ```
 
 ## Configuration
 
@@ -36,21 +66,22 @@ Every configuration key can be set with an environment variable or in the config
 variable wins**. In Docker, use environment variables: they need no mount, and CI tools store them as secrets.
 
 ```bash
-docker run --rm -v "$PWD":/workspace -w /workspace \
+docker run --rm -v "$PWD":/workspace \
   -e CLI_PLATFORM_SERVICES_DEVOPS_URL=https://odm.example.com/devops \
   -e CLI_PLATFORM_SERVICES_REGISTRY_URL=https://odm.example.com/registry \
-  opendatamesh/odm-cli:X.Y.Z platform devops complete-task --provider-run-id 1234 --status SUCCEEDED
+  opendatamesh/odm-cli:X.Y.Z odm-cli platform devops complete-task --provider-run-id 1234 --status SUCCEEDED
 ```
 
 The variable names and the naming rule are in the README, under
 [Environment variables](../README.md#environment-variables). The service URLs are not packaged: a command that needs a
-service whose URL is not set fails and names the variable to set.
+service whose URL is not set fails and names the variable to set. To reach ODM through the Blindata Agent, see
+[Connecting to ODM](devops-pipelines.md#connecting-to-odm).
 
 Variables that exist only in the image:
 
 | Variable | Purpose |
 | --- | --- |
-| `ODM_CLI_CONFIG_FILE` | Configuration file, default `$HOME/.odmcli/application.yml` (`/home/odmcli/.odmcli/application.yml`). |
+| `ODM_CLI_CONFIG_FILE` | Configuration file, default `$HOME/.odmcli/application.yml` (`/home/odmcli/.odmcli/application.yml`). It may be missing. |
 | `ODM_CLI_EXTENSIONS_DIR` | Extensions directory, default `/opt/odm-cli/extensions`. |
 | `JAVA_TOOL_OPTIONS` | JVM options, for example a proxy: `-Dhttps.proxyHost=proxy.example.com -Dhttps.proxyPort=3128`. |
 
@@ -58,12 +89,13 @@ Variables that exist only in the image:
 Mount it at the default location, or point `ODM_CLI_CONFIG_FILE` to it:
 
 ```bash
-docker run --rm -v "$PWD":/workspace -w /workspace \
+docker run --rm -v "$PWD":/workspace \
   -v "$HOME/.odmcli/application.yml":/home/odmcli/.odmcli/application.yml:ro \
-  opendatamesh/odm-cli:X.Y.Z platform registry validate
+  opendatamesh/odm-cli:X.Y.Z odm-cli platform registry validate
 ```
 
-`config --set` and `config --unset` edit that file. Without a mount, the edits are lost when the container exits.
+`config --set` and `config --unset` edit that file, and create it when it is missing. Without a mount, the edits are lost
+when the container exits.
 
 ## Extensions and certificates
 

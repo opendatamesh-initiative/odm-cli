@@ -26,7 +26,7 @@ class ActivityPlanTest {
 
     private static StartTaskCommand commandForTask(String taskName) {
         StartTaskCommand base = command(false);
-        return new StartTaskCommand(base.dataProductFqn(), base.dataProductVersion(), base.activityName(), taskName,
+        return new StartTaskCommand(base.dataProductFqn(), base.dataProductVersionNumber(), base.activityName(), taskName,
                 base.providerRunId(), false, base.pollInterval(), base.activityApprovalTimeout(), base.taskApprovalTimeout());
     }
 

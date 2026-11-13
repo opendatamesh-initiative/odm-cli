@@ -16,11 +16,11 @@ final class CompleteTaskFakes {
     }
 
     static CompleteTaskCommand instrumented(ExecutionStatus status, List<String> logFiles, String resultsFile) {
-        return new CompleteTaskCommand("run-1", status, false, logFiles, resultsFile, 5, Duration.ofSeconds(2));
+        return new CompleteTaskCommand("run-1", status, logFiles, resultsFile, 5, Duration.ofSeconds(2));
     }
 
     static CompleteTaskCommand resultsOnly(String resultsFile) {
-        return new CompleteTaskCommand("run-1", null, true, List.of(), resultsFile, 5, Duration.ofSeconds(2));
+        return new CompleteTaskCommand("run-1", null, List.of(), resultsFile, 5, Duration.ofSeconds(2));
     }
 
     static class FakeDevOps implements CompleteTaskDevOpsOutboundPort {

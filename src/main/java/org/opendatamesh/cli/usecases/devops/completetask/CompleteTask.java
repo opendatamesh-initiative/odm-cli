@@ -10,7 +10,7 @@ import static org.opendatamesh.cli.utils.usecases.UseCaseException.Reason.INVALI
 import static org.opendatamesh.cli.utils.usecases.UseCaseException.Reason.NOT_FOUND;
 
 /**
- * Closes an instrumented task (logs, results, status) or, with results only, uploads the results of a
+ * Closes an instrumented task (logs, results, status) or, without a status, uploads only the results of a
  * full-control task. Every write is addressed by provider run id.
  */
 class CompleteTask implements UseCase {
@@ -55,7 +55,9 @@ class CompleteTask implements UseCase {
     }
 
     private TaskReport checkInput() {
-        enter(CompleteTaskStep.CHECK_INPUT, "checking the input files");
+        enter(CompleteTaskStep.CHECK_INPUT, command.resultsOnly()
+                ? "no --status: uploading only the results of a full-control task; checking the input files"
+                : "checking the input files");
         return taskReportCheck.check(command);
     }
 

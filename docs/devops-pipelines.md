@@ -10,12 +10,13 @@ A task of a DevOps activity runs in one of two modes:
 - **Instrumented**: your pipeline runs the work, and the CLI keeps DevOps in sync. `start-task` waits until DevOps
   approves the task, your build runs, and `complete-task` uploads the logs and the results and records the final status.
 - **Full control**: DevOps starts the pipeline through its executor and reads the pipeline's status itself. The pipeline
-  only uploads its results, with `complete-task --results-only`.
+  only uploads its results, with `complete-task` and no `--status`.
 
 In both modes:
 
 - **Each CLI call runs in its own job**, with the [CLI image](run-with-docker.md) as the job image. Your build job keeps
-  its own image: the CLI never has to be installed in it.
+  its own image: the CLI never has to be installed in it. The job sees the checkout and the artifacts of earlier jobs in
+  its working directory, so `--logs-file` and `--results-file` take relative paths.
 - **The run id is the id of the whole pipeline run**, not of a job: `$CI_PIPELINE_ID` on GitLab, `github.run_id` on
   GitHub. Every CLI call of the pipeline passes the same value as `--provider-run-id`. DevOps finds the task by this id
   among the `RUNNING` tasks. DevOps runs one task of an activity at a time, so the tasks of one activity can share the id.
@@ -24,10 +25,103 @@ In both modes:
 - **Set the service URLs once**, as CI variables shared by all your pipelines (GitLab group or project CI/CD variables,
   GitHub organization or repository variables). The CLI reads them from the environment:
   `CLI_PLATFORM_SERVICES_DEVOPS_URL`, `CLI_PLATFORM_SERVICES_REGISTRY_URL`, and the credentials if your platform requires
-  them (see [Environment variables](../README.md#environment-variables)). Store credentials as masked variables or secrets.
+  them (see [Environment variables](../README.md#environment-variables) and [Connecting to ODM](#connecting-to-odm)).
+  Store credentials as masked variables or secrets.
   On GitLab, do not mark them **Protected** unless the branches and tags your pipelines run on are protected: protected
   variables reach only those pipelines. Full-control pipelines run on the version tag, so without protected tags the
   jobs get no URL and the CLI fails naming the missing variable.
+
+## Connecting to ODM
+
+The CLI reaches the ODM services in one of two ways:
+
+- **Directly**: the URLs are the services' own addresses, and the CLI sends no credentials. Use it only where the
+  services are reachable from trusted networks: nothing checks who calls them.
+- **Through the Blindata Agent**: the URLs point to the Agent's ODM proxy, which authenticates the caller and checks its
+  DataOps permissions before forwarding the call:
+
+  ```
+  CLI_PLATFORM_SERVICES_DEVOPS_URL=https://<agent>/agent-api/v1/odm/proxy/<configuration uuid>/devops
+  CLI_PLATFORM_SERVICES_REGISTRY_URL=https://<agent>/agent-api/v1/odm/proxy/<configuration uuid>/registry
+  ```
+
+  `<configuration uuid>` is the Agent's ODM configuration. The CLI authenticates with request headers, sent to both
+  services (see [Authentication through the Agent](#authentication-through-the-agent)).
+
+Direct access is the customer's choice: on trusted networks only, or behind an authentication layer of their own. Use the
+Agent when the calls must be authenticated and checked against the DataOps permissions.
+
+### Authentication through the Agent
+
+The CLI sends the credentials as request headers, configured per service with
+`CLI_PLATFORM_SERVICES_<SERVICE>_HEADERS_<n>_NAME` and `…_VALUE` (`<SERVICE>` is `DEVOPS` or `REGISTRY`; set both).
+Store the secret values as masked CI variables. Two methods suit pipelines.
+
+**Blindata API key.** The user must be an application user, and the tenant must enable API-key authentication. Send
+`X-BD-User`, `X-BD-ApiKey` and `X-BD-Tenant`. For DevOps (repeat with `REGISTRY`):
+
+```
+CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_0_NAME=X-BD-User      CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_0_VALUE=<user>
+CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_1_NAME=X-BD-ApiKey    CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_1_VALUE=<api key, masked>
+CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_2_NAME=X-BD-Tenant    CLI_PLATFORM_SERVICES_DEVOPS_HEADERS_2_VALUE=<tenant>
+```
+
+**OAuth 2.0 with Microsoft Entra ID.** The pipeline authenticates as an Entra ID service principal, with the client
+credentials flow. Set it up once, as described in the Blindata documentation ("Authenticating a Daemon App with a Service
+Principal", under the Microsoft SSO authentication method):
+
+1. Register an application in Entra ID, with a client secret or a certificate.
+2. In Blindata, create the user `msazure:{object id}@{Entra tenant id}`, where the object id is the service principal's
+   (the `oid` claim of its tokens), and give it the permissions of [the pipeline account](#the-pipeline-account).
+
+In each job that calls the CLI, request a token for the scope `<Blindata URL>/.default` and send it as
+`Authorization: Bearer <token>`, with `X-BD-Tenant`. The CLI sends fixed headers and does not request tokens, so the job
+requests it before the CLI runs. A token lasts about an hour, enough for one job. For example, in GitLab, with the CLI
+image (it has `curl` and `sed`):
+
+```yaml
+.odm-oauth:
+  before_script:
+    - |
+      ODM_TOKEN=$(curl -sf "https://login.microsoftonline.com/$ENTRA_TENANT_ID/oauth2/v2.0/token" \
+        -d grant_type=client_credentials -d client_id="$ENTRA_CLIENT_ID" \
+        --data-urlencode client_secret="$ENTRA_CLIENT_SECRET" \
+        --data-urlencode scope="$BLINDATA_URL/.default" \
+        | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+      test -n "$ODM_TOKEN"
+      for SERVICE in DEVOPS REGISTRY; do
+        export CLI_PLATFORM_SERVICES_${SERVICE}_HEADERS_0_NAME=Authorization
+        export CLI_PLATFORM_SERVICES_${SERVICE}_HEADERS_0_VALUE="Bearer $ODM_TOKEN"
+        export CLI_PLATFORM_SERVICES_${SERVICE}_HEADERS_1_NAME=X-BD-Tenant
+        export CLI_PLATFORM_SERVICES_${SERVICE}_HEADERS_1_VALUE="$BLINDATA_TENANT"
+      done
+```
+
+Jobs that call the CLI add `extends: .odm-oauth`. A token whose `iss` claim starts with `https://sts.windows.net/` was
+requested for the wrong resource: check the scope. Entra ID is the identity provider Blindata accepts bearer tokens from;
+other providers sign in to the Blindata UI only.
+
+The Agent also accepts a token issued by Blindata itself, with `X-BD-Tenant`. It belongs to a person's session and
+expires, so do not use it in pipelines.
+
+### The pipeline account
+
+Through the Agent, give pipelines a dedicated identity: a Blindata **application user** with an API key, or an Entra ID
+**service principal** with its `msazure:` user. The account needs no admin permission:
+
+- the permissions **DataOps viewer** and **DataOps editor**;
+- **write** on the team of each data product its pipelines deploy (a team policy);
+- a stage that matches the Agent configuration's allowed stages, if the configuration restricts them, for the steps that
+  create or cancel an activity. The task steps do not check it.
+
+The permissions the Agent checks, for each step of the commands:
+
+| Command step | Permission |
+| --- | --- |
+| Reading the Registry version and the activities | DataOps viewer |
+| Creating the activity (`start-task`, when none is open) | DataOps editor, write on the data product's team, and an allowed stage. The version must be `APPROVED`: otherwise only a DataOps admin can create the activity. |
+| Requesting the task, uploading logs and results, recording the status | DataOps editor and write on the team of the task's data product |
+| `start-task --force-start` (see [`--force-start`](cmd-platform-devops-start-task.md#--force-start)) | The same: it records the stale task `CANCELED` (task step), cancels the activity and creates a new one (allowed stage) |
 
 ## What to pass on each provider
 
@@ -35,7 +129,7 @@ In both modes:
 | --- | --- | --- |
 | `--provider-run-id` | `$CI_PIPELINE_ID` | `${{ github.run_id }}`: the workflow run id, **not** the job id. It is the same for every job of the run, and kept on re-runs. |
 | Work in a child or downstream pipeline | The parent's id, passed down as a variable (for example `PARENT_PIPELINE_ID: $CI_PIPELINE_ID`): the child's `CI_PIPELINE_ID` is different. | A called reusable workflow shares the caller's `github.run_id`. A workflow started by `workflow_run` has its own id: pass `github.event.workflow_run.id`. |
-| `--data-product-version` | A CI/CD variable, set by whoever triggers the pipeline, or read from the descriptor in an earlier job and passed on as a dotenv artifact | A workflow input or variable, or a step output |
+| `--data-product-version-number` | A CI/CD variable, set by whoever triggers the pipeline, or read from the descriptor in an earlier job and passed on as a dotenv artifact | A workflow input or variable, or a step output |
 | Build outcome → `--status` | Two close jobs: `when: on_success` → `SUCCEEDED`, `when: on_failure` → `FAILED` | `needs.<build job>.result`: `success` → `SUCCEEDED`, `failure` → `FAILED`, `cancelled` → `CANCELED` |
 | Close only if `start-task` succeeded | A dotenv artifact written by the start job | `needs.<start job>.result == 'success'` |
 | Logs and results between jobs | `artifacts:` with `when: always` | `actions/upload-artifact` and `actions/download-artifact` |
@@ -64,7 +158,7 @@ odm-start-task:
   image: $ODM_CLI_IMAGE
   script:
     - odm-cli platform devops start-task --data-product-fqn urn:dpds:sales:dataproducts:orders:1
-        --data-product-version "$DP_VERSION" --activity dev --task build --provider-run-id "$CI_PIPELINE_ID"
+        --data-product-version-number "$DP_VERSION" --activity dev --task build --provider-run-id "$CI_PIPELINE_ID"
     - echo "ODM_TASK_STARTED=true" > odm.env
   artifacts:
     reports:
@@ -108,13 +202,14 @@ odm-complete-failed:
 
 ### Full-control task
 
-DevOps starts the pipeline and reads its status through the executor. The pipeline uploads its results:
+DevOps starts the pipeline and reads its status through the executor. The pipeline uploads its results with
+`complete-task` and no `--status`:
 
 ```yaml
 upload-results:
   image: opendatamesh/odm-cli:X.Y.Z
   script:
-    - odm-cli platform devops complete-task --provider-run-id "$CI_PIPELINE_ID" --results-only --results-file results.json
+    - odm-cli platform devops complete-task --provider-run-id "$CI_PIPELINE_ID" --results-file results.json
 ```
 
 `results.json` comes from an earlier job, as an artifact. In a child or downstream pipeline, pass the parent's
@@ -139,7 +234,7 @@ jobs:
     steps:
       - run: >
           odm-cli platform devops start-task --data-product-fqn urn:dpds:sales:dataproducts:orders:1
-          --data-product-version "${{ vars.DP_VERSION }}" --activity dev --task build --provider-run-id "$ODM_RUN_ID"
+          --data-product-version-number "${{ vars.DP_VERSION }}" --activity dev --task build --provider-run-id "$ODM_RUN_ID"
 
   build:
     needs: odm-start-task
@@ -204,7 +299,8 @@ docker run --rm -e CLI_PLATFORM_SERVICES_DEVOPS_URL=https://odm.example.com/devo
 ```
 
 An operator can also run the next pipeline with `start-task --force-start`, which closes the stale task and replaces the
-activity (see [open activities](cmd-platform-devops.md#open-activities)). Never set `--force-start` in the pipeline file.
+activity (see [open activities](cmd-platform-devops-start-task.md#open-activities)). Never set `--force-start` in the
+pipeline file.
 
 ## Re-runs and retries
 

@@ -47,11 +47,20 @@ class ConfigUpdaterPersistenceOutboundPortImpl implements ConfigUpdaterPersisten
             if (additionalLocation == null) {
                 throw new IllegalStateException("The external configuration file is not present.");
             }
-            String filePath = additionalLocation.startsWith("file:")
-                    ? additionalLocation.substring(5)
-                    : additionalLocation;
+            String filePath = additionalLocation;
+            //The Docker image passes an optional location ("optional:file:..."), which may not exist yet
+            if (filePath.startsWith("optional:")) {
+                filePath = filePath.substring("optional:".length());
+            }
+            if (filePath.startsWith("file:")) {
+                filePath = filePath.substring("file:".length());
+            }
             File configFile = new File(filePath);
             if (!configFile.exists()) {
+                File parent = configFile.getAbsoluteFile().getParentFile();
+                if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                    throw new IOException("Failed to create the directory of the external configuration file: " + filePath);
+                }
                 if (!configFile.createNewFile()) {
                     throw new IOException("Failed to create external configuration file: " + filePath);
                 }

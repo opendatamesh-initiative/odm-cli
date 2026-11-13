@@ -2,9 +2,10 @@
 
 Story **BDMD-5443**. DevOps server counterpart: **BDMD-5442** (instrumented path, on `odm-platform-pp-devops-server` `main`). UI counterpart for the activity mapping: **BDMD-5518** (`blindata-ui`).
 
-**Status (2026-11-05, rev. 9).** No questions are open. The design below is implemented:
+**Status (2026-11-13, rev. 11).** No questions are open on the CLI. The design below is implemented:
 - **CLI:** `odm-cli`, REASONS `spdd/prompt/BDMD-5443-202610291156-[Feat]-commands-devops-v2-start-complete-task.md`.
 - **DevOps:** run-id addressing in `odm-platform-pp-devops-server` (DD-17).
+- **Agent:** the DevOps V2 proxy rules of rev. 11 in `blindata-agent` (DD-16, Limit 4).
 
 Both were reviewed and tested end to end on a local platform with a GitLab pipeline, in full-control and instrumented mode. The DevOps integration tests still have to run where Docker is available. The CLI Docker image has its own analysis (`BDMD-5443-202610270941-[Analysis]-cli-docker-image.md`) and is out of this document.
 
@@ -58,6 +59,8 @@ The analysis went through seven revisions with the team. The decisions themselve
 | 7 | 2026-10-29 | **Team:** one `--force-start` flag for both overrides (Q6). `--task` stays required (Q25). The version is always passed explicitly, from the descriptor in the checkout or from a CI variable; a lookup by git tag was rejected (Q24). |
 | 8 | 2026-11-02 | Aligned with the implementation, the review and the local end-to-end tests. Implementation details are added to DD-05, DD-07, DD-12, DD-14 and DD-17. The rule that an instrumented run id must be unique per CI job is added. |
 | 9 | 2026-11-05 | **PR #16 review and team call.** Instrumented tasks use the pipeline run id (`$CI_PIPELINE_ID`, `github.run_id`), like full-control tasks, instead of an id unique per job. `start-task`, the build and `complete-task` then run in separate jobs, each CLI job with the CLI image. DevOps already allows only one running task per activity, so the shared id is safe; the rule becomes "one pipeline run drives one activity". No CLI or DevOps change. The docs gain a pipelines page with GitLab and GitHub examples, a per-provider table and the cancel cases (`docs/devops-pipelines.md`). The configuration can come from environment variables, which win over the file; the packaged registry URL is removed. |
+| 10 | 2026-11-12 | **PR #16 review call.** `complete-task` loses `--results-only`: `--status` selects the mode, present for an instrumented task, absent for a full-control results upload with `--results-file` required (Q18 revised; one command is kept). The version option becomes `--data-product-version-number`, after the DevOps and Registry field `versionNumber`, and the options get short forms (DD-09). `--force-start` is documented as an override for DataOps admins; its authorization belongs to the Agent, not the CLI (DD-16, Limit 4). The Agent proxy, its authentication and its permissions are documented (Q15). The unused async support from the service template is removed. |
+| 11 | 2026-11-13 | **Follow-up call (PR #16).** Force start and bypass policy are separated. `--force-start` only replaces an open activity that blocks the task, and needs the same permissions as the pipeline (DataOps editor, team write, allowed stage). Running a version that is not `APPROVED` (bypass policy) becomes a later, admin-only command, not built now: `start-task` always refuses such a version, with or without the flag (DD-16, Q6, Q17). The Agent enforces the approval on Execute (only `DATAOPS_ADMIN` may create an activity for a version that is not `APPROVED`) and gives the task endpoints a non-admin rule resolved by natural key or by run id (Limit 4). Pipelines authenticate as an application user with DataOps viewer and editor and team write, never admin (the application-service persona). |
 
 ## Domain Concept Identification
 
@@ -149,8 +152,9 @@ DevOps itself checks none of these. The task endpoints check only the role, not 
 
 - **DevOps command group:** `odm platform devops`, with its own client and configuration entry.
 - **`start-task`:** one command that brings one instrumented task to `RUNNING`. It finds the open activity, or else fetches the published descriptor from Registry and executes the activity planned from it. It waits for activity approval, requests the task with the provider run id, and waits for task approval. Success means the pipeline may run the task's work.
-- **`complete-task`:** one command that closes one task. It uploads the logs, then the results, then records the terminal status. With `--results-only` (full control) it uploads results only. It addresses the task by its provider run id.
-- **Force start** (`--force-start` on `start-task`): the operator's override. It lets `start-task` run a version that is not `APPROVED`, and close an open activity that blocks the task (Q6).
+- **`complete-task`:** one command that closes one task. It uploads the logs, then the results, then records the terminal status. Without `--status` (full control) it uploads results only (rev. 10). It addresses the task by its provider run id.
+- **Force start** (`--force-start` on `start-task`): the operator's override. It closes an open activity that blocks the task and starts a new one (Q6). Since rev. 11 it no longer runs a version that is not `APPROVED`.
+- **Bypass policy:** running a version that is not `APPROVED`, which skips its policies. Admin only, and a later command: not built (rev. 11, DD-16).
 - **Task address by provider run id** (DevOps change, DD-17): the `RUNNING` task whose run id equals the one given. It replaces the activity key and task name on the three record endpoints.
 - **Version lookup:** the Registry V2 lookup from FQN and version number to the version uuid and the descriptor content. It is added to the existing Registry client, next to the V1 validate call.
 - **Activity plan:** the Execute Activity body the CLI derives from the descriptor content with the UI's rules, restricted to what an instrumented task needs.
@@ -165,7 +169,7 @@ DevOps itself checks none of these. The task endpoints check only the role, not 
 - **The pipeline is the source of the task coordinates.** The FQN, version, activity name and task name are options the pipeline passes to `start-task`. `complete-task` needs only the run id. The CLI never derives them from the descriptor and never returns them. When `start-task` creates the activity, it sets `dataProductFqn`, `dataProductVersionNumber` and `name` from those options. It also takes the stage named by `--activity` from the descriptor. So the activity's natural key in DevOps equals the options by construction, and every later call with the same options finds it.
 - **The descriptor is needed once per activity run.** It is used only to plan the activity, when none is open. Once the activity exists, DevOps holds its tasks, order and executors, and later calls need only the coordinates.
 - **The activity is created once.** `start-task` reuses the open activity with the same FQN, version and activity name. It executes a new activity only when there is none. Registry is called only in that case.
-- **Only published versions run, unless forced.** The activity is planned from the descriptor of the Registry version, never from a local file. A version that is not in Registry cannot be run, even with `--force-start`: there is no uuid and no descriptor. A version that is in Registry but not `APPROVED` (`PENDING` or `REJECTED`) is refused unless `--force-start` is passed (DD-16).
+- **Only approved versions run.** The activity is planned from the descriptor of the Registry version, never from a local file. A version that is not in Registry cannot be run: there is no uuid and no descriptor. A version that is in Registry but not `APPROVED` (`PENDING` or `REJECTED`) is refused, with or without `--force-start` (DD-16, rev. 11).
 - **The run id addresses the running task.** Once a task is `RUNNING`, the pipeline addresses it by the run id alone. For GitLab full-control tasks that is `CI_PIPELINE_ID`. Instrumented tasks use the same pipeline run id (`$CI_PIPELINE_ID` on GitLab, `github.run_id` on GitHub; rev. 9, replacing the rev. 8 "unique per CI job" rule), so `start-task` and `complete-task` can run in separate jobs. DevOps runs one task of an activity at a time (`RequestTaskExecution.requireNoOtherTaskRunning`) and keeps one open activity per version and name, so the tasks of one activity never share the id while running. **One pipeline run drives one activity.** DevOps matches only `RUNNING` tasks and refuses an ambiguous id (DD-17).
 - **Repeating a task request is allowed** while the task is still the next `PENDING` one. It overwrites the provider run id, so a retried `start-task` is safe.
 - **The upload order is logs → results → status, inside one command.** Logs and results are accepted only while the task is `RUNNING`, and the status ends `RUNNING`, so it is always last.
@@ -186,31 +190,31 @@ Add a `devops` command group under `platform` with two commands, `start-task` an
 1. Find the open activity.
 2. Only if there is none:
    1. Look up the version in Registry (uuid, validation state and content).
-   2. Refuse it if it is not `APPROVED`, unless `--force-start`.
+   2. Refuse it if it is not `APPROVED` (rev. 11: `--force-start` no longer overrides this).
    3. Plan the activity.
    4. Execute it.
 3. Wait for the activity.
 4. Request the task.
 5. Wait for the task.
 
-`complete-task` procedure: check local inputs → upload logs → upload results → record status. With `--results-only`, only the results upload runs.
+`complete-task` procedure: check local inputs → upload logs → upload results → record status. Without `--status`, only the results upload runs (rev. 10).
 
 Pipeline usage, one task per step group (illustrative):
 
 ```text
-start:     odm platform devops start-task    --data-product-fqn … --data-product-version … --activity … --task … --provider-run-id …
+start:     odm platform devops start-task    --data-product-fqn … --data-product-version-number … --activity … --task … --provider-run-id …
 work:      <the task's own steps>                                                     (only if start succeeded)
 complete:  odm platform devops complete-task --provider-run-id … --status … [--logs-file …] [--results-file …]
                                                                                               (always, if start succeeded)
 ```
 
-A full-control pipeline started by a DevOps executor calls `complete-task --results-only --provider-run-id …` while its task is `RUNNING`, with its own run id (`CI_PIPELINE_ID` on GitLab). It needs no coordinates, so a pipeline shared by several tasks or stages works too (Q12).
+A full-control pipeline started by a DevOps executor calls `complete-task --provider-run-id … --results-file …`, without `--status`, while its task is `RUNNING`, with its own run id (`CI_PIPELINE_ID` on GitLab). It needs no coordinates, so a pipeline shared by several tasks or stages works too (Q12).
 
 | Command                       | Registry and DevOps calls                                                                                                                                  | Waits                                                                     | Modes        |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------ |
 | `start-task`                  | search open activity → if none: Registry products by FQN → versions by product and version number → version content; Execute Activity → read activity → Request Task Execution → read activity | Activity until `RUNNING` / `FAILED`, then task until `RUNNING` / `FAILED` | Instrumented |
 | `complete-task`               | Record Task Logs → Record Task Results → Record Task Status                                                                                                | No                                                                        | Instrumented |
-| `complete-task --results-only` | Record Task Results                                                                                                                                        | No                                                                        | Full control |
+| `complete-task` without `--status` | Record Task Results                                                                                                                                        | No                                                                        | Full control |
 
 ### Key Design Decisions
 
@@ -264,10 +268,10 @@ A full-control pipeline started by a DevOps executor calls `complete-task --resu
   A DevOps 409 serialization conflict is retried a bounded number of times (`conflictRetries`, 3 × `conflictRetryInterval`, 1 s). A Registry 409 is not retried.
 - **DD-08: One DevOps client and configuration entry.** `cli.platform.services.devops` takes `url`, `headers` and `oauth2`, the same shape as `registry`, with `url` as the base address only. Only the devops commands read it.
 - **DD-09: Every parameter is an explicit option** _(team, rev. 2)_. There are no environment-variable fallbacks and no state file.
-  - **`start-task`:** `--data-product-fqn`, `--data-product-version`, `--activity`, `--task` and `--provider-run-id`, plus the optional `--force-start` flag.
-  - **`complete-task`:** `--provider-run-id`, which must be the value given to `start-task` (instrumented) or the pipeline's own run id (full control). It also takes `--status` (or `--results-only`), and optional `--logs-file` (repeatable) and `--results-file`. No coordinates and no `--activity-uuid` (rev. 6).
+  - **`start-task`:** `-p, --data-product-fqn`, `-n, --data-product-version-number`, `-a, --activity`, `-t, --task` and `-r, --provider-run-id`, plus the optional `--force-start` flag, long only on purpose (short forms added in rev. 10).
+  - **`complete-task`:** `--provider-run-id`, which must be the value given to `start-task` (instrumented) or the pipeline's own run id (full control). It also takes the optional `-s, --status`, `-l, --logs-file` (repeatable) and `-o, --results-file`. `--status` selects the mode: present for an instrumented task, absent for a full-control results upload, which requires `--results-file` and refuses `--logs-file` (rev. 10). No coordinates and no `--activity-uuid` (rev. 6).
 
-  The pipeline maps its own variables, such as `GITHUB_RUN_ID`, onto the options. The option is named `--data-product-version`, not "tag", because Registry's `tag` is the git tag.
+  The pipeline maps its own variables, such as `GITHUB_RUN_ID`, onto the options. The option is named `--data-product-version-number`, not "tag", because Registry's `tag` is the git tag; rev. 10 adds "number" to match the DevOps and Registry field `versionNumber`.
 - **DD-10: Devops commands never prompt.** They run in CI, where `System.console()` is not available and the packaged default is `interactive: true`. A missing value fails as invalid usage.
 - **DD-11: The activity plan follows the UI's rules, for the parts an instrumented task needs** _(revised in rev. 4: source is Registry)_. The plan is built from the Registry version and its descriptor `content`, as the UI does:
   - **Version uuid:** from the version.
@@ -294,10 +298,17 @@ A full-control pipeline started by a DevOps executor calls `complete-task --resu
 - **DD-15: The pipeline maps its steps to tasks by name** _(new, rev. 5)_. Each pipeline step that does a task's work hard-codes `--task` with that task's derived name (`name`, else `template.name`, else `task_<order>`). The pairing is a convention the pipeline author keeps. Nothing checks it in advance; DevOps refuses an unknown or out-of-order name at run time. A full-control pipeline needs no task name: DevOps chose the task and the run id identifies it (DD-17). The docs show the pairing with a descriptor stage and the matching pipeline file side by side. Whether `--task` may be omitted is Q25.
 - **DD-16: Publication check and `--force-start`** _(new, rev. 6)_. When `start-task` creates the activity, it reads the version's `validationState` from the Registry lookup it already does (no extra call).
   - **Not in Registry:** fails, with or without the flag.
-  - **`PENDING` or `REJECTED`:** fails, naming the state and the flag, unless `--force-start` is passed. With the flag, it logs a warning and continues.
+  - **`PENDING` or `REJECTED`:** fails, naming the state. Until rev. 10 `--force-start` skipped this; since rev. 11 nothing does.
   - **`APPROVED`:** continues.
 
   When an open activity is found, Registry is not called, so the check applies once per activity run, at creation. The activity was checked (or forced) when it was created, or created by the UI. `--force-start` also covers the open-activity cases of Q6. _Trade-off, accepted in rev. 7:_ one flag for two overrides. A pipeline that always passes it to run unapproved versions also replaces open activities; the docs say to use it only for manual runs.
+
+  _Authorization (rev. 10, PR #16 review):_ the CLI does not check roles: it cannot know them, and a client-side check is skipped by any direct API call. The rules belong to the Agent proxy.
+
+  _Rev. 11 (follow-up call, 2026-11-13): force start and bypass policy are two things._
+  - **Force start** keeps only the replacement of a blocked open activity. Through the Agent it needs what the pipeline needs: `DATAOPS_EDITOR`, team write on the data product, and an allowed stage (Record Task Status by natural key, then Cancel, then Execute).
+  - **Bypass policy** is running a version that is not `APPROVED`, which skips its Registry and DevOps policies. It is reserved to `DATAOPS_ADMIN` and becomes a dedicated command later; it is not built. So `start-task` refuses an unapproved version in every case, and the trade-off of rev. 7 (one flag for two overrides) is gone.
+  - **The Agent enforces the approval** on Execute: for a caller who is not `DATAOPS_ADMIN`, it reads the version by `dataProductVersionUuid` from Registry V2 and refuses it unless it is `APPROVED` and belongs to the activity's data product. This covers the UI and direct API calls, where the rule was client-side only.
 - **DD-17: `complete-task` addresses the task by provider run id** _(new, rev. 6; needs the DevOps change)_. DevOps' Record Task Logs, Results and Status accept `providerRunId` as a third way to address a task, next to the activity uuid and the natural key. The CLI sends only the run id. The verification and the server plan are in [DevOps change: address the running task by provider run id](#devops-change-address-the-running-task-by-provider-run-id).
   - **Why for all three endpoints, not only results:** one addressing rule for the whole command. The `complete` step no longer needs the version (Q24), which was the coordinate that varies.
   - **Not found (404):** the CLI retries for a short, bounded time, then fails. This covers the full-control gap before DevOps stores the run id. The default is 5 attempts 2 s apart (`runIdLookupAttempts`, `runIdLookupInterval`). After the retries run out, the command fails at that step and makes no further writes.
@@ -316,7 +327,7 @@ A full-control pipeline started by a DevOps executor calls `complete-task --resu
 - **DevOps resolves FQN + version into the uuid.** Rejected: a new DevOps → Registry dependency, against BDMD-5437's direction that DevOps does not know Registry.
 - **Environment-variable mapping (e.g. `GITHUB_RUN_ID` → provider run id).** Set aside by the team in rev. 2. It ties the CLI to each CI vendor's variable names. It can be added later as defaults under the explicit options.
 - **Build the full UI mapping, including full-control executor parameters.** Rejected. It needs repositories, tags, branches and executor secrets, and mixed activities are out of scope.
-- **A separate `upload-results` command for full-control pipelines.** Rejected by the team in rev. 2. Covered by `complete-task --results-only`.
+- **A separate `upload-results` command for full-control pipelines.** Rejected by the team in rev. 2. Covered by `complete-task` without `--status` (`--results-only` until rev. 9).
 - **Coordinates for full-control pipelines** (Q12, closed in rev. 6 by DD-17). Set aside:
   - **Literal params:** the descriptor author copies the stage and task name into `configurations.params`.
   - **Built-in DevOps placeholders:** `${activity.uuid}`, `${task.name}`, … resolved into pipeline parameters. The pipeline must declare them as GitLab inputs.
@@ -342,22 +353,22 @@ A full-control pipeline started by a DevOps executor calls `complete-task --resu
 | Q7  | Poll every 5 s. Time out after 30 min waiting for activity approval and 10 min for task approval, all configurable by option and configuration. On timeout the command fails and writes no DevOps state. | Rev. 3 |
 | Q8  | One results file holding a JSON object, validated before any call. | Rev. 3 |
 | Q9  | Zero or more log files, one log row each; no size cap in this story. | Rev. 3 |
-| Q10 | The DevOps version number is the descriptor's `info.version`, which is Registry's `versionNumber`. The option is `--data-product-version`. | Rev. 2, amended rev. 4 |
+| Q10 | The DevOps version number is the descriptor's `info.version`, which is Registry's `versionNumber`. The option is `--data-product-version-number` (rev. 10). | Rev. 2, amended rev. 4 |
 | Q11 | A stage with full-control tasks is refused by DevOps; the CLI shows the message, and the docs mention mixed stages. | Rev. 3 |
-| Q12 | A full-control pipeline addresses its task by its run id (`CI_PIPELINE_ID` on GitLab): `complete-task --results-only --provider-run-id …`. Needs the DevOps change (DD-17). Placeholders and literal params are set aside. | Rev. 6 |
+| Q12 | A full-control pipeline addresses its task by its run id (`CI_PIPELINE_ID` on GitLab): `complete-task --provider-run-id … --results-file …` without `--status`. Needs the DevOps change (DD-17). Placeholders and literal params are set aside. | Rev. 6 |
 | Q13 | Exit `1` for every command failure and `2` for usage, with a final message naming the cause and the step. | Rev. 3 |
 | Q14 | `--status` takes `SUCCEEDED`, `FAILED` or `CANCELED`, case-insensitive; the pipeline maps CI values itself. | Rev. 3 |
-| Q15 | No authentication design in this story. The DevOps client reuses the `headers` and `oauth2` configuration shape at no cost. Reaching DevOps from the pipeline is a deployment concern. | Rev. 4 |
+| Q15 | No authentication design in this story. The DevOps client reuses the `headers` and `oauth2` configuration shape at no cost. Reaching DevOps from the pipeline is a deployment concern. Rev. 10: the two ways in (direct, or the Blindata Agent proxy with `X-BD-User`/`X-BD-ApiKey`/`X-BD-Tenant` headers) and the permissions per step are documented in `docs/devops-pipelines.md`, "Connecting to ODM". | Rev. 4, docs rev. 10 |
 | Q16 | The CLI fetches the descriptor from Registry (DD-13); the pipeline needs no descriptor. Confirmed by the team in rev. 6. | Rev. 4, confirmed rev. 6 |
-| Q17 | The CLI looks the version up in Registry V2 by FQN and version number (DD-13, DD-14), only when it has to create the activity, and refuses a version that is not `APPROVED` unless `--force-start` (DD-16). | Rev. 4, amended rev. 6 |
-| Q18 | `complete-task --results-only` for full-control tasks: it uploads results only, and `--status` is not allowed with it. Without the flag, `--status` is required. | Rev. 3 |
+| Q17 | The CLI looks the version up in Registry V2 by FQN and version number (DD-13, DD-14), only when it has to create the activity, and refuses a version that is not `APPROVED` (DD-16; until rev. 10 `--force-start` overrode it). | Rev. 4, amended rev. 6 and 11 |
+| Q18 | The mode follows `--status`: present → instrumented (logs, results, status); absent → full-control results upload, with `--results-file` required and `--logs-file` refused. Until rev. 9 a `--results-only` flag, exclusive with `--status`, selected it; the review found the exclusive pair needless. | Rev. 3, revised rev. 10 |
 | Q19 | If the results upload fails, `complete-task` records `FAILED`. If only the logs upload fails, it records the requested status. It exits non-zero in both cases. | Rev. 3 |
 | Q20 | `complete-task` takes only `--provider-run-id` as the task address (DD-09, DD-17). Superseded the rev. 4 answer (four coordinates or `--activity-uuid` with `--task`). | Rev. 4, amended rev. 6 |
 | Q21 | Not applicable. `canDeployOnlyStage` restricts UI users; a pipeline with the right permissions may run any stage. No CLI guardrail. | Rev. 6 |
 | Q22 | No drift: the descriptor is always the published version's (DD-13). | Rev. 4 |
-| Q6  | `start-task --force-start` replaces an open activity that cannot accept the task; without it, plain reuse with a hint. One flag, shared with the publication override (DD-16). | Rev. 7 |
+| Q6  | `start-task --force-start` replaces an open activity that cannot accept the task; without it, plain reuse with a hint. Rev. 11: the flag no longer overrides the publication check (DD-16). | Rev. 7, amended rev. 11 |
 | Q25 | `--task` stays required on `start-task`. | Rev. 7 |
-| Q24 | `--data-product-version` is always passed to `start-task`: from the checked-out descriptor (`yq`), else from a CI variable. The CLI does not derive it (no `--git-tag`, no "latest"). | Rev. 7 |
+| Q24 | `--data-product-version-number` is always passed to `start-task`: from the checked-out descriptor (`yq`), else from a CI variable. The CLI does not derive it (no `--git-tag`, no "latest"). | Rev. 7 |
 | Q23 | DPDS 1.x only, matching the UI; other versions are refused with a clear message. | Rev. 3 |
 
 ### Open questions under discussion
@@ -389,7 +400,7 @@ DevOps refuses an ambiguous id with 400 and names the matching tasks. No write g
 
 **Limit 3: a re-run of the same CI run.** For example, GitHub "re-run jobs" keeps `GITHUB_RUN_ID`, and GitLab job retry keeps `CI_PIPELINE_ID`. The re-run's `start-task` already finds the earlier attempt's task `RUNNING` and is refused (Q6 case 5). So two attempts never both own a running task under the same id.
 
-**Limit 4: authorization.** Through the Agent proxy, the record endpoints need `DATAOPS_ADMIN` and no data product, so the run id changes nothing today. A later team-scoped rule in the proxy would have to resolve the run id to the activity first.
+**Limit 4: authorization.** Through the Agent proxy, the record endpoints needed `DATAOPS_ADMIN` and no data product, so the run id changed nothing. Rev. 11: the Agent gives the task endpoints (request execution, status, logs, results) `DATAOPS_EDITOR` and team write, on the activity found by natural key, or by run id through the DevOps activity search (`taskProviderRunId`). When no activity has the run id yet, the Agent answers 404 like DevOps, so the CLI's retry (DD-17) keeps working. The deploy-stage restriction (`canDeployOnlyStage`) is not applied to them: it limits what the UI deploys, and whoever starts the pipeline already may run it (to confirm with Gabriele; Execute and Cancel keep it). Pipelines no longer need an admin user.
 
 **Do logs and status make sense too? Yes.** Both are instrumented-only, and an instrumented task's id is set before it is `RUNNING`, so they have none of the full-control timing gap. Benefits:
 - one address for the whole `complete-task`;
@@ -445,7 +456,7 @@ Cases 3–5 need an abnormal end of a pipeline: a lost runner, a killed job, or 
 
 #### Q24: where `start-task` gets the version (closed in rev. 7)
 
-Only `start-task` needs `--data-product-version` and `--activity`; `complete-task` uses the run id (DD-17). FQN and task name are static in the pipeline file (DD-15). The activity (stage) is static when the pipeline serves one stage; otherwise the pipeline's own logic chooses it, for example by branch or environment.
+Only `start-task` needs `--data-product-version-number` and `--activity`; `complete-task` uses the run id (DD-17). FQN and task name are static in the pipeline file (DD-15). The activity (stage) is static when the pipeline serves one stage; otherwise the pipeline's own logic chooses it, for example by branch or environment.
 
 **Decided (rev. 7):** the version comes from the descriptor in the checkout when it is there (`yq '.info.version' <descriptor>`). Otherwise it is a CI variable set by whoever triggers the pipeline. Both are documented with GitHub Actions and GitLab examples. The value must equal Registry's `versionNumber`.
 
@@ -463,7 +474,7 @@ No omission for now: `--task` stays required on `start-task`. The reasons: a ste
 - **Task rejected by policy after the request.** `start-task` sees the task `FAILED` and fails. DevOps fails the activity and cancels the pending tasks. `complete-task` must not run: the pipeline runs it only if `start-task` succeeded, or it fails with "not RUNNING".
 - **Task not next, or another task `RUNNING`.** DevOps refuses Request Task Execution with a 400. `start-task` prints the message verbatim and fails (AC4). The activity may already have been created; a later run finds and reuses it.
 - **Open activity in an unexpected state** (task already `SUCCEEDED` or still `RUNNING` from an abandoned run). Refused, with the `--force-start` hint; with the flag, the activity is replaced (Q6).
-- **Version in Registry but `PENDING` or `REJECTED`.** `start-task` fails before touching DevOps, naming the state; with `--force-start` it warns and continues (DD-16).
+- **Version in Registry but `PENDING` or `REJECTED`.** `start-task` fails before touching DevOps, naming the state, with or without `--force-start` (DD-16, rev. 11).
 - **Work failed in the pipeline.** `complete-task` runs with `--status FAILED`. Otherwise the task stays `RUNNING` and blocks later runs.
 - **Activity canceled by a user while the task runs.** DevOps cancels the pending tasks and waits for `complete-task`. The activity ends `CANCELED` whatever status is sent.
 - **Data product or version not found in Registry** (wrong FQN, wrong version, or the descriptor's version was never published). `start-task` fails before touching DevOps, naming FQN and version. If an open activity exists, Registry is not called and this cannot happen.
@@ -472,7 +483,7 @@ No omission for now: `--task` stays required on `start-task`. The reasons: a ste
 - **`--task` that does not match a derived name.** `start-task` fails before Execute Activity and lists the stage's task names.
 - **The open activity was created by the UI** (same version and stage). `start-task` reuses it; if its tasks are full-control, DevOps refuses the request.
 - **Version deleted and recreated in Registry while an old activity is open.** The natural key matches two open activities, and DevOps refuses with "More than one open activity" (server-side gap).
-- **Full-control `complete-task --results-only` after the executor reported its outcome.** Refused (task not `RUNNING`). The pipeline must upload before its run ends.
+- **Full-control `complete-task` (no `--status`) after the executor reported its outcome.** Refused (task not `RUNNING`). The pipeline must upload before its run ends.
 - **Run id not found yet** (full control, before DevOps stores it). `complete-task` retries briefly, then fails naming the id, without further writes (DD-17).
 - **Run id matches several `RUNNING` tasks** (one CI run working on two activities at once). DevOps refuses with the matching tasks; the CLI shows the message.
 - **Full-control work in a child or downstream pipeline.** Its `CI_PIPELINE_ID` is not the task's run id; the parent's id must be passed down, or the lookup finds nothing.
@@ -509,7 +520,7 @@ No omission for now: `--task` stays required on `start-task`. The reasons: a ste
 | 5   | Comandi sotto platform devops: validate con polling, upload result, upload logs, comando finale di stato con nome definito | Yes, as revised | The team replaced the four commands with `start-task` (covers validate) and `complete-task` (covers upload result, upload logs and the final status). The AC text should be updated to match. |
 | 6   | Deciso e documentato il posizionamento dei comandi | Yes | Directly under `platform devops` (DD-03), documented in `docs/cmd-platform-devops.md`. |
 | 7   | Immagine Docker della CLI utilizzabile in pipeline | No (separate analysis) | `BDMD-5443-202610270941-[Analysis]-cli-docker-image.md`. |
-| —   | Implicit: results upload usable from a full-control pipeline | Yes, with the DevOps change | `complete-task --results-only --provider-run-id` (Q12, Q18, DD-17), shared pipelines included. |
+| —   | Implicit: results upload usable from a full-control pipeline | Yes, with the DevOps change | `complete-task --provider-run-id --results-file`, without `--status` (Q12, Q18, DD-17), shared pipelines included. |
 | —   | Implicit: the pipeline can supply every coordinate | Yes, documented | Only `start-task` needs them: Q24 recipes; step-to-task pairing by name (DD-15). `complete-task` needs only the run id. |
 | —   | Implicit (rev. 6): unpublished versions do not run by accident | Yes | DD-16, `--force-start` to override. |
 | —   | Implicit: abandoned activities can be recovered | Yes, from the CLI | Q6: `--force-start`, or `complete-task --status CANCELED` with the dead run's id; DevOps cancel follow-up for the UI. |

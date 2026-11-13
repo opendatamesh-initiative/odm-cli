@@ -21,7 +21,7 @@ public class StartTaskCommandExecutor extends PicoCliCommandExecutor {
     private final StartTaskFactory startTaskFactory;
 
     private String dataProductFqn;
-    private String dataProductVersion;
+    private String dataProductVersionNumber;
     private String activityName;
     private String taskName;
     private String providerRunId;
@@ -40,7 +40,7 @@ public class StartTaskCommandExecutor extends PicoCliCommandExecutor {
         DevOpsCommandsConfiguration timings = configuredTimings();
         StartTaskCommand command = new StartTaskCommand(
                 dataProductFqn,
-                dataProductVersion,
+                dataProductVersionNumber,
                 activityName,
                 taskName,
                 providerRunId,
@@ -63,8 +63,8 @@ public class StartTaskCommandExecutor extends PicoCliCommandExecutor {
         this.dataProductFqn = dataProductFqn;
     }
 
-    void setDataProductVersion(String dataProductVersion) {
-        this.dataProductVersion = dataProductVersion;
+    void setDataProductVersionNumber(String dataProductVersionNumber) {
+        this.dataProductVersionNumber = dataProductVersionNumber;
     }
 
     void setActivityName(String activityName) {

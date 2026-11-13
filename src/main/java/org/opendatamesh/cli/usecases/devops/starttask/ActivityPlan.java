@@ -26,7 +26,7 @@ class ActivityPlan {
                 null,
                 versionUuid,
                 command.dataProductFqn(),
-                command.dataProductVersion(),
+                command.dataProductVersionNumber(),
                 command.activityName(),
                 new ArrayList<>(lifecycle.stages().keySet()).indexOf(command.activityName()),
                 null,

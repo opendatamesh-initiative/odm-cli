@@ -85,7 +85,7 @@ class OpenActivity {
     }
 
     private DevOpsActivityKey key() {
-        return new DevOpsActivityKey(command.dataProductFqn(), command.dataProductVersion(), command.activityName());
+        return new DevOpsActivityKey(command.dataProductFqn(), command.dataProductVersionNumber(), command.activityName());
     }
 
     private boolean blocked(DevOpsActivity activity) {

@@ -2,6 +2,8 @@
 
 _Revised on 2026-11-05 for the Docker analysis rev. 5 (PR #16 review and team call): Docker Hub, one tag, `linux/amd64`, no scan or smoke tests, no copyable bundle, instrumented tasks in separate jobs._
 
+_Revised on 2026-11-12 for the Docker analysis rev. 6 (PR #16 review call). Where this document still describes the earlier design, rev. 6 wins: no `ENTRYPOINT` and no `docker/docker-entrypoint` (`CMD ["odm-cli", "--help"]`; `docker run <image> odm-cli <args>`); the launcher is a single `exec java` with `-Dloader.path` and `-Dspring.config.additional-location=optional:file:…`, copied to `/usr/local/bin/odm-cli`, with no `ODM_CLI_HOME`; no `dnf -y upgrade`._
+
 ## Requirements
 
 Publish, with every CLI release, a Docker image that runs the released CLI with the same commands, arguments and exit codes as the executable, so that pipelines can use the CLI without installing Java or the launcher script.
