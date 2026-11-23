@@ -30,7 +30,6 @@ public class LocalCommandBuilder implements PicoCliCommandBuilder {
         LocalCommandExecutor executor = new LocalCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(LOCAL_COMMAND);
-        spec.version("1.0.0");
         spec.usageMessage().description("Manages features that are done within the local environment.");
         spec.mixinStandardHelpOptions(true);
 

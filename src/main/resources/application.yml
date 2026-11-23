@@ -7,19 +7,15 @@ cli:
     templatesFolder: null
     saveFormat: NORMALIZED
     interactive: true
-  systems:
-    - name: testDb
-      endpoint: "jdbc:mysql://localhost:3306/"
-      user: "root"
-      password: "root"
-    - name: anotherDb
-      endpoint: "jdbc:mysql://localhost:3306/"
-      user: "root"
-      password: "root"
   platform:
-    services:
-      registry:
-        url: http://localhost:8001
+    devops:
+      pollInterval: 5s
+      activityApprovalTimeout: 30m
+      taskApprovalTimeout: 10m
+      runIdLookupAttempts: 5
+      runIdLookupInterval: 2s
+      conflictRetries: 3
+      conflictRetryInterval: 1s
   template:
     owner:
       id: "testId"

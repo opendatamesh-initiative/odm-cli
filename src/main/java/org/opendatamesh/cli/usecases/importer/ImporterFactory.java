@@ -1,11 +1,9 @@
 package org.opendatamesh.cli.usecases.importer;
 
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
-import org.opendatamesh.cli.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 public class ImporterFactory {
@@ -18,16 +16,11 @@ public class ImporterFactory {
         this.portImporterFactory = portImporterFactory;
     }
 
-    public UseCase getImportSchemaUseCase(
-            String descriptorFilePath,
-            Map<String, String> importSchemaCommandParams,
-            ImporterExtension importSchemaExtension
-    ) {
-        String toOption = importSchemaCommandParams.get("to");
-        if("descriptor".equalsIgnoreCase(toOption)){
-            return descriptorImporterFactory.getImportSchemaUseCase(descriptorFilePath,importSchemaCommandParams,importSchemaExtension);
+    public UseCase buildImporter(ImporterCommand command, ImporterExtension importSchemaExtension, ImporterPresenter presenter) {
+        if("descriptor".equalsIgnoreCase(command.to())){
+            return descriptorImporterFactory.buildDescriptorImporter(command, importSchemaExtension, presenter);
         } else {
-            return portImporterFactory.getImportSchemaUseCase(descriptorFilePath,importSchemaCommandParams,importSchemaExtension);
+            return portImporterFactory.buildPortImporter(command, importSchemaExtension, presenter);
         }
     }
 }

@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.opendatamesh.cli.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCase;
+import org.opendatamesh.cli.utils.usecases.UseCaseException;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -15,28 +16,35 @@ import java.util.*;
 
 class ConfigUpdater implements UseCase {
 
+    private final ConfigUpdaterCommand command;
+    private final ConfigUpdaterPresenter presenter;
     private final ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort;
-    private final ConfigUpdaterParametersOutboundPort parametersOutboundPort;
 
-    ConfigUpdater(ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort, ConfigUpdaterParametersOutboundPort parametersOutboundPort) {
+    ConfigUpdater(ConfigUpdaterCommand command, ConfigUpdaterPresenter presenter, ConfigUpdaterPersistenceOutboundPort persistenceOutboundPort) {
+        this.command = command;
+        this.presenter = presenter;
         this.persistenceOutboundPort = persistenceOutboundPort;
-        this.parametersOutboundPort = parametersOutboundPort;
     }
 
     @Override
     public void execute() {
-        //Retrieve the current configuration (default + external)
-        JsonNode currentConfig = persistenceOutboundPort.getCurrentConfiguration();
-        handleSimpleFieldsDelete(currentConfig);
-        handleArraysDelete(currentConfig);
-        handleSimpleParametersAddition(currentConfig);
-        handleArraysAddition(currentConfig);
-        JsonNode patchToApplyOnDefaultConfig = computeDifferenceOnDefaultConfig(currentConfig);
-        persistenceOutboundPort.saveConfiguration(patchToApplyOnDefaultConfig);
+        try {
+            //Retrieve the current configuration (default + external)
+            JsonNode currentConfig = persistenceOutboundPort.getCurrentConfiguration();
+            handleSimpleFieldsDelete(currentConfig);
+            handleArraysDelete(currentConfig);
+            handleSimpleParametersAddition(currentConfig);
+            handleArraysAddition(currentConfig);
+            JsonNode patchToApplyOnDefaultConfig = computeDifferenceOnDefaultConfig(currentConfig);
+            persistenceOutboundPort.saveConfiguration(patchToApplyOnDefaultConfig);
+            presenter.presentConfigurationUpdated(patchToApplyOnDefaultConfig);
+        } catch (Exception e) {
+            presenter.presentException(e);
+        }
     }
 
     private void handleArraysAddition(JsonNode currentConfig) {
-        Map<String, Map<String, String>> arraysEntriesToAdd = parametersOutboundPort.getArraysEntriesToAdd();
+        Map<String, Map<String, String>> arraysEntriesToAdd = command.arraysEntriesToAdd();
         arraysEntriesToAdd.forEach((arrayField, entries) -> {
             JsonPointer arrayFieldPointer = dotToJsonPointer(arrayField);
             JsonNode arrayFieldNode = currentConfig.at(arrayFieldPointer);
@@ -47,7 +55,7 @@ class ConfigUpdater implements UseCase {
                 if (parent.isObject()) {
                     ((ObjectNode) parent).put(arrayFieldPointer.last().getMatchingProperty(), arrayFieldNode);
                 } else {
-                    throw new IllegalStateException("Impossible to add an array to a node that is not an Object: " + arrayFieldPointer);
+                    throw new UseCaseException(UseCaseException.Reason.INVALID, "Impossible to add an array to a node that is not an Object: " + arrayFieldPointer);
                 }
             }
             if (!CollectionUtils.isEmpty(entries)) {
@@ -65,7 +73,7 @@ class ConfigUpdater implements UseCase {
     }
 
     private void handleSimpleParametersAddition(JsonNode currentConfig) {
-        Map<String, String> fieldsToAdd = parametersOutboundPort.getFieldsToAdd();
+        Map<String, String> fieldsToAdd = command.fieldsToAdd();
         fieldsToAdd.forEach((fieldKey, fieldValue) -> {
             JsonPointer jsonPointer = dotToJsonPointer(fieldKey);
             JsonNode parent = currentConfig.at(jsonPointer.head());
@@ -76,7 +84,7 @@ class ConfigUpdater implements UseCase {
             if (parent.isObject()) {
                 ((ObjectNode) parent).put(jsonPointer.last().getMatchingProperty(), fieldValue);
             } else {
-                throw new IllegalStateException("Impossible to add a simple parameter to a node that is not an Object: " + jsonPointer);
+                throw new UseCaseException(UseCaseException.Reason.INVALID, "Impossible to add a simple parameter to a node that is not an Object: " + jsonPointer);
             }
         });
     }
@@ -93,7 +101,7 @@ class ConfigUpdater implements UseCase {
     }
 
     private void handleArraysDelete(JsonNode currentConfig) {
-        Map<String, Map<String, String>> arraysEntriesToDelete = parametersOutboundPort.getArraysEntriesToDelete();
+        Map<String, Map<String, String>> arraysEntriesToDelete = command.arraysEntriesToDelete();
         arraysEntriesToDelete.forEach((arrayField, entryToDelete) -> {
             JsonPointer jsonPointer = dotToJsonPointer(arrayField);
             JsonNode arrayNode = currentConfig.at(jsonPointer);
@@ -107,7 +115,7 @@ class ConfigUpdater implements UseCase {
                 ((ArrayNode) arrayNode).removeAll();
                 ((ArrayNode) arrayNode).addAll(filteredElements);
             } else {
-                throw new IllegalStateException("Impossible to delete an element that is not part of an array: " + jsonPointer);
+                throw new UseCaseException(UseCaseException.Reason.INVALID, "Impossible to delete an element that is not part of an array: " + jsonPointer);
             }
         });
     }
@@ -121,7 +129,7 @@ class ConfigUpdater implements UseCase {
     }
 
     private void handleSimpleFieldsDelete(JsonNode currentConfig) {
-        Set<String> fieldsToDelete = parametersOutboundPort.getFieldsToDelete();
+        Set<String> fieldsToDelete = command.fieldsToDelete();
         for (String fieldToDelete : fieldsToDelete) {
             JsonPointer jsonPointer = dotToJsonPointer(fieldToDelete);
             JsonPointer parentPointer = jsonPointer.head();
@@ -133,7 +141,7 @@ class ConfigUpdater implements UseCase {
                     parentObject.remove(keyToRemove);
                 }
             } else {
-                throw new IllegalStateException("Impossible to delete an element that has not an Object as parent: " + jsonPointer);
+                throw new UseCaseException(UseCaseException.Reason.INVALID, "Impossible to delete an element that has not an Object as parent: " + jsonPointer);
             }
         }
     }

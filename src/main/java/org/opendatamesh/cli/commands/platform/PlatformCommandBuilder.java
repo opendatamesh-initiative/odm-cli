@@ -27,7 +27,6 @@ public class PlatformCommandBuilder implements PicoCliCommandBuilder {
         PlatformCommandExecutor executor = new PlatformCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(PLATFORM_COMMAND);
-        spec.version("1.0.0");
         spec.usageMessage().description("Command to manage ODM Platform functionalities.");
         spec.mixinStandardHelpOptions(true);
 

@@ -40,7 +40,6 @@ public class ImportCommandBuilder implements PicoCliCommandBuilder {
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(IMPORT_COMMAND);
         spec.mixinStandardHelpOptions(true);
-        spec.version("1.0.0");
         spec.usageMessage().description("Import an object into a descriptor file", extension == null ? "" : extension.getExtensionInfo().getDescription());
         spec.usageMessage().sortOptions(false);
 

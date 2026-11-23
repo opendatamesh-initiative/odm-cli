@@ -1,0 +1,15 @@
+spec: backend-service-template-state
+specVersion: "1.0.0"
+templateName: blindata-backend-service-template-spring
+templateVersion: "1.1.1"
+modules:
+  - usecases
+  - rest-client
+parameters:
+  groupId: org.opendatamesh
+  artifactId: odm-cli
+  serviceName: odm-cli
+  serviceClassPrefix: OdmCli
+  basePackage: org.opendatamesh.cli
+  basePackagePath: org/opendatamesh/cli
+  description: "Open Data Mesh Platform's CLI"

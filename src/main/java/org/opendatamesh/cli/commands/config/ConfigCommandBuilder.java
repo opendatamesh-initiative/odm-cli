@@ -31,7 +31,8 @@ public class ConfigCommandBuilder implements PicoCliCommandBuilder {
         ConfigCommandExecutor executor = new ConfigCommandExecutor(odmCliConfiguration);
         CommandLine.Model.CommandSpec spec = CommandLine.Model.CommandSpec.wrapWithoutInspection(executor);
         spec.name(CONFIG_COMMAND);
-        spec.version("odm-cli config 1.0.0");
+        //The CLI version is appended by OdmCliRootCommandBuilder
+        spec.version("odm-cli config");
         spec.usageMessage().description("Manages the configuration file.");
         spec.mixinStandardHelpOptions(true);
 

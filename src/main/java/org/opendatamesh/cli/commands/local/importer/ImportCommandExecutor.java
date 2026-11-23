@@ -4,6 +4,7 @@ import org.opendatamesh.cli.commands.PicoCliCommandExecutor;
 import org.opendatamesh.cli.configs.OdmCliConfiguration;
 import org.opendatamesh.cli.extensions.ExtensionOption;
 import org.opendatamesh.cli.extensions.importer.ImporterExtension;
+import org.opendatamesh.cli.usecases.importer.ImporterCommand;
 import org.opendatamesh.cli.usecases.importer.ImporterFactory;
 import org.springframework.util.StringUtils;
 
@@ -59,11 +60,13 @@ public class ImportCommandExecutor extends PicoCliCommandExecutor {
         if (importSchemaExtension == null) {
             return;
         }
-        portImporterFactory.getImportSchemaUseCase(
+        ImporterCommand command = new ImporterCommand(
                 descriptorFilePath,
-                importSchemaCommandParams,
-                importSchemaExtension
-        ).execute();
+                importSchemaCommandParams.get("to"),
+                importSchemaCommandParams.get("target"),
+                importSchemaCommandParams
+        );
+        portImporterFactory.buildImporter(command, importSchemaExtension, descriptor -> { }).execute();
     }
 
     public void setDescriptorFilePath(String descriptorFilePath) {

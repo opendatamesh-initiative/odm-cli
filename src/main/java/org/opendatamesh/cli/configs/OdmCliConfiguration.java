@@ -4,6 +4,7 @@ import org.opendatamesh.cli.configs.platform.PlatformConfiguration;
 import org.opendatamesh.cli.configs.template.TemplateConfiguration;
 import org.opendatamesh.cli.extensions.OdmCliBaseConfiguration;
 import org.opendatamesh.cli.usecases.config.reader.ConfigReaderFactory;
+import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterCommand;
 import org.opendatamesh.cli.usecases.config.updater.ConfigUpdaterFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,10 +12,12 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This beans has "thread" scope. This allows its state to be accessed and modified
@@ -28,7 +31,7 @@ import java.util.Set;
 public class OdmCliConfiguration {
 
     private Config cliConfiguration;
-    private List<OdmCliBaseConfiguration.SystemConfig> systems;
+    private List<OdmCliBaseConfiguration.SystemConfig> systems = new ArrayList<>();
     private PlatformConfiguration platform;
     private TemplateConfiguration template;
 
@@ -41,11 +44,14 @@ public class OdmCliConfiguration {
     private ConfigUpdaterFactory updaterFactory;
 
     public Map<String, String> getAllConfiguration() {
-        return readerFactory.getConfigReader().execute();
+        AtomicReference<Map<String, String>> configuration = new AtomicReference<>();
+        readerFactory.buildConfigReader(configuration::set).execute();
+        return configuration.get();
     }
 
     public void updateConfiguration(Map<String, String> simpleEntriesToAdd, Set<String> keysToDelete, Map<String, Map<String, String>> arrayAttributesEntriesToAdd, Map<String, Map<String, String>> arrayAttributesEntriesToDelete) {
-        updaterFactory.getConfigUpdater(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete).execute();
+        ConfigUpdaterCommand command = new ConfigUpdaterCommand(simpleEntriesToAdd, keysToDelete, arrayAttributesEntriesToAdd, arrayAttributesEntriesToDelete);
+        updaterFactory.buildConfigUpdater(command, savedConfiguration -> { }).execute();
     }
 
     public OdmCliBaseConfiguration getBaseConfiguration() {

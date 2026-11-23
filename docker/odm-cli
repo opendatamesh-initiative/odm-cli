@@ -1,0 +1,11 @@
+#!/bin/sh
+# Starts the CLI bundled in the Docker image. Unlike the workstation script (odm-cli at the repository root), it downloads
+# nothing: the jar and the Java runtime are part of the image.
+# - loader.path: the extensions directory, read by Spring Boot's PropertiesLauncher.
+# - spring.config.additional-location: the optional configuration file. "optional:" lets the CLI start when the file does
+#   not exist; "config --set" creates it.
+CONFIG_FILE="${ODM_CLI_CONFIG_FILE:-${HOME:-/home/odmcli}/.odmcli/application.yml}"
+exec java \
+  "-Dloader.path=${ODM_CLI_EXTENSIONS_DIR:-/opt/odm-cli/extensions}" \
+  "-Dspring.config.additional-location=optional:file:$CONFIG_FILE" \
+  -jar /opt/odm-cli/lib/odm-cli.jar "$@"

@@ -9,6 +9,25 @@ CONFIG_FILE="$INSTALL_DIR/application.yml"
 # Version injected during release, fallback if not replaced
 VERSION="latest"
 
+# Minimum Java major version required to run the CLI
+REQUIRED_JAVA_VERSION=21
+
+# Check that a compatible Java runtime is installed
+if ! command -v java >/dev/null 2>&1; then
+  echo "Error: Java not found. ODM CLI requires Java $REQUIRED_JAVA_VERSION or newer."
+  exit 1
+fi
+JAVA_VERSION=$(java -version 2>&1 | head -n1 | cut -d '"' -f 2)
+JAVA_MAJOR_VERSION=$(echo "$JAVA_VERSION" | cut -d '.' -f 1)
+if [[ "$JAVA_MAJOR_VERSION" == "1" ]]; then
+  JAVA_MAJOR_VERSION=$(echo "$JAVA_VERSION" | cut -d '.' -f 2)
+fi
+if ! [[ "$JAVA_MAJOR_VERSION" =~ ^[0-9]+$ ]] || (( JAVA_MAJOR_VERSION < REQUIRED_JAVA_VERSION )); then
+  echo "Error: ODM CLI requires Java $REQUIRED_JAVA_VERSION or newer, but found Java ${JAVA_VERSION:-unknown}."
+  echo "Please install Java $REQUIRED_JAVA_VERSION (e.g. 'sudo apt install -y openjdk-$REQUIRED_JAVA_VERSION-jdk') and try again."
+  exit 1
+fi
+
 # Get the latest version if not explicitly set
 if [[ "$VERSION" == "latest" ]]; then
   echo "Fetching the latest release version..."

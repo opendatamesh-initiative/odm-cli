@@ -32,7 +32,6 @@ public class InitCommandBuilder implements PicoCliCommandBuilder {
 
         spec.name(INIT_COMMAND);
         spec.mixinStandardHelpOptions(true);
-        spec.version("1.0.0");
         spec.usageMessage().description("Init a data descriptor json file");
         spec.usageMessage().sortOptions(false);
 
