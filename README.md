@@ -60,6 +60,8 @@ In a CI job, use it as the job image and call `odm-cli` in the script. Configura
 [Run with Docker](docs/run-with-docker.md); pipeline examples for the DevOps commands are in
 [Run DevOps tasks from a pipeline](docs/devops-pipelines.md).
 
+The Docker Hub overview of this image is [`DOCKERHUB.md`](DOCKERHUB.md). It is published on every release, so keep it up to date.
+
 ## Updates
 
 Each released `odm-cli` script is bound to the version it was released with:
